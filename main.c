@@ -1,14 +1,16 @@
 #include "minishell.h"
 
 
-char *find_exec(char *cmd, char **env)
+char *find_exec(char *cmd)
 {
-	(void)env;
-    char *path = getenv("PATH");
-    char **paths = ft_split(path, ':');
+    char *path;
+    char **paths;
     char *full_path;
-    int i = 0;
+    int i;
 
+	i = 0;
+	path = getenv("PATH");
+	paths = ft_split(path, ':');
     if (!paths)
         return NULL;
     
@@ -31,14 +33,14 @@ char *find_exec(char *cmd, char **env)
 
 void execute_command(char **args, char **env)
 {
-	char *exec_path;
 	(void)env;
+	char *exec_path;
 	pid_t pid = fork();
 	if (pid == 0) // Child process
 	{
 		exec_path = args[0];
 		if(access(exec_path, X_OK) != 0)
-			exec_path = find_exec(args[0], env);
+			exec_path = find_exec(args[0]);
 		if(!exec_path)
 		{
 			printf("Command not found\n");
@@ -58,7 +60,8 @@ void parse_command(char *input, char **env)
 {
 	int i = 0;
 
-	char **args = ft_split(input, ' '); // Parsing to do
+	char **args; // Parsing to do
+	args = ft_split(input, ' ');
 	if (!args || !args[0])
 		return;
 	
