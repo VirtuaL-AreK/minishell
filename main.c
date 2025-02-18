@@ -1,14 +1,52 @@
 #include "minishell.h"
 
+
+char *find_exec(char *cmd, char **env)
+{
+	(void)env;
+    char *path = getenv("PATH");
+    char **paths = ft_split(path, ':');
+    char *full_path;
+    int i = 0;
+
+    if (!paths)
+        return NULL;
+    
+    while (paths[i])
+    {
+        full_path = ft_strjoin(paths[i], "/");
+        full_path = ft_strjoin(full_path, cmd);
+		if (access(full_path, X_OK) == 0)
+        {
+            free(paths[i]);
+            return full_path;
+        }
+        free(full_path);
+        free(paths[i]);
+        i++;
+    }
+    free(paths);
+    return NULL;
+}
+
 void execute_command(char **args, char **env)
 {
+	char *exec_path;
 	(void)env;
 	pid_t pid = fork();
 	if (pid == 0) // Child process
 	{
-		execve(args[0], args, env);
-		//execvp(args[0], args);
-		printf("Command not found\n");
+		exec_path = args[0];
+		if(access(exec_path, X_OK) != 0)
+			exec_path = find_exec(args[0], env);
+		if(!exec_path)
+		{
+			printf("Command not found\n");
+			exit(1);
+		}
+		execve(exec_path, args, env);
+		perror("minishell");
+		exit(1);
 	}
 	else
 	{
@@ -59,5 +97,8 @@ int main(int ac, char **av, char **env)
 {
 	(void)ac;
 	(void)av;
+	//(void)env;
+
+	//printf("%s\n", getenv("PATH"));
     prompt_loop(env);
 }
