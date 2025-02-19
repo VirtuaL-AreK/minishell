@@ -43,7 +43,7 @@ void execute_command(char **args, char **env)
 			exec_path = find_exec(args[0]);
 		if(!exec_path)
 		{
-			printf("Command not found\n");
+			printf("%s: Command not found\n", args[0]);
 			exit(1);
 		}
 		execve(exec_path, args, env);
