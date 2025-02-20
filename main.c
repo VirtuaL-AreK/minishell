@@ -64,6 +64,13 @@ void parse_command(char *input, char **env)
 	args = ft_split(input, ' ');
 	if (!args || !args[0])
 		return;
+
+	if (syntax_verification(args))
+	{
+		printf(GREEN "Good syntax\n" RESET);
+	}
+	else
+		printf(RED "Bad Syntax!\n" RESET);
 	
 	execute_command(args, env);
 	
