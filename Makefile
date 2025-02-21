@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror 
 NAME = minishell
-SRC = main.c utils.c syntax.c
+SRC = main.c utils.c syntax.c tokenization.c
 OBJ = $(SRC:.c=.o)
 LIBFT = ./libft/libft.a
 

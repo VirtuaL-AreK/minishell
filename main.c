@@ -67,6 +67,7 @@ void parse_command(char *input, char **env)
 
 	if (syntax_verification(args))
 	{
+		tokenization(args);
 		printf(GREEN "Good syntax\n" RESET);
 	}
 	else
