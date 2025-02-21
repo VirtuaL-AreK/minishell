@@ -1,5 +1,27 @@
 #include "minishell.h"
 
+int check_double_quote(char **a)
+{
+    int i;
+    int j;
+    int flag;
+
+    i = 0;
+    j = 0;
+    flag = 0;
+    while (a[i] != NULL)
+    {
+        while (a[i][j] != '\0')
+        {
+            if (a[i][j] == '"')
+                flag++;
+            j++;
+        }
+        i++;
+    }
+    return (flag % 2 == 0);
+}
+
 int is_special_char(char c)
 {
     char special_char[] = {
@@ -38,6 +60,8 @@ int syntax_verification(char **a)
         }
         i++;
     }
+    if (!check_double_quote(a))
+        return (0);
     return (1);
 }
 
