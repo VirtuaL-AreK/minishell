@@ -13,7 +13,6 @@ char *find_exec(char *cmd)
 	paths = ft_split(path, ':');
     if (!paths)
         return NULL;
-    
     while (paths[i])
     {
         full_path = ft_strjoin(paths[i], "/");
