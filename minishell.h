@@ -53,16 +53,21 @@ typedef struct s_command {
 // utils
 
 char	**ft_split(char const *s, char c);
+void ft_free_args(char **args);
 
 // tokenizatiion
 
+void free_tokens(t_token *head);
 int syntax_verification(char **args);
 t_token *tokenization(char **args);
+
+int check_quotes(char *str);
 
 // commands
 
 void print_command(t_command *commands);
 t_command *command_parser(t_token *tokens);
+void free_commands(t_command *cmd);
 
 // execution
 

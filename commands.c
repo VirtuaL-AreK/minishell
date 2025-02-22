@@ -96,3 +96,29 @@ t_command *command_parser(t_token *tokens)
     }
     return head;
 }
+
+void free_commands(t_command *cmd)
+{
+    t_command *tmp;
+    int i;
+
+    while (cmd)
+    {
+        tmp = cmd->next;
+        
+        if (cmd->args)
+        {
+            i = 0;
+            while (cmd->args[i])
+                free(cmd->args[i++]);
+            free(cmd->args);
+        }
+        if (cmd->infile)
+            free(cmd->infile);
+        if (cmd->outfile)
+            free(cmd->outfile);
+
+        free(cmd);
+        cmd = tmp;
+    }
+}

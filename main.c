@@ -1,8 +1,25 @@
 #include "minishell.h"
 
+int is_syntax_error(t_token *tokens)
+{
+	if (!tokens)
+		return (1);
+	if (tokens && tokens->type == 1)
+		return (printf("Syntax error: unexpected '|'\n"), 1);
+    while (tokens)
+    {
+        if (tokens->type == 1 && (!tokens->next || tokens->next->type == 1))
+            return (printf("Syntax error near unexpected token '|'\n"), 1);
+        if ((tokens->type == 1 || tokens->type == 3)
+            && (!tokens->next || tokens->next->type != 0))
+            return (printf("Syntax error: missing file for redirection\n"), 1);
+        tokens = tokens->next;
+    }
+    return (0);
+}
+
 void parse_command(char *input, char **env)
 {
-	int i = 0;
 	t_command *commands;
 	(void)env;
 
@@ -12,25 +29,24 @@ void parse_command(char *input, char **env)
 	if (!args || !args[0])
 		return;
 
-	if (syntax_verification(args))
-	{
+	// if (syntax_verification(args))
+	// {
 		tokens = tokenization(args);
-		printf(GREEN "Good syntax\n" RESET);
-	}
-	else
-		printf(RED "Bad Syntax!\n" RESET);
+	// 	printf(GREEN "Good syntax\n" RESET);
+	// }
+	// else
+	// 	printf(RED "Bad Syntax!\n" RESET);
 	
-	commands = command_parser(tokens);
-	print_command(commands);
-	//execute_command(args, env);
-	
-	while(args[i])
+	if(!is_syntax_error(tokens))
 	{
-		free(args[i]);
-		i++;
+		commands = command_parser(tokens);
+		print_command(commands);
+		//execute_command(args, env);
 	}
-		
-	free(args);
+	
+	ft_free_args(args);
+	free_tokens(tokens);
+	free_commands(commands);
 }
 
 void prompt_loop(char **env)
@@ -43,6 +59,7 @@ void prompt_loop(char **env)
 		if (!input)
 		{
 			printf("exit\n");
+			rl_clear_history();
 			break;
 		}
 		if (*input)
