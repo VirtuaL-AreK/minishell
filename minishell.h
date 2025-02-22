@@ -40,11 +40,34 @@ typedef struct s_token
     struct s_token  *next;
 } t_token;
 
+// Commands
+typedef struct s_command {
+	int nb_arg;
+    char **args;          // Arguments de la commande
+    char *infile;         // Fichier d'entrée si '<'
+    char *outfile;        // Fichier de sortie si '>' ou '>>'
+    int append;           // 1 si '>>', 0 sinon
+    struct s_command *next; // Prochaine commande si '|' existe
+} t_command;
+
 // utils
 
 char	**ft_split(char const *s, char c);
 
+// tokenizatiion
+
 int syntax_verification(char **args);
-void tokenization(char **args);
+t_token *tokenization(char **args);
+
+// commands
+
+void print_command(t_command *commands);
+t_command *tokens_to_commands(t_token *tokens);
+
+// execution
+
+char *find_exec(char *cmd);
+void execute_command(char **args, char **env);
+
 
 #endif

@@ -69,7 +69,7 @@ void free_tokens(t_token *head)
     }
 }
 
-void tokenization(char **args)
+t_token *tokenization(char **args)
 {
     int i;
     t_token *token_list;
@@ -82,4 +82,5 @@ void tokenization(char **args)
         i++;
     }
     print_tokens(token_list);
+	return(token_list);
 }
