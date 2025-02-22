@@ -20,7 +20,7 @@ void parse_command(char *input, char **env)
 	else
 		printf(RED "Bad Syntax!\n" RESET);
 	
-	commands = tokens_to_commands(tokens);
+	commands = command_parser(tokens);
 	print_command(commands);
 	//execute_command(args, env);
 	

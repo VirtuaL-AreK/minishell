@@ -43,11 +43,11 @@ typedef struct s_token
 // Commands
 typedef struct s_command {
 	int nb_arg;
-    char **args;          // Arguments de la commande
-    char *infile;         // Fichier d'entrée si '<'
-    char *outfile;        // Fichier de sortie si '>' ou '>>'
-    int append;           // 1 si '>>', 0 sinon
-    struct s_command *next; // Prochaine commande si '|' existe
+    char **args;          // Arguments of the command within pipes
+    char *infile;         // Input file if '<'
+    char *outfile;        // Output file si '>' ou '>>'
+    int append;           // 1 if '>>', 0 else
+    struct s_command *next; // Next command if '|' exist
 } t_command;
 
 // utils
@@ -62,7 +62,7 @@ t_token *tokenization(char **args);
 // commands
 
 void print_command(t_command *commands);
-t_command *tokens_to_commands(t_token *tokens);
+t_command *command_parser(t_token *tokens);
 
 // execution
 
