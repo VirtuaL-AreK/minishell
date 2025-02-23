@@ -41,7 +41,14 @@ void parse_command(char *input, char **env)
 	{
 		commands = command_parser(tokens);
 		print_command(commands);
-		//execute_command(args, env);
+		if (strcmp(args[0], "echo") == 0)
+			ft_echo(commands);
+		else if (strcmp(args[0], "cd") == 0)
+			ft_cd(commands);
+		// else if (strcmp(args[0], "pwd") == 0)
+		// 	ft_pwd(commands);
+		else
+			execute_command(args, env);
 	}
 	
 	ft_free_args(args);
@@ -80,4 +87,5 @@ int main(int ac, char **av, char **env)
 
 	//printf("%s\n", getenv("PATH"));
     prompt_loop(env);
+	return (0);
 }

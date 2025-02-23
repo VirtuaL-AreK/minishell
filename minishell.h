@@ -4,10 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <string.h>
 # include "libft/libft.h"
 
 #define RESET   "\x1B[0m"
@@ -74,5 +75,10 @@ void free_commands(t_command *cmd);
 char *find_exec(char *cmd);
 void execute_command(char **args, char **env);
 
+// Builtins
+
+int ft_echo(t_command *cmd);
+int ft_cd(t_command *cmd);
+int ft_pwd(t_command *cmd);
 
 #endif
