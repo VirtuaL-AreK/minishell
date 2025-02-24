@@ -45,6 +45,10 @@ void parse_command(char *input, char **env)
 			ft_echo(commands);
 		else if (strcmp(args[0], "cd") == 0)
 			ft_cd(commands);
+		else if (strcmp(args[0], "export") == 0)
+			ft_export(commands);
+		else if (strcmp(args[0], "unset") == 0)
+			ft_unset(commands);
 		// else if (strcmp(args[0], "pwd") == 0)
 		// 	ft_pwd(commands);
 		else
