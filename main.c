@@ -74,6 +74,7 @@ void prompt_loop(char **env)
 
 	while (1)
 	{
+		signal(SIGQUIT, SIG_IGN);
 		signal(SIGINT, sig_handler);
 		input = readline("\033[1;32mminishell$\033[0m ");
 		if (!input)
