@@ -1,5 +1,7 @@
 #include "minishell.h"
 
+// extern char **environ;
+
 int is_syntax_error(t_token *tokens)
 {
 	if (!tokens)
@@ -49,6 +51,10 @@ void parse_command(char *input, char **env)
 			ft_export(commands);
 		else if (strcmp(args[0], "unset") == 0)
 			ft_unset(commands);
+		else if (strcmp(args[0], "env") == 0)
+			ft_env(commands);
+		else if (strcmp(args[0], "exit") == 0)
+			ft_exit(commands);
 		// else if (strcmp(args[0], "pwd") == 0)
 		// 	ft_pwd(commands);
 		else
@@ -87,7 +93,7 @@ int main(int ac, char **av, char **env)
 {
 	(void)ac;
 	(void)av;
-	//(void)env;
+	(void)env;
 
 	//printf("%s\n", getenv("PATH"));
     prompt_loop(env);
