@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -85,5 +86,8 @@ int is_valid_varname(char *var);
 void ft_unset(t_command *cmd);
 int ft_env(t_command *cmd);
 int ft_exit(t_command *cmd);
+
+// Signals
+void sig_handler(int sig);
 
 #endif
