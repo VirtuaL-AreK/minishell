@@ -1,5 +1,7 @@
 #include "minishell.h"
 
+// extern char **environ;
+
 int is_syntax_error(t_token *tokens)
 {
 	if (!tokens)
@@ -41,7 +43,22 @@ void parse_command(char *input, char **env)
 	{
 		commands = command_parser(tokens);
 		print_command(commands);
-		//execute_command(args, env);
+		if (strcmp(args[0], "echo") == 0)
+			ft_echo(commands);
+		else if (strcmp(args[0], "cd") == 0)
+			ft_cd(commands);
+		else if (strcmp(args[0], "export") == 0)
+			ft_export(commands);
+		else if (strcmp(args[0], "unset") == 0)
+			ft_unset(commands);
+		else if (strcmp(args[0], "env") == 0)
+			ft_env(commands);
+		else if (strcmp(args[0], "exit") == 0)
+			ft_exit(commands);
+		// else if (strcmp(args[0], "pwd") == 0)
+		// 	ft_pwd(commands);
+		else
+			execute_command(args, env);
 	}
 	
 	ft_free_args(args);
@@ -55,6 +72,8 @@ void prompt_loop(char **env)
 
 	while (1)
 	{
+		signal(SIGQUIT, SIG_IGN);
+		signal(SIGINT, sig_handler);
 		input = readline("\033[1;32mminishell$\033[0m ");
 		if (!input)
 		{
@@ -74,8 +93,9 @@ int main(int ac, char **av, char **env)
 {
 	(void)ac;
 	(void)av;
-	//(void)env;
+	(void)env;
 
 	//printf("%s\n", getenv("PATH"));
     prompt_loop(env);
+	return (0);
 }
