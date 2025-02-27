@@ -43,22 +43,22 @@ void parse_command(char *input, char **env)
 	{
 		commands = command_parser(tokens);
 		print_command(commands);
-		if (strcmp(args[0], "echo") == 0)
-			ft_echo(commands);
-		else if (strcmp(args[0], "cd") == 0)
-			ft_cd(commands);
-		else if (strcmp(args[0], "export") == 0)
-			ft_export(commands);
-		else if (strcmp(args[0], "unset") == 0)
-			ft_unset(commands);
-		else if (strcmp(args[0], "env") == 0)
-			ft_env(commands);
-		else if (strcmp(args[0], "exit") == 0)
-			ft_exit(commands);
+		// if (strcmp(args[0], "echo") == 0)
+		// 	ft_echo(commands);
+		// else if (strcmp(args[0], "cd") == 0)
+		// 	ft_cd(commands);
+		// else if (strcmp(args[0], "export") == 0)
+		// 	ft_export(commands);
+		// else if (strcmp(args[0], "unset") == 0)
+		// 	ft_unset(commands);
+		// else if (strcmp(args[0], "env") == 0)
+		// 	ft_env(commands);
+		// else if (strcmp(args[0], "exit") == 0)
+		// 	ft_exit(commands);
 		// else if (strcmp(args[0], "pwd") == 0)
 		// 	ft_pwd(commands);
-		else
-			execute_command(args, env);
+		// else
+			execute_pipeline(commands, env);
 	}
 	
 	ft_free_args(args);

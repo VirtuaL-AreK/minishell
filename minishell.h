@@ -75,6 +75,8 @@ void free_commands(t_command *cmd);
 
 char *find_exec(char *cmd);
 void execute_command(char **args, char **env);
+int execute_builtin(t_command *cmd, char **env);
+void execute_pipeline(t_command *cmd, char **env);
 
 // Builtins
 

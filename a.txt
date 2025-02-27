@@ -1,4 +1,0 @@
-minishell
-minishell.h
-minishell
-minishell.h
