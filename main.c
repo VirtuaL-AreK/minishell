@@ -45,10 +45,8 @@ void parse_command(char *input, char **env)
 	}
 	
 	ft_free_args(args);
-	// if(tokens)
-	// 	free_tokens(tokens);
-	// if(commands)
-	// 	free_commands(commands);
+	free_tokens(tokens);
+	free_commands(commands);
 }
 
 void prompt_loop(char **env)
