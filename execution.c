@@ -8,11 +8,12 @@ char *find_exec(char *cmd)
     int i;
 
 	i = 0;
+	if (cmd[0] == '/' && access(cmd, X_OK) == 0)
+        return cmd;
 	path = getenv("PATH");
 	paths = ft_split(path, ':');
     if (!paths)
         return NULL;
-    
     while (paths[i])
     {
         full_path = ft_strjoin(paths[i], "/");

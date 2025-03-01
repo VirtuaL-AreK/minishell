@@ -57,7 +57,7 @@ void parse_command(char *input, char **env)
 		// else if (strcmp(args[0], "pwd") == 0)
 		// 	ft_pwd(commands);
 		// else
-			execute_pipeline(commands, env);
+		execute_pipeline(commands, env);
 	}
 	
 	ft_free_args(args);
