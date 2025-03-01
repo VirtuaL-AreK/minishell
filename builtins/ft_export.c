@@ -35,8 +35,45 @@ void export_var(char *arg)
         printf("%s: is not a valid varname\n", name);
         return ;
     }
-    if (value)
-        setenv(name, value, 1);
+    // if (value)
+    //     setenv(name, value, 1);
+
+    int i;
+    int var_len;
+    int found;
+    char *new_var;
+
+    i = 0;
+    var_len = ft_strlen(name);
+    while (environ[i] != NULL)
+    {
+        if ((ft_strncmp(environ[i], name, var_len) == 0) && environ[i][var_len] == '=')
+        {
+            if (value)
+            {
+                new_var = ft_strjoin(name, "=");
+                new_var = ft_strjoin(new_var, value);
+                environ[i] = new_var;
+            }
+            found = 1;
+            break;
+        }
+        i++;
+    }
+    if (!found && value)
+    {
+        i = 0;
+        while (environ[i] != NULL)
+            i++;
+        new_var = malloc(var_len + ft_strlen(value) + 2);
+        if (new_var)
+        {
+            new_var = ft_strjoin(name, "=");
+            new_var = ft_strjoin(new_var, value);
+            environ[i] = new_var;
+            environ[i + 1] = NULL;
+        }
+    }
 }
 
 int ft_export(t_command *cmd)
