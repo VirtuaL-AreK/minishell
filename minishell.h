@@ -21,6 +21,8 @@
 #define CYAN    "\x1B[36m"
 #define WHITE   "\x1B[37m"
 
+extern char **environ;
+
 typedef enum e_token_type
 {
     TOKEN_WORD = 0,      // Word (command, argument, filename)

@@ -23,7 +23,6 @@ int is_syntax_error(t_token *tokens)
 void parse_command(char *input, char **env)
 {
 	t_command *commands;
-	(void)env;
 
 	char **args; // Parsing to do
 	t_token *tokens;
@@ -93,7 +92,6 @@ int main(int ac, char **av, char **env)
 {
 	(void)ac;
 	(void)av;
-	(void)env;
 
 	//printf("%s\n", getenv("PATH"));
     prompt_loop(env);

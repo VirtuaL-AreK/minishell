@@ -1,7 +1,5 @@
 #include "../minishell.h"
 
-extern char **environ;
-
 int ft_env(t_command *cmd)
 {
     char **env = environ;

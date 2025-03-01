@@ -1,7 +1,5 @@
 #include "../minishell.h"
 
-extern char **environ;
-
 int is_valid_varname(char *var)
 {
     int i;
@@ -43,7 +41,6 @@ void export_var(char *arg)
 
 int ft_export(t_command *cmd)
 {
-    char **env = environ;
     int i;
 
     if (strcmp(cmd->args[0], "export") == 0)
@@ -51,9 +48,9 @@ int ft_export(t_command *cmd)
         if (!cmd->args[1])
         {
             i = 0;
-            while (env[i] != NULL)
+            while (environ[i] != NULL)
             {
-                printf("%s\n", env[i]);
+                printf("%s\n", environ[i]);
                 i++;
             }
         }
