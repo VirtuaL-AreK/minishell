@@ -1,7 +1,7 @@
 CC = cc
 CFLAGS = -Wall -Wextra -Werror 
 NAME = minishell
-SRC = main.c utils.c syntax.c tokenization.c commands.c ./builtins/ft_echo.c ./builtins/ft_cd.c \
+SRC = main.c utils.c syntax.c split_tokens.c tokenization.c commands.c ./builtins/ft_echo.c ./builtins/ft_cd.c \
 		execution.c ./builtins/ft_pwd.c ./builtins/ft_export.c ./builtins/ft_unset.c ./builtins/ft_env.c \
 		./builtins/ft_exit.c ./execution/signals.c
 OBJ = $(SRC:.c=.o)

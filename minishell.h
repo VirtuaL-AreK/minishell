@@ -55,13 +55,22 @@ typedef struct s_command {
 } t_command;
 
 // utils
-
 char	**ft_split(char const *s, char c);
 void ft_free_args(char **args);
+
+// syntax
+int check_unclosed_quotes(const char *input);
+
+// split_tokens
+void skip_spaces(const char *input, int *i);
+int is_special(char c);
+int count_tokens(const char *input);
+char **ft_split_command(const char *input);
 
 // tokenizatiion
 
 void free_tokens(t_token *head);
+void print_tokens(t_token *head);
 int syntax_verification(char **args);
 t_token *tokenization(char **args);
 

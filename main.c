@@ -24,45 +24,26 @@ void parse_command(char *input, char **env)
 {
 	t_command *commands;
 
-	char **args; // Parsing to do
+	char **args;
 	t_token *tokens;
-	args = ft_split(input, ' ');
+	//args = ft_split(input, ' ');
+	args = ft_split_command(input);
 	if (!args || !args[0])
 		return;
 
-	// if (syntax_verification(args))
-	// {
-		tokens = tokenization(args);
-	// 	printf(GREEN "Good syntax\n" RESET);
-	// }
-	// else
-	// 	printf(RED "Bad Syntax!\n" RESET);
-	
+	tokens = tokenization(args);
+	//print_tokens(tokens);
+
 	if(!is_syntax_error(tokens))
 	{
 		commands = command_parser(tokens);
-		print_command(commands);
-		// if (strcmp(args[0], "echo") == 0)
-		// 	ft_echo(commands);
-		// else if (strcmp(args[0], "cd") == 0)
-		// 	ft_cd(commands);
-		// else if (strcmp(args[0], "export") == 0)
-		// 	ft_export(commands);
-		// else if (strcmp(args[0], "unset") == 0)
-		// 	ft_unset(commands);
-		// else if (strcmp(args[0], "env") == 0)
-		// 	ft_env(commands);
-		// else if (strcmp(args[0], "exit") == 0)
-		// 	ft_exit(commands);
-		// else if (strcmp(args[0], "pwd") == 0)
-		// 	ft_pwd(commands);
-		// else
+		//print_command(commands);
 		execute_pipeline(commands, env);
 	}
 	
 	ft_free_args(args);
 	free_tokens(tokens);
-	free_commands(commands);
+	//free_commands(commands);
 }
 
 void prompt_loop(char **env)
@@ -76,13 +57,14 @@ void prompt_loop(char **env)
 		input = readline("\033[1;32mminishell$\033[0m ");
 		if (!input)
 		{
-			printf("exit\n");
+			//printf("exit\n");
 			rl_clear_history();
-			break;
+			exit(0);
 		}
 		if (*input)
 			add_history(input);
-		parse_command(input, env);
+		if(!check_unclosed_quotes(input))
+			parse_command(input, env);
 		//printf("You entered : %s\n", input);
 		free(input);
 	}

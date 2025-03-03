@@ -81,6 +81,6 @@ t_token *tokenization(char **args)
         append_token(&token_list, args[i]);
         i++;
     }
-    print_tokens(token_list);
+    //print_tokens(token_list);
 	return(token_list);
 }
