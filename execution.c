@@ -1,5 +1,24 @@
 #include "minishell.h"
 
+void handle_cat(t_command *cmd)
+{
+	if (strcmp(cmd->args[0], "cat") == 0 && !cmd->args[1])
+	{
+		return ;
+	}
+	else if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "-e") == 0)
+	{
+		printf("$\n");
+		return ;
+	}
+	else if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "-e") != 0 && cmd->args[1])
+	{
+		execute_command(cmd->args, environ);
+		printf("\n");
+		return ;
+	}
+}
+
 char *find_exec(char *cmd)
 {
     char *path;
@@ -109,7 +128,12 @@ void execute_pipeline(t_command *cmd, char **env)
 
     while (cmd)
     {
-		if (execute_builtin(cmd, env))
+		if (strcmp(cmd->args[0], "cat") == 0)
+		{
+			handle_cat(cmd);
+			return ;
+		}
+		else if (execute_builtin(cmd, env))
             cmd = cmd->next;
 		else
 		{

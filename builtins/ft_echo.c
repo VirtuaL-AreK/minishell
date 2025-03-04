@@ -21,7 +21,10 @@ int ft_echo(t_command *cmd)
     i = 1;
     no_newline = 0;
     if (!cmd->args || !cmd->args[1])
+    {
+        printf("\n");
         return (0);
+    }
     if (cmd->args && strcmp(cmd->args[1], "-n") == 0)
     {
         no_newline = 1;
