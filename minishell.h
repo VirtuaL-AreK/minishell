@@ -35,6 +35,22 @@ typedef enum e_token_type
     TOKEN_EOF = 7        // End of input
 } t_token_type;
 
+// GENERAL EXIT STATUS
+
+typedef enum s_exit_status
+{
+    SUCCESS = 0,
+    GENERAL_ERROR = 1,
+    MISUSE_BUILTINS = 2,
+    CANNOT_EXECUTE = 126,
+    CMD_NOT_FOUND = 127,
+    SIGNAL_TERM = 128,
+    SIGINT_RECEIVED = 130,
+    SIGQUIT_RECEIVED = 131
+} t_exit_status;
+
+extern t_exit_status gexitstatus;
+
 // Linked list
 
 typedef struct s_token
@@ -102,5 +118,7 @@ int ft_exit(t_command *cmd);
 
 // Signals
 void sig_handler(int sig);
+
+void exit_here(t_exit_status order);
 
 #endif

@@ -1,5 +1,7 @@
 #include "../minishell.h"
 
+// t_exit_status gexitstatus = SUCCESS;
+
 void echo_path(char *path)
 {
     int j;
@@ -23,12 +25,18 @@ int ft_echo(t_command *cmd)
     if (!cmd->args || !cmd->args[1])
     {
         printf("\n");
+        exit_here(SUCCESS);
         return (0);
     }
     if (cmd->args && strcmp(cmd->args[1], "-n") == 0)
     {
         no_newline = 1;
         i++;
+    }
+    else if (cmd->args && strcmp(cmd->args[1], "$?") == 0)
+    {
+        printf("%d\n", gexitstatus);
+        return (0);
     }
     if (cmd->args && strncmp(cmd->args[1], "$", 1) == 0)
         echo_path(cmd->args[1] + 1);

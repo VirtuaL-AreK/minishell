@@ -14,6 +14,7 @@ int ft_cd(t_command *cmd)
         if (!path)
         {
             printf("minishell: cd: OLDPWD not set\n");
+            exit_here(MISUSE_BUILTINS);
             return (1);
         }
         printf("%s\n", path);
