@@ -147,7 +147,10 @@ void execute_pipeline(t_command *cmd, char **env)
 				{
 					int in_fd = open(cmd->infile, O_RDONLY);
 					if (in_fd < 0)
+					{
+						perror(cmd->infile);
 						exit(1);
+					}
 					dup2(in_fd, STDIN_FILENO);
 					close(in_fd);
 				}
@@ -155,7 +158,10 @@ void execute_pipeline(t_command *cmd, char **env)
 				{
 					int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
 					if (out_fd < 0)
+					{
+						perror(cmd->outfile);
 						exit(1);
+					}
 					dup2(out_fd, STDOUT_FILENO);
 					close(out_fd);
 				}
@@ -173,8 +179,9 @@ void execute_pipeline(t_command *cmd, char **env)
 				exec_path = find_exec(cmd->args[0]);
                 if (!exec_path)
                 {
-                    printf("%s: command not found\n", cmd->args[0]);
-                    exit(1);
+                    //printf("%s: command not found\n", cmd->args[0]);
+					ft_putstr_fd(" command not found\n", 2);
+                    exit(127);
                 }
                 execve(exec_path, cmd->args, env);
                 perror(cmd->args[0]);
@@ -182,7 +189,10 @@ void execute_pipeline(t_command *cmd, char **env)
 			}
 			else
 			{
-				waitpid(pid, NULL, 0);
+				int status;
+				waitpid(pid, &status, 0);  // Attente du processus enfant
+                if (WIFEXITED(status))
+                    gexitstatus = WEXITSTATUS(status);
 				if (prev_fd != -1)
 					close(prev_fd);
 				if (cmd->next)
