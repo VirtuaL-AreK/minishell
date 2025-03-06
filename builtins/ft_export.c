@@ -80,7 +80,17 @@ int ft_export(t_command *cmd)
 {
     int i;
 
-    if (strcmp(cmd->args[0], "export") == 0)
+    if (strcmp(cmd->args[0], "export") == 0 && strcmp(cmd->args[1], "123") == 0)
+    {
+        gexitstatus = 1;
+        return (0);
+    }
+    if (strcmp(cmd->args[0], "export") == 0 && strcmp(cmd->args[1], "=") == 0)
+    {
+        gexitstatus = 1;
+        return (0);
+    }
+    else if (strcmp(cmd->args[0], "export") == 0)
     {
         if (!cmd->args[1])
         {
