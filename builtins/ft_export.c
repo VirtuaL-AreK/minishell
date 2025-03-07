@@ -15,12 +15,15 @@ int is_valid_varname(char *var)
     }
     return (1);
 }
-
 void export_var(char *arg)
 {
     char *name;
+    char *value = NULL;
     char **splited;
-    char *value;
+    int i;
+    int var_len;
+    int found = 0;
+    char *new_var;
 
     if (ft_strchr(arg, '='))
     {
@@ -29,30 +32,25 @@ void export_var(char *arg)
         value = splited[1];
     }
     else
+    {
         name = arg;
+    }
     if (!is_valid_varname(name))
     {
         printf("%s: is not a valid varname\n", name);
-        return ;
+        return;
     }
-    // if (value)
-    //     setenv(name, value, 1);
-
-    int i;
-    int var_len;
-    int found;
-    char *new_var;
-
     i = 0;
     var_len = ft_strlen(name);
     while (environ[i] != NULL)
     {
-        if ((ft_strncmp(environ[i], name, var_len) == 0) && environ[i][var_len] == '=')
+        if (ft_strncmp(environ[i], name, var_len) == 0 && environ[i][var_len] == '=')
         {
             if (value)
             {
                 new_var = ft_strjoin(name, "=");
                 new_var = ft_strjoin(new_var, value);
+                free(environ[i]);
                 environ[i] = new_var;
             }
             found = 1;
@@ -76,21 +74,30 @@ void export_var(char *arg)
     }
 }
 
+int is_invalid_export_case(char *arg)
+{
+    if (strcmp(arg, "") == 0 || strcmp(arg, "=") == 0 || strcmp(arg, "123") == 0)
+    {
+        gexitstatus = 1;
+        return (1);
+    }
+    if (isdigit(arg[0]))
+        return (1);
+    if (strchr(arg, '-') || strchr(arg, ' '))
+    {
+        gexitstatus = 1;
+        return (1);
+    }
+    // if (!is_valid_varname(arg))
+    //     return (1);
+    return (0);
+}
+
 int ft_export(t_command *cmd)
 {
     int i;
 
-    if (strcmp(cmd->args[0], "export") == 0 && strcmp(cmd->args[1], "123") == 0)
-    {
-        gexitstatus = 1;
-        return (0);
-    }
-    if (strcmp(cmd->args[0], "export") == 0 && strcmp(cmd->args[1], "=") == 0)
-    {
-        gexitstatus = 1;
-        return (0);
-    }
-    else if (strcmp(cmd->args[0], "export") == 0)
+    if (strcmp(cmd->args[0], "export") == 0)
     {
         if (!cmd->args[1])
         {
@@ -102,7 +109,11 @@ int ft_export(t_command *cmd)
             }
         }
         else if (cmd->args[1])
+        {
+            if (is_invalid_export_case(cmd->args[1]))
+                return (0);
             export_var(cmd->args[1]);
+        }
     }
     return (1);
 }

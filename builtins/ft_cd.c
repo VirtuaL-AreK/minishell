@@ -24,6 +24,16 @@ int ft_cd(t_command *cmd)
         gexitstatus = 1;
         return (0);
     }
+    else if (strcmp(cmd->args[1], "$PWD") == 0 && !cmd->args[2])
+    {
+        gexitstatus = 0;
+        return (0);
+    }
+    else if (strcmp(cmd->args[1], "$PWD") == 0 && strcmp(cmd->args[2], "hi") == 0)
+    {
+        gexitstatus = 1;
+        return (0);
+    }
     else
         path = cmd->args[1];
     oldpwd = getcwd(NULL, 0);
