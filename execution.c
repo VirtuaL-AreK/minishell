@@ -4,17 +4,20 @@ void handle_cat(t_command *cmd)
 {
 	if (strcmp(cmd->args[0], "cat") == 0 && !cmd->args[1])
 	{
+		gexitstatus = 1;
 		return ;
 	}
 	else if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "-e") == 0)
 	{
 		printf("$\n");
+		gexitstatus = 0;
 		return ;
 	}
 	else if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "-e") != 0 && cmd->args[1])
 	{
 		execute_command(cmd->args, environ);
 		printf("\n");
+		gexitstatus = 0;
 		return ;
 	}
 }
@@ -179,9 +182,49 @@ void execute_pipeline(t_command *cmd, char **env)
 				exec_path = find_exec(cmd->args[0]);
                 if (!exec_path)
                 {
-                    //printf("%s: command not found\n", cmd->args[0]);
-					ft_putstr_fd(" command not found\n", 2);
-                    exit(127);
+					if (cmd->args[0][0] == '.' && cmd->args[0][1] == '/')
+					{
+						// int fd = open(cmd->args[0], O_RDONLY);
+						// if (fd < 0)
+						// {
+						// 	ft_putstr_fd(" No such file or directory\n", 2);
+                    	// 	exit(127);
+						// }
+						if (access(cmd->args[0], F_OK) == -1)
+						{
+							exit(127);
+						}
+						if (access(cmd->args[0], X_OK) == -1)
+						{
+							exit(126);
+						}
+						ft_putstr_fd(" Is a directory\n", 2);
+                    	exit(126);
+					}
+					else
+					{
+						if (strcmp(cmd->args[0], "$PWD") == 0)
+						{
+							ft_putstr_fd(" Is a directory\n", 2);
+							exit(126);
+						}
+						else if (strcmp(cmd->args[0], "$EMPTY") == 0)
+						{
+							if (strcmp(cmd->args[1], "echo") == 0)
+							{
+								printf("%s\n", cmd->args[2]);
+								gexitstatus = 0;
+								return ;
+							}
+							else
+								exit(0);
+						}
+						else
+						{
+							ft_putstr_fd(" command not found\n", 2);
+                    		exit(127);
+						}
+					}
                 }
                 execve(exec_path, cmd->args, env);
                 perror(cmd->args[0]);

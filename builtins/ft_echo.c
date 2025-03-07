@@ -30,30 +30,29 @@ int ft_echo(t_command *cmd)
     //     return (0);
 
     // }
-    if (cmd->args && ft_strchr(cmd->args[1], '\'') != NULL)
+    if (cmd->args && (ft_strchr(cmd->args[1], '\'') != NULL || ft_strchr(cmd->args[1], '\"') != NULL))
     {
         int x = 0;
-        while (cmd->args && cmd->args[1][x] != '\0')
+        while (cmd->args[1][x] && cmd->args[1][x] != '\0')
         {
-            if (cmd->args[1][x] == '\'')
-                x++;
-            write(1, &cmd->args[1][x], 1);
+            if (!(cmd->args[1][x] == '\'' || cmd->args[1][x] == '\"'))
+                write(1, &cmd->args[1][x], 1);
             x++;
         }
         write(1, "\n", 1);
-        exit_here(SUCCESS);
+        gexitstatus = 0;
         return (0);
     }
     else if (cmd->args && strcmp(cmd->args[1], "$") == 0)
     {
         printf("%s\n", cmd->args[1]);
-        exit_here(SUCCESS);
+        gexitstatus = 0;
         return (0);
     }
     else if (!cmd->args || !cmd->args[1])
     {
         printf("\n");
-        exit_here(SUCCESS);
+        gexitstatus = 0;
         return (0);
     }
     else if (cmd->args && strcmp(cmd->args[1], "-n") == 0)
@@ -94,5 +93,6 @@ int ft_echo(t_command *cmd)
     }
     if (!no_newline)
         printf("\n");
+    gexitstatus = 0;
     return 0;
 }
