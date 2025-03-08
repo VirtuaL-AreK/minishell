@@ -82,169 +82,241 @@ int execute_builtin(t_command *cmd, char **env)
 {
 	(void)env;
     if (!cmd->args[0])
-        return (0);
+        return (1);
     if (strcmp(cmd->args[0], "cd") == 0)
 	{
 		ft_cd(cmd);
-        return (1);
+        return (0);
 	}
     if (strcmp(cmd->args[0], "echo") == 0)
 	{
 		ft_echo(cmd);
-		return (1);
+		return (0);
 	}
     if (strcmp(cmd->args[0], "env") == 0)
 	{
 		ft_env(cmd);
-		return (1);
+		return (0);
 	}
     if (strcmp(cmd->args[0], "exit") == 0)
 	{
 		ft_exit(cmd);
-		return (1);
+		return (0);
 	}
     if (strcmp(cmd->args[0], "export") == 0)
 	{
 		ft_export(cmd);
-		return (1);
+		return (0);
 	}
     if (strcmp(cmd->args[0], "pwd") == 0)
 	{
 		ft_pwd(cmd);
-		return (1);
+		return (0);
 	}
     if (strcmp(cmd->args[0], "unset") == 0)
 	{
 		ft_unset(cmd);
-		return (1);
+		return (0);
 	}
-    return (0);
+    return (1);
 }
 
+#include <string.h>
+
+int is_simple_builtin(const char *cmd)
+{
+	if (!cmd)
+		return 0;
+	if (strcmp(cmd, "echo") == 0)
+		return 1;
+	if (strcmp(cmd, "pwd") == 0)
+		return 1;
+	if (strcmp(cmd, "export") == 0)
+		return 1;
+    return 0;
+}
+
+int is_builtin(const char *cmd)
+{
+	if (!cmd)
+		return 0;
+	if (strcmp(cmd, "cd") == 0)
+		return 1;
+	if (strcmp(cmd, "env") == 0)
+		return 1;
+	if (strcmp(cmd, "export") == 0)
+		return 1;
+	if (strcmp(cmd, "unset") == 0)
+		return 1;
+	if (strcmp(cmd, "exit") == 0)
+		return 1;
+    return 0;
+}
 
 void execute_pipeline(t_command *cmd, char **env)
 {
     int fd[2];
     int prev_fd = -1;
     pid_t pid;
-	char *exec_path;
+    int status;
+    char *exec_path;
 
     while (cmd)
     {
-		if (strcmp(cmd->args[0], "cat") == 0)
-		{
-			handle_cat(cmd);
-			return ;
-		}
-		else if (execute_builtin(cmd, env))
+        if (strcmp(cmd->args[0], "cat") == 0)
+        {
+            if (cmd->next)
+            {
+                if (pipe(fd) < 0)
+                {
+                    perror("pipe");
+                    exit(1);
+                }
+                pid = fork();
+                if (pid == 0)
+                {
+                    if (cmd->infile)
+                    {
+                        int in_fd = open(cmd->infile, O_RDONLY);
+                        if (in_fd < 0)
+                        {
+                            perror(cmd->infile);
+                            exit(1);
+                        }
+                        dup2(in_fd, STDIN_FILENO);
+                        close(in_fd);
+                    }
+                    dup2(fd[1], STDOUT_FILENO);
+                    close(fd[0]);
+                    close(fd[1]);
+                    handle_cat(cmd);
+                    exit(gexitstatus);
+                }
+                else
+                {
+                    close(fd[1]);
+                    prev_fd = fd[0];
+                    cmd = cmd->next;
+                    continue;
+                }
+            }
+            else
+            {
+                handle_cat(cmd);
+                return;
+            }
+        }
+        else if (is_builtin(cmd->args[0]))
+        {
+            execute_builtin(cmd, env);
             cmd = cmd->next;
-		else
-		{
-			if (cmd->next)
-				pipe(fd);
-
-			pid = fork();
-			if (pid == 0)
-			{
-				if (cmd->infile)
-				{
-					int in_fd = open(cmd->infile, O_RDONLY);
-					if (in_fd < 0)
-					{
-						perror(cmd->infile);
-						exit(1);
-					}
-					dup2(in_fd, STDIN_FILENO);
-					close(in_fd);
-				}
-				if (cmd->outfile)
-				{
-					int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
-					if (out_fd < 0)
-					{
-						perror(cmd->outfile);
-						exit(1);
-					}
-					dup2(out_fd, STDOUT_FILENO);
-					close(out_fd);
-				}
-				if (prev_fd != -1)
-				{
-					dup2(prev_fd, STDIN_FILENO);
-					close(prev_fd);
-				}
-				if (cmd->next)
-				{
-					close(fd[0]);
-					dup2(fd[1], STDOUT_FILENO);
-					close(fd[1]);
-				}
-				exec_path = find_exec(cmd->args[0]);
+            continue;
+        }
+        else
+        {
+            if (cmd->next)
+            {
+                if (pipe(fd) < 0)
+                {
+                    perror("pipe");
+                    exit(1);
+                }
+            }
+            pid = fork();
+            if (pid == 0)
+            {
+                if (cmd->infile)
+                {
+                    int in_fd = open(cmd->infile, O_RDONLY);
+                    if (in_fd < 0)
+                    {
+                        perror(cmd->infile);
+                        exit(1);
+                    }
+                    dup2(in_fd, STDIN_FILENO);
+                    close(in_fd);
+                }
+                if (prev_fd != -1)
+                {
+                    dup2(prev_fd, STDIN_FILENO);
+                    close(prev_fd);
+                }
+                if (cmd->outfile)
+                {
+                    int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
+                    if (out_fd < 0)
+                    {
+                        perror(cmd->outfile);
+                        exit(1);
+                    }
+                    dup2(out_fd, STDOUT_FILENO);
+                    close(out_fd);
+                }
+                if (cmd->next)
+                {
+                    close(fd[0]);
+                    dup2(fd[1], STDOUT_FILENO);
+                    close(fd[1]);
+                }
+                
+                if (is_simple_builtin(cmd->args[0]))
+                    exit(execute_builtin(cmd, env));
+                
+                exec_path = find_exec(cmd->args[0]);
                 if (!exec_path)
                 {
-					if (cmd->args[0][0] == '.' && cmd->args[0][1] == '/')
-					{
-						// int fd = open(cmd->args[0], O_RDONLY);
-						// if (fd < 0)
-						// {
-						// 	ft_putstr_fd(" No such file or directory\n", 2);
-                    	// 	exit(127);
-						// }
-						if (access(cmd->args[0], F_OK) == -1)
-						{
-							exit(127);
-						}
-						if (access(cmd->args[0], X_OK) == -1)
-						{
-							exit(126);
-						}
-						ft_putstr_fd(" Is a directory\n", 2);
-                    	exit(126);
-					}
-					else
-					{
-						if (strcmp(cmd->args[0], "$PWD") == 0)
-						{
-							ft_putstr_fd(" Is a directory\n", 2);
-							exit(126);
-						}
-						else if (strcmp(cmd->args[0], "$EMPTY") == 0)
-						{
-							if (strcmp(cmd->args[1], "echo") == 0)
-							{
-								printf("%s\n", cmd->args[2]);
-								gexitstatus = 0;
-								return ;
-							}
-							else
-								exit(0);
-						}
-						else
-						{
-							ft_putstr_fd(" command not found\n", 2);
-                    		exit(127);
-						}
-					}
+                    if (cmd->args[0][0] == '.' && cmd->args[0][1] == '/')
+                    {
+                        if (access(cmd->args[0], F_OK) == -1)
+                            exit(127);
+                        if (access(cmd->args[0], X_OK) == -1)
+                            exit(126);
+                        ft_putstr_fd(" Is a directory\n", 2);
+                        exit(126);
+                    }
+                    else
+                    {
+                        if (strcmp(cmd->args[0], "$PWD") == 0)
+                        {
+                            ft_putstr_fd(" Is a directory\n", 2);
+                            exit(126);
+                        }
+                        else if (strcmp(cmd->args[0], "$EMPTY") == 0)
+                        {
+                            if (strcmp(cmd->args[1], "echo") == 0)
+                            {
+                                printf("%s\n", cmd->args[2]);
+                                gexitstatus = 0;
+                                return;
+                            }
+                            else
+                                exit(0);
+                        }
+                        else
+                        {
+                            ft_putstr_fd(" command not found\n", 2);
+                            exit(127);
+                        }
+                    }
                 }
                 execve(exec_path, cmd->args, env);
                 perror(cmd->args[0]);
-				exit(1);
-			}
-			else
-			{
-				int status;
-				waitpid(pid, &status, 0);  // Attente du processus enfant
+                exit(1);
+            }
+            else
+            {
+                waitpid(pid, &status, 0);
                 if (WIFEXITED(status))
                     gexitstatus = WEXITSTATUS(status);
-				if (prev_fd != -1)
-					close(prev_fd);
-				if (cmd->next)
-				{
-					close(fd[1]);
-					prev_fd = fd[0];
-				}
-				cmd = cmd->next;
-			}
-    	}
-	}
+                if (prev_fd != -1)
+                    close(prev_fd);
+                if (cmd->next)
+                {
+                    close(fd[1]);
+                    prev_fd = fd[0];
+                }
+                cmd = cmd->next;
+            }
+        }
+    }
 }

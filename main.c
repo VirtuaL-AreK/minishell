@@ -32,12 +32,12 @@ void parse_command(char *input, char **env)
 		return;
 
 	tokens = tokenization(args);
-	//print_tokens(tokens);
+	// print_tokens(tokens);
 
 	if(!is_syntax_error(tokens))
 	{
 		commands = command_parser(tokens);
-		//print_command(commands);
+		// print_command(commands);
 		execute_pipeline(commands, env);
 	}
 	

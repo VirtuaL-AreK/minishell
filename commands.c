@@ -47,32 +47,59 @@ t_command *new_command(t_token *tokens)
 
 void fill_command(t_command *cmd, t_token **tokens)
 {
-    int arg_count;
+    int arg_count = 0;
 
-    arg_count = 0;
     while (*tokens && (*tokens)->type != 1)
     {
         if ((*tokens)->type == 0)
+        {
             cmd->args[arg_count++] = ft_strdup((*tokens)->value);
+            *tokens = (*tokens)->next;
+        }
         else if ((*tokens)->type == 2 && (*tokens)->next)
         {
             *tokens = (*tokens)->next;
+            if (cmd->infile)
+                free(cmd->infile);
             cmd->infile = ft_strdup((*tokens)->value);
+            *tokens = (*tokens)->next;
         }
-        else if ((*tokens)->type == 3 || (*tokens)->type == 4)
+        else if (((*tokens)->type == 3 || (*tokens)->type == 4) && (*tokens)->next)
         {
             if ((*tokens)->type == 4)
                 cmd->append = 1;
-            if ((*tokens)->next)
+            else
+                cmd->append = 0;
+            *tokens = (*tokens)->next;
+            
+            int flags = O_WRONLY | O_CREAT;
+            if (cmd->append)
+                flags |= O_APPEND;
+            else
+                flags |= O_TRUNC;
+            int fd = open((*tokens)->value, flags, 0644);
+            if (fd < 0)
             {
-                *tokens = (*tokens)->next;
-                cmd->outfile = ft_strdup((*tokens)->value);
+                perror((*tokens)->value);
             }
+            else
+            {
+                close(fd);
+            }
+            
+            if (cmd->outfile)
+                free(cmd->outfile);
+            cmd->outfile = ft_strdup((*tokens)->value);
+            *tokens = (*tokens)->next;
         }
-        *tokens = (*tokens)->next;
+        else
+        {
+            *tokens = (*tokens)->next;
+        }
     }
     cmd->args[arg_count] = NULL;
 }
+
 
 t_command *command_parser(t_token *tokens)
 {
