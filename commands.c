@@ -20,29 +20,51 @@ void print_command(t_command *commands)
 	}
 }
 
+int count_command_arguments(t_token *tokens)
+{
+    int count = 0;
+    while (tokens && tokens->type != 1)
+    {
+        if (tokens->type == 2 || tokens->type == 3 || tokens->type == 4)
+        {
+            tokens = tokens->next;
+            if (tokens)
+                tokens = tokens->next;
+        }
+        else if (tokens->type == 0)
+        {
+            count++;
+            tokens = tokens->next;
+        }
+        else
+        {
+            tokens = tokens->next;
+        }
+    }
+    return count;
+}
+
 t_command *new_command(t_token *tokens)
 {
-	t_command *cmd;
-	t_token *tmp;
-	int i;
+    t_command *cmd;
+    int nb_arg;
 
-	cmd = malloc(sizeof(t_command));
-
-	i = 0;
-	tmp = tokens;
-	while(tmp && tmp->type == 0)
-	{
-		tmp = tmp->next;
-		i++;
-	}
-	cmd->nb_arg = i;
-	cmd->args = malloc(sizeof(char *) * (cmd->nb_arg + 1));
-	cmd->infile = NULL;
-	cmd->outfile = NULL;
-	cmd->append = 0;
-	cmd->next = NULL;
-
-	return(cmd);
+    cmd = malloc(sizeof(t_command));
+    if (!cmd)
+        return (NULL);
+    nb_arg = count_command_arguments(tokens);
+    cmd->nb_arg = nb_arg;
+    cmd->args = malloc(sizeof(char *) * (nb_arg + 1));
+    if (!cmd->args)
+    {
+        free(cmd);
+        return (NULL);
+    }
+    cmd->infile = NULL;
+    cmd->outfile = NULL;
+    cmd->append = 0;
+    cmd->next = NULL;
+    return (cmd);
 }
 
 void fill_command(t_command *cmd, t_token **tokens)
@@ -58,7 +80,7 @@ void fill_command(t_command *cmd, t_token **tokens)
         }
         else if ((*tokens)->type == 2 && (*tokens)->next)
         {
-            *tokens = (*tokens)->next;
+            *tokens = (*tokens)->next;  //passer le token "<"
             if (cmd->infile)
                 free(cmd->infile);
             cmd->infile = ft_strdup((*tokens)->value);
@@ -66,12 +88,13 @@ void fill_command(t_command *cmd, t_token **tokens)
         }
         else if (((*tokens)->type == 3 || (*tokens)->type == 4) && (*tokens)->next)
         {
+            // redirection de sortie (3: >, 4: >>)
             if ((*tokens)->type == 4)
                 cmd->append = 1;
             else
                 cmd->append = 0;
-            *tokens = (*tokens)->next;
-            
+            *tokens = (*tokens)->next;  // passer le token de redirection
+            // ouvrir le fichier pour vérifier les erreurs
             int flags = O_WRONLY | O_CREAT;
             if (cmd->append)
                 flags |= O_APPEND;
@@ -86,7 +109,6 @@ void fill_command(t_command *cmd, t_token **tokens)
             {
                 close(fd);
             }
-            
             if (cmd->outfile)
                 free(cmd->outfile);
             cmd->outfile = ft_strdup((*tokens)->value);
@@ -99,6 +121,7 @@ void fill_command(t_command *cmd, t_token **tokens)
     }
     cmd->args[arg_count] = NULL;
 }
+
 
 
 t_command *command_parser(t_token *tokens)

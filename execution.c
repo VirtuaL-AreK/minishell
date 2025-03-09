@@ -255,7 +255,8 @@ void execute_pipeline(t_command *cmd, char **env)
                 if (cmd->next)
                 {
                     close(fd[0]);
-                    dup2(fd[1], STDOUT_FILENO);
+                    if (!cmd->outfile)  // Si la commande n’a pas de redirection de sortie, utiliser le pipe
+        				dup2(fd[1], STDOUT_FILENO);
                     close(fd[1]);
                 }
                 
