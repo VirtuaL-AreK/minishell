@@ -111,7 +111,10 @@ int ft_export(t_command *cmd)
         else if (cmd->args[1])
         {
             if (is_invalid_export_case(cmd->args[1]))
+            {
+                ft_putstr_fd(" not a valid identifier\n", 2);
                 return (0);
+            }
             export_var(cmd->args[1]);
         }
     }

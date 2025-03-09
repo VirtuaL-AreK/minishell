@@ -41,6 +41,7 @@ int ft_exit(t_command *cmd)
     }
     else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "hello") == 0)
     {
+        ft_putstr_fd(" numeric argument required\n", 2);
         gexitstatus = 2;
         // printf(" numeric argument required\n");
         return (0);
@@ -50,6 +51,7 @@ int ft_exit(t_command *cmd)
         gexitstatus = 1;
         // write(1, " too many arguments\n", 21);
         // printf(" numeric argument required\n");
+        ft_putstr_fd(" too many arguments\n", 2);
         return (0);
     }
     return (1);

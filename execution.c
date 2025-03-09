@@ -380,7 +380,7 @@ void execute_pipeline(t_command *cmd, char **env)
                         ft_putstr_fd(" No such file or directory\n", 2);
                         exit(127);
                     }
-                    if (cmd->args[0][0] == '.' && cmd->args[0][1] == '/')
+                    else if (cmd->args[0][0] == '.' && cmd->args[0][1] == '/')
                     {
                         if (access(cmd->args[0], F_OK) == -1)
                         {

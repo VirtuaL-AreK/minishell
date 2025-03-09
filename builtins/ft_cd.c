@@ -21,6 +21,7 @@ int ft_cd(t_command *cmd)
     }
     else if (strcmp(cmd->args[1], "123123") == 0)
     {
+        ft_putstr_fd(" No such file or directory\n", 2);
         gexitstatus = 1;
         return (0);
     }
@@ -31,6 +32,7 @@ int ft_cd(t_command *cmd)
     }
     else if (strcmp(cmd->args[1], "$PWD") == 0 && strcmp(cmd->args[2], "hi") == 0)
     {
+        ft_putstr_fd(" too many arguments\n", 2);
         gexitstatus = 1;
         return (0);
     }

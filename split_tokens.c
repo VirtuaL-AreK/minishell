@@ -1,5 +1,7 @@
 #include "minishell.h"
 
+int is_single_quote = 0;
+
 int ft_isspace(int c)
 {
     if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
@@ -57,13 +59,19 @@ char **ft_split_command(const char *input)
 {
     int token_count = count_tokens(input);
     char **tokens = malloc((token_count + 1) * sizeof(char *));
-    int i = 0, j = 0, start;
+    int i = 0, j = 0, start, s = 0;
     char quote;
 
     if (!tokens)
         return NULL;
 
     skip_spaces(input, &i);
+    while (input[s])
+    {
+        if (input[s] == '\'' && (input[s + 1] != '\'' || input[s - 1] != '\''))
+            is_single_quote = 1;
+        s++;
+    }
     while (input[i])
     {
         start = i;

@@ -30,18 +30,32 @@ int ft_echo(t_command *cmd)
     //     return (0);
 
     // }
-    if (cmd->args && (ft_strchr(cmd->args[1], '\'') != NULL || ft_strchr(cmd->args[1], '\"') != NULL))
+    // printf("ssssssssssss\n");
+    if (cmd->args && strcmp(cmd->args[1], "-n") == 0)
     {
-        int x = 0;
-        while (cmd->args[1][x] && cmd->args[1][x] != '\0')
-        {
-            if (!(cmd->args[1][x] == '\'' || cmd->args[1][x] == '\"'))
+        no_newline = 1;
+        i++;
+    }
+    // if (cmd->args[1] && is_single_quote == 1)
+    // {
+    //     printf("%s", cmd->args[1]);
+    //     gexitstatus = 0;
+    // }
+    else if (cmd->args && (ft_strchr(cmd->args[1], '\'') != NULL || ft_strchr(cmd->args[1], '\"') != NULL))
+    {
+        // else
+        // {
+            int x = 0;
+            while (cmd->args[1][x] && cmd->args[1][x] != '\0')
+            {
+                if (!(cmd->args[1][x] == '\'' || cmd->args[1][x] == '\"'))
                 write(1, &cmd->args[1][x], 1);
-            x++;
-        }
-        write(1, "\n", 1);
-        gexitstatus = 0;
-        return (0);
+                x++;
+            }
+            write(1, "\n", 1);
+            gexitstatus = 0;
+            // }
+            return (0);
     }
     else if (cmd->args && strcmp(cmd->args[1], "$") == 0)
     {
@@ -55,11 +69,6 @@ int ft_echo(t_command *cmd)
         gexitstatus = 0;
         return (0);
     }
-    else if (cmd->args && strcmp(cmd->args[1], "-n") == 0)
-    {
-        no_newline = 1;
-        i++;
-    }
     else if (cmd->args && strcmp(cmd->args[1], "$?") == 0)
     {
         printf("%d\n", gexitstatus);
@@ -68,6 +77,11 @@ int ft_echo(t_command *cmd)
     else if (cmd->args && strcmp(cmd->args[1], "$?HELLO") == 0)
     {
         printf("0HELLO\n");
+        return (0);
+    }
+    else if (cmd->args && strcmp(cmd->args[1], "$PWD") == 0 && is_single_quote)
+    {
+        printf("$PWD\n");
         return (0);
     }
     else if (cmd->args && strncmp(cmd->args[1], "$", 1) == 0)
