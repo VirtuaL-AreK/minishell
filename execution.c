@@ -266,12 +266,23 @@ void execute_pipeline(t_command *cmd, char **env)
                 exec_path = find_exec(cmd->args[0]);
                 if (!exec_path)
                 {
+					if (cmd->args[0][0] == '/')
+					{
+						ft_putstr_fd(" No such file or directory\n", 2);
+                        exit(127);
+					}
                     if (cmd->args[0][0] == '.' && cmd->args[0][1] == '/')
                     {
                         if (access(cmd->args[0], F_OK) == -1)
-                            exit(127);
+                        {
+							ft_putstr_fd(" No such file or directory\n", 2);
+							exit(127);
+						}
                         if (access(cmd->args[0], X_OK) == -1)
-                            exit(126);
+                        {
+							ft_putstr_fd(" Permission denied\n", 2);
+							exit(126);
+						}
                         ft_putstr_fd(" Is a directory\n", 2);
                         exit(126);
                     }
