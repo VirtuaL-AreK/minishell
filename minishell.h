@@ -67,7 +67,8 @@ typedef struct s_command {
     char *infile;         // Input file if '<'
     char *outfile;        // Output file si '>' ou '>>'
     int append;           // 1 if '>>', 0 else
-    struct s_command *next; // Next command if '|' exist
+    int redir_error_code;
+	struct s_command *next; // Next command if '|' exist
 } t_command;
 
 // utils

@@ -2,25 +2,48 @@
 
 void handle_cat(t_command *cmd)
 {
-	if (strcmp(cmd->args[0], "cat") == 0 && !cmd->args[1])
-	{
-		gexitstatus = 1;
-		return ;
-	}
-	else if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "-e") == 0)
-	{
-		printf("$\n");
-		gexitstatus = 0;
-		return ;
-	}
-	else if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "-e") != 0 && cmd->args[1])
-	{
-		execute_command(cmd->args, environ);
-		printf("\n");
-		gexitstatus = 0;
-		return ;
-	}
+    char buffer[1024];
+    int bytes;
+	int i;
+
+    if (strcmp(cmd->args[0], "cat") == 0 && !cmd->args[1])
+    {
+        while ((bytes = read(STDIN_FILENO, buffer, sizeof(buffer))) > 0)
+        {
+            if (write(STDOUT_FILENO, buffer, bytes) < 0)
+            {
+                perror("write");
+                gexitstatus = 1;
+                return;
+            }
+        }
+        gexitstatus = 0;
+        return;
+    }
+    else if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "-e") == 0)
+    {
+        while ((bytes = read(STDIN_FILENO, buffer, sizeof(buffer))) > 0)
+        {
+            while (i < bytes)
+            {
+                if (buffer[i] == '\n')
+                    write(STDOUT_FILENO, "$\n", 2);
+                else
+                    write(STDOUT_FILENO, &buffer[i], 1);
+				i++;
+            }
+        }
+        gexitstatus = 0;
+        return;
+    }
+    else if (strcmp(cmd->args[0], "cat") == 0 && cmd->args[1])
+    {
+        execute_command(cmd->args, environ);
+        gexitstatus = 0;
+        return;
+    }
 }
+
 
 char *find_exec(char *cmd)
 {
@@ -163,6 +186,37 @@ void execute_pipeline(t_command *cmd, char **env)
 
     while (cmd)
     {
+        // erreur de redirection => ne pas exécuter la commande et retourner exit code 1
+        if (cmd->redir_error_code != 0)
+        {
+            pid = fork();
+            if (pid == 0)
+            {
+                exit(1);
+            }
+            else
+            {
+                waitpid(pid, &status, 0);
+                if (WIFEXITED(status))
+                    gexitstatus = WEXITSTATUS(status);
+                if (prev_fd != -1)
+                    close(prev_fd);
+                if (cmd->next)
+                {
+                    if (pipe(fd) < 0)
+                    {
+                        perror("pipe");
+                        exit(1);
+                    }
+                    close(fd[1]);
+                    prev_fd = fd[0];
+                }
+                cmd = cmd->next;
+                continue;
+            }
+        }
+
+        // cat
         if (strcmp(cmd->args[0], "cat") == 0)
         {
             if (cmd->next)
@@ -175,6 +229,17 @@ void execute_pipeline(t_command *cmd, char **env)
                 pid = fork();
                 if (pid == 0)
                 {
+                    if (cmd->outfile)
+                    {
+                        int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
+                        if (out_fd < 0)
+                        {
+                            perror(cmd->outfile);
+                            exit(1);
+                        }
+                        dup2(out_fd, STDOUT_FILENO);
+                        close(out_fd);
+                    }
                     if (cmd->infile)
                     {
                         int in_fd = open(cmd->infile, O_RDONLY);
@@ -185,6 +250,8 @@ void execute_pipeline(t_command *cmd, char **env)
                         }
                         dup2(in_fd, STDIN_FILENO);
                         close(in_fd);
+                        if (prev_fd != -1)
+                            close(prev_fd);
                     }
                     dup2(fd[1], STDOUT_FILENO);
                     close(fd[0]);
@@ -202,16 +269,58 @@ void execute_pipeline(t_command *cmd, char **env)
             }
             else
             {
-                handle_cat(cmd);
-                return;
+                pid = fork();
+                if (pid == 0)
+                {
+                    if (cmd->outfile)
+                    {
+                        int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
+                        if (out_fd < 0)
+                        {
+                            perror(cmd->outfile);
+                            exit(1);
+                        }
+                        dup2(out_fd, STDOUT_FILENO);
+                        close(out_fd);
+                    }
+                    if (cmd->infile)
+                    {
+                        int in_fd = open(cmd->infile, O_RDONLY);
+                        if (in_fd < 0)
+                        {
+                            perror(cmd->infile);
+                            exit(1);
+                        }
+                        dup2(in_fd, STDIN_FILENO);
+                        close(in_fd);
+                        if (prev_fd != -1)
+                            close(prev_fd);
+                    }
+                    else if (prev_fd != -1)
+                    {
+                        dup2(prev_fd, STDIN_FILENO);
+                        close(prev_fd);
+                    }
+                    handle_cat(cmd);
+                    exit(gexitstatus);
+                }
+                else
+                {
+                    waitpid(pid, &status, 0);
+                    if (WIFEXITED(status))
+                        gexitstatus = WEXITSTATUS(status);
+                    return;
+                }
             }
         }
+        // builtins
         else if (is_builtin(cmd->args[0]))
         {
             execute_builtin(cmd, env);
             cmd = cmd->next;
             continue;
         }
+        // commandes externes
         else
         {
             if (cmd->next)
@@ -255,8 +364,8 @@ void execute_pipeline(t_command *cmd, char **env)
                 if (cmd->next)
                 {
                     close(fd[0]);
-                    if (!cmd->outfile)  // Si la commande n’a pas de redirection de sortie, utiliser le pipe
-        				dup2(fd[1], STDOUT_FILENO);
+                    if (!cmd->outfile)
+                        dup2(fd[1], STDOUT_FILENO);
                     close(fd[1]);
                 }
                 
@@ -266,23 +375,23 @@ void execute_pipeline(t_command *cmd, char **env)
                 exec_path = find_exec(cmd->args[0]);
                 if (!exec_path)
                 {
-					if (cmd->args[0][0] == '/')
-					{
-						ft_putstr_fd(" No such file or directory\n", 2);
+                    if (cmd->args[0][0] == '/')
+                    {
+                        ft_putstr_fd(" No such file or directory\n", 2);
                         exit(127);
-					}
+                    }
                     if (cmd->args[0][0] == '.' && cmd->args[0][1] == '/')
                     {
                         if (access(cmd->args[0], F_OK) == -1)
                         {
-							ft_putstr_fd(" No such file or directory\n", 2);
-							exit(127);
-						}
+                            ft_putstr_fd(" No such file or directory\n", 2);
+                            exit(127);
+                        }
                         if (access(cmd->args[0], X_OK) == -1)
                         {
-							ft_putstr_fd(" Permission denied\n", 2);
-							exit(126);
-						}
+                            ft_putstr_fd(" Permission denied\n", 2);
+                            exit(126);
+                        }
                         ft_putstr_fd(" Is a directory\n", 2);
                         exit(126);
                     }

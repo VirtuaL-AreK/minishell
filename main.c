@@ -43,7 +43,7 @@ void parse_command(char *input, char **env)
 	
 	ft_free_args(args);
 	free_tokens(tokens);
-	//free_commands(commands);
+	free_commands(commands);
 }
 
 void prompt_loop(char **env)
