@@ -82,7 +82,6 @@ void fill_command(t_command *cmd, t_token **tokens)
         else if ((*tokens)->type == 2 && (*tokens)->next)
         {
             *tokens = (*tokens)->next;  // passer le token "<"
-            // Vérifier immédiatement l'ouverture du fichier d'entrée
             int in_fd = open((*tokens)->value, O_RDONLY);
             if (in_fd < 0)
             {
