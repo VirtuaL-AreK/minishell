@@ -22,6 +22,7 @@
 #define WHITE   "\x1B[37m"
 
 extern char **environ;
+extern int is_single_quote;
 
 typedef enum e_token_type
 {
@@ -68,6 +69,7 @@ typedef struct s_command {
     char *outfile;        // Output file si '>' ou '>>'
     int append;           // 1 if '>>', 0 else
     int redir_error_code;
+    int is_single_quote;
 	struct s_command *next; // Next command if '|' exist
 } t_command;
 

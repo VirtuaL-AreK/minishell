@@ -1,10 +1,11 @@
 #include "minishell.h"
 
+int is_single_quote = 0;
+
 int ft_isspace(int c)
 {
-    if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f')
-        return 1;
-    return 0;
+    return (c == ' ' || c == '\t' || c == '\n' ||
+            c == '\r' || c == '\v' || c == '\f');
 }
 
 void skip_spaces(const char *input, int *i)
@@ -18,35 +19,53 @@ int is_special(char c)
     return (c == '|' || c == '&' || c == '<' || c == '>');
 }
 
+char *remove_quotes(const char *s)
+{
+    int i = 0, j = 0;
+    int len = ft_strlen(s);
+    char *res = malloc(len + 1);
+    if (!res)
+        return NULL;
+    while (s[i])
+    {
+        if (s[i] != '"' && s[i] != '\'')
+            res[j++] = s[i];
+        i++;
+    }
+    res[j] = '\0';
+    return res;
+}
+
 int count_tokens(const char *input)
 {
     int count = 0, i = 0;
-    char quote;
 
     skip_spaces(input, &i);
     while (input[i])
     {
-        count++;
         if (is_special(input[i]))
         {
-            if ((input[i] == '|' && input[i + 1] == '|') ||
-                (input[i] == '&' && input[i + 1] == '&') ||
-                (input[i] == '>' && input[i + 1] == '>'))
+            count++;
+            if (input[i] == '>' && input[i + 1] == '>')
                 i++;
             i++;
         }
-        else if (input[i] == '"' || input[i] == '\'')
-        {
-            quote = input[i++];
-            while (input[i] && input[i] != quote)
-                i++;
-            if (input[i] == quote)
-                i++;
-        }
         else
         {
+            count++;
             while (input[i] && !ft_isspace(input[i]) && !is_special(input[i]))
-                i++;
+            {
+                if (input[i] == '"' || input[i] == '\'')
+                {
+                    char quote = input[i++];
+                    while (input[i] && input[i] != quote)
+                        i++;
+                    if (input[i] == quote)
+                        i++;
+                }
+                else
+                    i++;
+            }
         }
         skip_spaces(input, &i);
     }
@@ -57,38 +76,53 @@ char **ft_split_command(const char *input)
 {
     int token_count = count_tokens(input);
     char **tokens = malloc((token_count + 1) * sizeof(char *));
-    int i = 0, j = 0, start;
+    int i = 0, j = 0, start, s = 0;
     char quote;
 
     if (!tokens)
         return NULL;
 
     skip_spaces(input, &i);
+    while (input[s])
+    {
+        if (input[s] == '\'' && (input[s + 1] != '\'' || input[s - 1] != '\''))
+            is_single_quote = 1;
+        s++;
+    }
     while (input[i])
     {
-        start = i;
         if (is_special(input[i]))
         {
-            if (input[i] == '>' && input[i + 1] == '>')
+            start = i;
+            if ((input[i] == '|' && input[i + 1] == '|') ||
+                (input[i] == '&' && input[i + 1] == '&') ||
+                (input[i] == '>' && input[i + 1] == '>'))
                 i++;
             i++;
             tokens[j++] = ft_substr(input, start, i - start);
         }
-        else if (input[i] == '"' || input[i] == '\'')
-        {
-            quote = input[i++];
-            start = i;
-            while (input[i] && input[i] != quote)
-                i++;
-            tokens[j++] = ft_substr(input, start, i - start);
-            if (input[i] == quote)
-                i++;
-        }
         else
         {
+            start = i;
             while (input[i] && !ft_isspace(input[i]) && !is_special(input[i]))
-                i++;
-            tokens[j++] = ft_substr(input, start, i - start);
+            {
+                if (input[i] == '"' || input[i] == '\'')
+                {
+                    quote = input[i++];
+                    while (input[i] && input[i] != quote)
+                        i++;
+                    if (input[i] == quote)
+                        i++;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            char *token = ft_substr(input, start, i - start);
+            char *cleaned = remove_quotes(token);
+            free(token);
+            tokens[j++] = cleaned;
         }
         skip_spaces(input, &i);
     }
