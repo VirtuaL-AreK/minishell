@@ -4,26 +4,38 @@
 
 int is_syntax_error(t_token *tokens)
 {
-	if (!tokens)
-		return (1);
-	if (tokens && tokens->type == 1)
-		return (printf("Syntax error: unexpected '|'\n"), 1);
+    if (!tokens)
+        return (1);
+
     while (tokens)
     {
-        if (tokens->type == 1 && (!tokens->next || tokens->next->type == 1))
-            return (printf("Syntax error near unexpected token '|'\n"), 1);
-        if ((tokens->type == 1 || tokens->type == 3)
-            && (!tokens->next || tokens->next->type != 0))
-            return (printf("Syntax error: missing file for redirection\n"), 1);
+        if (tokens->type == 1)
+        {
+            if (!tokens->next || tokens->next->type == 1)
+            {
+                printf("Syntax error near unexpected token '|'\n");
+                return 1;
+            }
+        }
+        else if (tokens->type == 3 || tokens->type == 4)
+        {
+            if (!tokens->next || tokens->next->type != 0)
+            {
+                printf("Syntax error: missing file for redirection\n");
+                return 1;
+            }
+        }
         tokens = tokens->next;
     }
-    return (0);
+    return 0;
 }
+
 
 void parse_command(char *input, char **env)
 {
 	t_command *commands;
 
+	commands = NULL;
 	char **args;
 	t_token *tokens;
 	//args = ft_split(input, ' ');

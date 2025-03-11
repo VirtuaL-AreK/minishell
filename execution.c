@@ -6,6 +6,7 @@ void handle_cat(t_command *cmd)
     int bytes;
 	int i;
 
+	i = 0;
     if (strcmp(cmd->args[0], "cat") == 0 && !cmd->args[1])
     {
         while ((bytes = read(STDIN_FILENO, buffer, sizeof(buffer))) > 0)
@@ -217,6 +218,7 @@ void execute_pipeline(t_command *cmd, char **env)
         }
 
         // cat
+
         if (strcmp(cmd->args[0], "cat") == 0)
         {
             if (cmd->next)
