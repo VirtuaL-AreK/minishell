@@ -435,7 +435,7 @@ void execute_pipeline(t_command *cmd, char **env)
 				{
 					if (S_ISDIR(sb.st_mode))
 					{
-						ft_putstr_fd("Is a directory\n", 2);
+						ft_putstr_fd(" Is a directory\n", 2);
 						exit(126); // code d'erreur de type "Cannot execute"
 					}
 				}
