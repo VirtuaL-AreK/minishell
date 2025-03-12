@@ -35,16 +35,23 @@ void export_var(char *arg)
     {
         name = arg;
     }
+
     if (!is_valid_varname(name))
     {
-        printf("%s: is not a valid varname\n", name);
-        return;
+        ft_putstr_fd("export: `", 2);
+        ft_putstr_fd(name, 2);
+        ft_putstr_fd("': not a valid identifier\n", 2);
+
+        gexitstatus = 1; 
+        return;         
     }
+
     i = 0;
     var_len = ft_strlen(name);
     while (environ[i] != NULL)
     {
-        if (ft_strncmp(environ[i], name, var_len) == 0 && environ[i][var_len] == '=')
+        if (ft_strncmp(environ[i], name, var_len) == 0
+            && environ[i][var_len] == '=')
         {
             if (value)
             {
@@ -74,49 +81,33 @@ void export_var(char *arg)
     }
 }
 
+
 int is_invalid_export_case(char *arg)
 {
-    if (strcmp(arg, "") == 0 || strcmp(arg, "=") == 0 || strcmp(arg, "123") == 0)
+    if (strcmp(arg, "") == 0 || strcmp(arg, "=") == 0)
     {
         gexitstatus = 1;
-        return (1);
+        return 1;
     }
-    if (isdigit(arg[0]))
-        return (1);
-    if (strchr(arg, '-') || strchr(arg, ' '))
-    {
-        gexitstatus = 1;
-        return (1);
-    }
-    // if (!is_valid_varname(arg))
-    //     return (1);
-    return (0);
+    return 0;
 }
-
 int ft_export(t_command *cmd)
 {
-    int i;
-
     if (strcmp(cmd->args[0], "export") == 0)
     {
         if (!cmd->args[1])
         {
-            i = 0;
+            int i = 0;
             while (environ[i] != NULL)
             {
                 printf("%s\n", environ[i]);
                 i++;
             }
         }
-        else if (cmd->args[1])
+        else
         {
-            if (is_invalid_export_case(cmd->args[1]))
-            {
-                ft_putstr_fd(" not a valid identifier\n", 2);
-                return (0);
-            }
             export_var(cmd->args[1]);
         }
     }
-    return (1);
+    return (gexitstatus == 1 ? 1 : 0);
 }

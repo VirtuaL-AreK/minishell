@@ -36,24 +36,28 @@ void parse_command(char *input, char **env)
 	t_command *commands;
 
 	commands = NULL;
-	char **args;
+	// char **args;
 	t_token *tokens;
 	//args = ft_split(input, ' ');
-	args = ft_split_command(input);
-	if (!args || !args[0])
-		return;
+	// args = ft_split_command(input);
+	// if (!args || !args[0])
+	// 	return;
 
-	tokens = tokenization(args);
+	tokens = bash_tokenize_to_tokens(input);
 	// print_tokens(tokens);
+
+	if (!tokens)
+        return;
 
 	if(!is_syntax_error(tokens))
 	{
+		expand_tokens(tokens, env);
 		commands = command_parser(tokens);
 		// print_command(commands);
 		execute_pipeline(commands, env);
 	}
 	
-	ft_free_args(args);
+	// ft_free_args(args);
 	free_tokens(tokens);
 	free_commands(commands);
 }

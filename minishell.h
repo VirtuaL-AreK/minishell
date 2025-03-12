@@ -12,6 +12,9 @@
 #include <readline/history.h>
 # include "libft/libft.h"
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #define RESET   "\x1B[0m"
 #define RED     "\x1B[31m"
 #define GREEN   "\x1B[32m"
@@ -53,13 +56,22 @@ typedef enum s_exit_status
 extern t_exit_status gexitstatus;
 
 // Linked list
-
-typedef struct s_token
+typedef enum e_quote_type
 {
-    char            *value;
-    t_token_type    type;
-    struct s_token  *next;
+    NO_QUOTE = 0,
+    SINGLE_QUOTED,
+    DOUBLE_QUOTED
+} t_quote_type;
+
+
+typedef struct s_token {
+    char *value;
+    t_token_type type;
+    int has_single_quote;
+    int has_double_quote;
+    struct s_token *next;
 } t_token;
+
 
 // Commands
 typedef struct s_command {
@@ -69,7 +81,7 @@ typedef struct s_command {
     char *outfile;        // Output file si '>' ou '>>'
     int append;           // 1 if '>>', 0 else
     int redir_error_code;
-    int is_single_quote;
+    // int is_single_quote;
 	struct s_command *next; // Next command if '|' exist
 } t_command;
 
@@ -81,13 +93,14 @@ void ft_free_args(char **args);
 int check_unclosed_quotes(const char *input);
 
 // split_tokens
-void skip_spaces(const char *input, int *i);
+// void skip_spaces(const char *input, int *i);
 int is_special(char c);
 int count_tokens(const char *input);
 char **ft_split_command(const char *input);
 
 // tokenizatiion
-
+t_token *bash_tokenize_to_tokens(const char *input);
+t_token_type get_token_type(char *str);
 void free_tokens(t_token *head);
 void print_tokens(t_token *head);
 int syntax_verification(char **args);
@@ -100,6 +113,10 @@ int check_quotes(char *str);
 void print_command(t_command *commands);
 t_command *command_parser(t_token *tokens);
 void free_commands(t_command *cmd);
+
+// expansion
+
+void expand_tokens(t_token *tokens, char **env);
 
 // execution
 

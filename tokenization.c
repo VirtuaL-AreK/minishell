@@ -69,18 +69,18 @@ void free_tokens(t_token *head)
     }
 }
 
-t_token *tokenization(char **args)
-{
-    int i;
-    t_token *token_list;
+// t_token *tokenization(char **args)
+// {
+//     int i;
+//     t_token *token_list;
     
-    token_list = NULL;
-    i = 0;
-    while (args[i] != NULL)
-    {
-        append_token(&token_list, args[i]);
-        i++;
-    }
-    //print_tokens(token_list);
-	return(token_list);
-}
+//     token_list = NULL;
+//     i = 0;
+//     while (args[i] != NULL)
+//     {
+//         append_token(&token_list, args[i]);
+//         i++;
+//     }
+//     //print_tokens(token_list);
+// 	return(token_list);
+// }

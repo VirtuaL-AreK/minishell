@@ -187,6 +187,14 @@ void execute_pipeline(t_command *cmd, char **env)
 
     while (cmd)
     {
+		if (!cmd->args[0])
+		{
+			// Pas de commande => on fait rien, code 0
+			gexitstatus = 0;
+			cmd = cmd->next;
+			continue;
+		}
+
         // erreur de redirection => ne pas exécuter la commande et retourner exit code 1
         if (cmd->redir_error_code != 0)
         {
@@ -422,6 +430,15 @@ void execute_pipeline(t_command *cmd, char **env)
                         }
                     }
                 }
+				struct stat sb;
+				if (stat(exec_path, &sb) == 0)
+				{
+					if (S_ISDIR(sb.st_mode))
+					{
+						ft_putstr_fd("Is a directory\n", 2);
+						exit(126); // code d'erreur de type "Cannot execute"
+					}
+				}
                 execve(exec_path, cmd->args, env);
                 perror(cmd->args[0]);
                 exit(1);

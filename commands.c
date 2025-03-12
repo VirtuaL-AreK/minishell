@@ -153,28 +153,58 @@ void fill_command(t_command *cmd, t_token **tokens)
 }
 
 
+static void fix_empty_first_arg(t_command *cmd)
+{
+    if (!cmd->args[0])
+        return;
+
+    if (cmd->args[0][0] == '\0')
+    {
+        if (!cmd->args[1])
+        {
+            free(cmd->args[0]);
+            cmd->args[0] = NULL;
+            cmd->nb_arg = 0;
+        }
+        else
+        {
+            free(cmd->args[0]);
+            int i = 0;
+            while (cmd->args[i+1])
+            {
+                cmd->args[i] = cmd->args[i+1];
+                i++;
+            }
+            cmd->args[i] = NULL;
+            cmd->nb_arg--;
+        }
+    }
+}
+
 t_command *command_parser(t_token *tokens)
 {
-    t_command *head;
-	t_command *last;
-	t_command *cmd;
+    t_command *head = NULL;
+    t_command *last = NULL;
 
-	head = NULL;
-	last = NULL;
-    while (tokens) 
-	{
-		cmd = new_command(tokens);
-		fill_command(cmd, &tokens);
+    while (tokens)
+    {
+        t_command *cmd = new_command(tokens);
+        fill_command(cmd, &tokens);
+
+        fix_empty_first_arg(cmd);
+
         if (!head)
             head = cmd;
         else
             last->next = cmd;
         last = cmd;
-        if (tokens && tokens->type == 1)
+
+        if (tokens && tokens->type == TOKEN_PIPE)
             tokens = tokens->next;
     }
     return head;
 }
+
 
 void free_commands(t_command *cmd)
 {
