@@ -1,21 +1,18 @@
 #include "../minishell.h"
 
-int ft_env(t_command *cmd)
+int ft_env(t_command *cmd, t_shell *shell)
 {
-    char **env = environ;
-    int i;
-
-    if (strcmp(cmd->args[0], "env") == 0)
+    if (!cmd->args[1])
     {
-        if (!cmd->args[1])
+        int i = 0;
+        while (shell->env && shell->env[i])
         {
-            i = 0;
-            while (env[i] != NULL)
-            {
-                printf("%s\n", env[i]);
-                i++;
-            }
+            printf("%s\n", shell->env[i]);
+            i++;
         }
+        shell->exit_status = 0;
+        return 0;
     }
-    return (1);
+    shell->exit_status = 0;
+    return 0;
 }

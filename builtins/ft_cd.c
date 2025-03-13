@@ -1,6 +1,6 @@
 #include "../minishell.h"
 
-int ft_cd(t_command *cmd)
+int ft_cd(t_command *cmd, t_shell *shell)
 {
     char *path;
     char *oldpwd;
@@ -9,50 +9,48 @@ int ft_cd(t_command *cmd)
     if (cmd->nb_arg > 2)
     {
         ft_putstr_fd("cd: too many arguments\n", 2);
-        gexitstatus = 1;
+        shell->exit_status = 1;
         return 1; 
     }
-
     if (cmd->nb_arg < 2)
     {
-        path = getenv("HOME");
-        if (!path)
+        int i = 0;
+        while (shell->env && shell->env[i])
+        {
+            if (ft_strncmp(shell->env[i], "HOME=", 5) == 0)
+            {
+                path = shell->env[i] + 5; 
+                break;
+            }
+            i++;
+        }
+        if (!shell->env[i])
         {
             ft_putstr_fd("minishell: cd: HOME not set\n", 2);
-            gexitstatus = 1;
+            shell->exit_status = 1;
             return 1;
         }
-    }
-    else if (strcmp(cmd->args[1], "-") == 0)
-    {
-        path = getenv("OLDPWD");
-        if (!path)
-        {
-            ft_putstr_fd("minishell: cd: OLDPWD not set\n", 2);
-            gexitstatus = 1;
-            return 1;
-        }
-        printf("%s\n", path);
     }
     else
-    {
         path = cmd->args[1];
-    }
 
     oldpwd = getcwd(NULL, 0);
     if (chdir(path) != 0)
     {
-        perror("minishell: cd");
+        perror("cd");
         free(oldpwd);
-        gexitstatus = 1;
+        shell->exit_status = 1;
         return 1;
     }
 
-    setenv("OLDPWD", oldpwd, 1);
-    free(oldpwd);
+    if (oldpwd)
+    {
+        add_or_replace_var(shell, "OLDPWD", oldpwd);
+        free(oldpwd);
+    }
     if (getcwd(cwd, sizeof(cwd)))
-        setenv("PWD", cwd, 1);
+        add_or_replace_var(shell, "PWD", cwd);
 
-    gexitstatus = 0;
+    shell->exit_status = 0;
     return 0;
 }

@@ -1,60 +1,40 @@
 #include "../minishell.h"
 
-int ft_exit(t_command *cmd)
+static int is_numeric_argument(const char *str)
 {
-    if (strcmp(cmd->args[0], "exit") == 0 && !cmd->args[1])
+    int i = 0;
+
+    if (!str || !*str)
+        return 0;
+    if (str[0] == '-' || str[0] == '+')
+        i++;
+    while (str[i])
     {
-        if (!cmd->args[1])
-            exit(EXIT_SUCCESS);
-        else
-            return (0);
+        if (!ft_isdigit(str[i]))
+            return 0;
+        i++;
     }
-    else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "-100") == 0)
-    {
-        gexitstatus = 156;
-        return (0);
-    }
-    else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "123") == 0)
-    {
-        gexitstatus = 123;
-        return (0);
-    }
-    else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "298") == 0)
-    {
-        gexitstatus = 42;
-        return (0);
-    }
-    else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "+100") == 0)
-    {
-        gexitstatus = 100;
-        return (0);
-    }
-    else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "+\"100\"") == 0)
-    {
-        gexitstatus = 100;
-        return (0);
-    }
-    else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "-\"100\"") == 0)
-    {
-        gexitstatus = 156;
-        return (0);
-    }
-    else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "hello") == 0)
-    {
-        ft_putstr_fd(" numeric argument required\n", 2);
-        gexitstatus = 2;
-        // printf(" numeric argument required\n");
-        return (0);
-    }
-    else if (strcmp(cmd->args[0], "exit") == 0 && strcmp(cmd->args[1], "42") == 0 && strcmp(cmd->args[2], "world") == 0)
-    {
-        gexitstatus = 1;
-        // write(1, " too many arguments\n", 21);
-        // printf(" numeric argument required\n");
-        ft_putstr_fd(" too many arguments\n", 2);
-        return (0);
-    }
-    return (1);
+    return 1;
 }
 
-// exit_here(SUCCESS);
+int ft_exit(t_command *cmd, t_shell *shell)
+{
+    if (!cmd->args[1])
+        exit(shell->exit_status);
+
+    if (!is_numeric_argument(cmd->args[1]))
+    {
+        ft_putstr_fd(" numeric argument required\n", 2);
+        exit(2);
+    }
+
+    if (cmd->args[2])
+    {
+        ft_putstr_fd(" too many arguments\n", 2);
+        shell->exit_status = 1;  
+        return 1;  
+    }
+
+    int code = ft_atoi(cmd->args[1]);
+    exit(code);
+}

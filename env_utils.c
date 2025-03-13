@@ -6,7 +6,7 @@ char **clone_envp(char **envp)
     while (envp && envp[i])
         i++;
 
-    char **copy = malloc(sizeof(char*) * (i + 1));
+    char **copy = malloc(sizeof(char *) * (i + 1));
     if (!copy)
         return NULL;
 

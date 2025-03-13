@@ -1,17 +1,20 @@
 #include "../minishell.h"
 
-int ft_pwd(t_command *cmd)
+int ft_pwd(t_command *cmd, t_shell *shell)
 {
-    char *cwd;
     (void)cmd;
 
-    cwd = getcwd(NULL, 0);
+    char *cwd = getcwd(NULL, 0);
     if (!cwd)
     {
-        printf("minishell: pwd");
-        return (1);
+        perror("pwd");
+        shell->exit_status = 1;
+        return 1;
     }
+
     printf("%s\n", cwd);
     free(cwd);
-    return (0);
+
+    shell->exit_status = 0;
+    return 0;
 }

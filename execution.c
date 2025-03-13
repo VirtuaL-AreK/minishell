@@ -1,6 +1,6 @@
 #include "minishell.h"
 
-void handle_cat(t_command *cmd)
+void handle_cat(t_command *cmd, t_shell *shell)
 {
     char buffer[1024];
     int bytes;
@@ -14,11 +14,11 @@ void handle_cat(t_command *cmd)
             if (write(STDOUT_FILENO, buffer, bytes) < 0)
             {
                 perror("write");
-                gexitstatus = 1;
+                shell->exit_status = 1;
                 return;
             }
         }
-        gexitstatus = 0;
+        shell->exit_status = 0;
         return;
     }
     else if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "-e") == 0)
@@ -34,13 +34,13 @@ void handle_cat(t_command *cmd)
 				i++;
             }
         }
-        gexitstatus = 0;
+        shell->exit_status = 0;
         return;
     }
     else if (strcmp(cmd->args[0], "cat") == 0 && cmd->args[1])
     {
-        execute_command(cmd->args, environ);
-        gexitstatus = 0;
+        execute_command(cmd->args, shell->env);
+        shell->exit_status = 0;
         return;
     }
 }
@@ -67,22 +67,19 @@ char *find_exec(char *cmd)
     char    *tmp;
     int     i;
 
-    // 1) Si la commande contient un slash (ex: "./a.out", "/usr/bin/ls" etc.),
-    //    on ne cherche PAS dans $PATH. On teste juste s'il existe (F_OK).
     if (ft_strchr(cmd, '/'))
     {
         if (access(cmd, F_OK) == 0)
-            return ft_strdup(cmd);  // On renvoie une copie de cmd
+            return ft_strdup(cmd);
         else
-            return NULL;            // Fichier introuvable => "command not found"
+            return NULL;
     }
 
-    // 2) Sinon, on va chercher dans $PATH
     path = getenv("PATH");
     if (!path || !*path)
-        return NULL; // pas de PATH => on ne trouve rien
+        return NULL; 
 
-    paths = ft_split(path, ':'); // ou votre fonction de split habituelle
+    paths = ft_split(path, ':');
     if (!paths)
         return NULL;
 
@@ -93,10 +90,8 @@ char *find_exec(char *cmd)
         full_path = ft_strjoin(tmp, cmd);
         free(tmp);
 
-        // Ici on teste la simple existence (F_OK)
         if (access(full_path, F_OK) == 0)
         {
-            // On a trouvé un binaire (ou un script) existant.
             ft_free_strarray(paths);
             return full_path;
         }
@@ -105,7 +100,7 @@ char *find_exec(char *cmd)
     }
 
     ft_free_strarray(paths);
-    return NULL; // Rien trouvé => "command not found"
+    return NULL;
 }
 
 
@@ -135,44 +130,43 @@ void execute_command(char **args, char **env)
 	}
 }
 
-int execute_builtin(t_command *cmd, char **env)
+int execute_builtin(t_command *cmd, t_shell *shell)
 {
-	(void)env;
     if (!cmd->args[0])
         return (1);
     if (strcmp(cmd->args[0], "cd") == 0)
 	{
-		ft_cd(cmd);
+		ft_cd(cmd, shell);
         return (0);
 	}
     if (strcmp(cmd->args[0], "echo") == 0)
 	{
-		ft_echo(cmd);
+		ft_echo(cmd, shell);
 		return (0);
 	}
     if (strcmp(cmd->args[0], "env") == 0)
 	{
-		ft_env(cmd);
+		ft_env(cmd, shell);
 		return (0);
 	}
     if (strcmp(cmd->args[0], "exit") == 0)
 	{
-		ft_exit(cmd);
+		ft_exit(cmd, shell);
 		return (0);
 	}
     if (strcmp(cmd->args[0], "export") == 0)
 	{
-		ft_export(cmd);
+		ft_export(cmd, shell);
 		return (0);
 	}
     if (strcmp(cmd->args[0], "pwd") == 0)
 	{
-		ft_pwd(cmd);
+		ft_pwd(cmd, shell);
 		return (0);
 	}
     if (strcmp(cmd->args[0], "unset") == 0)
 	{
-		ft_unset(cmd);
+		ft_unset(cmd, shell);
 		return (0);
 	}
     return (1);
@@ -210,382 +204,208 @@ int is_builtin(const char *cmd)
     return 0;
 }
 
-static int is_last_command(t_command *cmd)
+// static int is_last_command(t_command *cmd)
+// {
+//     return (cmd->next == NULL);
+// }
+
+static int count_commands(t_command *cmd)
 {
-    return (cmd->next == NULL);
-}
-
-
-void execute_pipeline(t_command *cmd, char **env)
-{
-    int fd[2];
-    int prev_fd = -1;
-    pid_t pid;
-    int status;
-    char *exec_path;
-
+    int count = 0;
     while (cmd)
     {
-        if (!cmd->args[0])
-        {
-            // Aucune commande => on fait rien, code 0
-            gexitstatus = 0;
-            cmd = cmd->next;
-            continue;
-        }
+        count++;
+        cmd = cmd->next;
+    }
+    return count;
+}
 
-        // 1) Erreur de redirection => on skip
-        if (cmd->redir_error_code != 0)
+static int is_critical_builtin(const char *cmd)
+{
+    if (!cmd)
+        return 0;
+
+    if (strcmp(cmd, "cd") == 0)
+        return 1;
+    if (strcmp(cmd, "exit") == 0)
+        return 1;
+    if (strcmp(cmd, "export") == 0)
+        return 1;
+    if (strcmp(cmd, "unset") == 0)
+        return 1;
+
+    return 0;
+}
+
+void execute_pipeline(t_command *cmd, t_shell *shell)
+{
+    if (cmd && !cmd->next && cmd->args[0] && is_critical_builtin(cmd->args[0]))
+    {
+        execute_builtin(cmd, shell);
+        return;
+    }
+
+    int nb_cmds = count_commands(cmd);
+    pid_t *pids = malloc(sizeof(pid_t) * nb_cmds);
+    if (!pids)
+    {
+        perror("malloc pids");
+        shell->exit_status = 1;
+        return;
+    }
+
+    int i = 0;         
+    int prev_fd = -1; 
+    t_command *c = cmd;
+
+    while (c)
+    {
+        int fd[2];
+
+        if (c->next)
         {
-            pid = fork();
-            if (pid == 0)
-                exit(1);  // On sort en erreur
-            else
+            if (pipe(fd) < 0)
             {
-                waitpid(pid, &status, 0);
-                if (WIFEXITED(status))
-                    gexitstatus = WEXITSTATUS(status);
-
-                // Gestion du pipe éventuel
-                if (prev_fd != -1)
-                    close(prev_fd);
-
-                if (cmd->next)
-                {
-                    if (pipe(fd) < 0)
-                    {
-                        perror("pipe");
-                        exit(1);
-                    }
-                    close(fd[1]);
-                    prev_fd = fd[0];
-                }
-                cmd = cmd->next;
-                continue;
+                perror("pipe");
+                free(pids);
+                shell->exit_status = 1;
+                return;
             }
         }
 
-        // 2) Cas "cat" géré séparément
-        if (strcmp(cmd->args[0], "cat") == 0)
+        pid_t pid = fork();
+        if (pid < 0)
         {
-            // -- (CODE EXISTANT, inchangé) --
-            // Vous conservez la logique spéciale “cat” telle qu’elle est.
-            // --------------------------------
-            if (cmd->next)
+            perror("fork");
+            free(pids);
+            shell->exit_status = 1;
+            return;
+        }
+        else if (pid == 0)
+        {
+
+            if (c->redir_error_code != 0)
+                exit(1);
+
+            if (c->infile)
             {
-                // s’il y a un pipe après, on gère pipe+fork
-                if (pipe(fd) < 0)
+                int in_fd = open(c->infile, O_RDONLY);
+                if (in_fd < 0)
                 {
-                    perror("pipe");
+                    perror(c->infile);
                     exit(1);
                 }
-                pid = fork();
-                if (pid == 0)
-                {
-                    // Fils
-                    if (cmd->outfile)
-                    {
-                        int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
-                        if (out_fd < 0)
-                        {
-                            perror(cmd->outfile);
-                            exit(1);
-                        }
-                        dup2(out_fd, STDOUT_FILENO);
-                        close(out_fd);
-                    }
-                    if (cmd->infile)
-                    {
-                        int in_fd = open(cmd->infile, O_RDONLY);
-                        if (in_fd < 0)
-                        {
-                            perror(cmd->infile);
-                            exit(1);
-                        }
-                        dup2(in_fd, STDIN_FILENO);
-                        close(in_fd);
-                        if (prev_fd != -1)
-                            close(prev_fd);
-                    }
-                    dup2(fd[1], STDOUT_FILENO);
-                    close(fd[0]);
-                    close(fd[1]);
-                    handle_cat(cmd);
-                    exit(gexitstatus);
-                }
-                else
-                {
-                    close(fd[1]);
-                    prev_fd = fd[0];
-                    cmd = cmd->next;
-                    continue;
-                }
+                dup2(in_fd, STDIN_FILENO);
+                close(in_fd);
             }
-            else
+            else if (prev_fd != -1)
             {
-                // cat sans pipeline
-                pid = fork();
-                if (pid == 0)
-                {
-                    if (cmd->outfile)
-                    {
-                        int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
-                        if (out_fd < 0)
-                        {
-                            perror(cmd->outfile);
-                            exit(1);
-                        }
-                        dup2(out_fd, STDOUT_FILENO);
-                        close(out_fd);
-                    }
-                    if (cmd->infile)
-                    {
-                        int in_fd = open(cmd->infile, O_RDONLY);
-                        if (in_fd < 0)
-                        {
-                            perror(cmd->infile);
-                            exit(1);
-                        }
-                        dup2(in_fd, STDIN_FILENO);
-                        close(in_fd);
-                        if (prev_fd != -1)
-                            close(prev_fd);
-                    }
-                    else if (prev_fd != -1)
-                    {
-                        dup2(prev_fd, STDIN_FILENO);
-                        close(prev_fd);
-                    }
-                    handle_cat(cmd);
-                    exit(gexitstatus);
-                }
-                else
-                {
-                    waitpid(pid, &status, 0);
-                    if (WIFEXITED(status))
-                        gexitstatus = WEXITSTATUS(status);
-                    return;
-                }
+                dup2(prev_fd, STDIN_FILENO);
+                close(prev_fd);
             }
-        }
 
-        // 3) Cas "builtin" (CD, export, unset, etc.)
-        else if (is_builtin(cmd->args[0]))
-        {
-            // **Vérifier si on est seul ou dans un pipeline**
-            if (is_last_command(cmd))
+            if (c->outfile)
             {
-                // => PAS de pipe après => on exécute le builtin dans le PÈRE
-                //    comme avant (pour modifier l'environnement principal).
-                execute_builtin(cmd, env);
-                cmd = cmd->next;
-                continue;
-            }
-            else
-            {
-                // => Il y a un pipeline => on doit forker comme pour une commande externe
-                if (pipe(fd) < 0)
+                int flags = O_WRONLY | O_CREAT;
+                flags |= (c->append ? O_APPEND : O_TRUNC);
+                int out_fd = open(c->outfile, flags, 0644);
+                if (out_fd < 0)
                 {
-                    perror("pipe");
+                    perror(c->outfile);
                     exit(1);
                 }
-                pid = fork();
-                if (pid == 0)
+                dup2(out_fd, STDOUT_FILENO);
+                close(out_fd);
+            }
+            else if (c->next)
+            {
+                close(fd[0]);
+                dup2(fd[1], STDOUT_FILENO);
+                close(fd[1]);
+            }
+
+            if (prev_fd != -1)
+                close(prev_fd);
+
+            if (!c->args[0] || c->args[0][0] == '\0')
+                exit(0);
+
+            if (strcmp(c->args[0], "cat") == 0)
+            {
+                handle_cat(c, shell);
+                exit(shell->exit_status);
+            }
+            else if (!execute_builtin(c, shell))
+            {
+                exit(shell->exit_status);
+            }
+            else
+            {
+                char *exec_path = find_exec(c->args[0]);
+                if (!exec_path)
                 {
-                    // -- Fils --
-                    // 1) Redirections d'entrée
-                    if (cmd->infile)
-                    {
-                        int in_fd = open(cmd->infile, O_RDONLY);
-                        if (in_fd < 0)
-                        {
-                            perror(cmd->infile);
-                            exit(1);
-                        }
-                        dup2(in_fd, STDIN_FILENO);
-                        close(in_fd);
-                    }
-                    else if (prev_fd != -1)
-                    {
-                        dup2(prev_fd, STDIN_FILENO);
-                        close(prev_fd);
-                    }
+                    fprintf(stderr, "%s: command not found\n", c->args[0]);
+                    exit(127);
+                }
 
-                    // 2) Redirection de sortie
-                    if (cmd->outfile)
+                struct stat sb;
+                if (stat(exec_path, &sb) == 0)
+                {
+                    if (S_ISDIR(sb.st_mode))
                     {
-                        int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
-                        if (out_fd < 0)
-                        {
-                            perror(cmd->outfile);
-                            exit(1);
-                        }
-                        dup2(out_fd, STDOUT_FILENO);
-                        close(out_fd);
+                        fprintf(stderr, "%s: Is a directory\n", exec_path);
+                        exit(126);
                     }
-                    else
+                    if (access(exec_path, X_OK) != 0)
                     {
-                        // On redirige vers le pipe
-                        close(fd[0]);
-                        dup2(fd[1], STDOUT_FILENO);
-                        close(fd[1]);
+                        perror(exec_path);
+                        exit(126);
                     }
-
-                    // 3) Exécuter le builtin dans le fils
-                    //    => la fonction mettra gexitstatus à jour.
-                    execute_builtin(cmd, env);
-                    // on quitte le fils avec le code de retour
-                    exit(gexitstatus);
+                    execve(exec_path, c->args, shell->env);
+                    perror(exec_path);
+                    exit(1);
                 }
                 else
                 {
-                    // -- Père --
-                    waitpid(pid, &status, 0);
-                    if (WIFEXITED(status))
-                        gexitstatus = WEXITSTATUS(status);
-
-                    if (prev_fd != -1)
-                        close(prev_fd);
-
-                    close(fd[1]);
-                    prev_fd = fd[0];
-
-                    cmd = cmd->next;
-                    continue;
+                    fprintf(stderr, "%s: No such file or directory\n", exec_path);
+                    exit(127);
                 }
             }
         }
-
-        // 4) Sinon : commandes externes
         else
         {
-            if (cmd->next)
+            pids[i++] = pid;
+
+            if (prev_fd != -1)
+                close(prev_fd);
+
+            if (c->next)
             {
-                if (pipe(fd) < 0)
-                {
-                    perror("pipe");
-                    exit(1);
-                }
-            }
-            pid = fork();
-            if (pid == 0)
-            {
-                // -- Fils -- (commande externe)
-                if (cmd->infile)
-                {
-                    int in_fd = open(cmd->infile, O_RDONLY);
-                    if (in_fd < 0)
-                    {
-                        perror(cmd->infile);
-                        exit(1);
-                    }
-                    dup2(in_fd, STDIN_FILENO);
-                    close(in_fd);
-                }
-                if (prev_fd != -1)
-                {
-                    dup2(prev_fd, STDIN_FILENO);
-                    close(prev_fd);
-                }
-
-                if (cmd->outfile)
-                {
-                    int out_fd = open(cmd->outfile, O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC), 0644);
-                    if (out_fd < 0)
-                    {
-                        perror(cmd->outfile);
-                        exit(1);
-                    }
-                    dup2(out_fd, STDOUT_FILENO);
-                    close(out_fd);
-                }
-                else if (cmd->next)
-                {
-                    close(fd[0]);
-                    dup2(fd[1], STDOUT_FILENO);
-                    close(fd[1]);
-                }
-
-                // Exécution réelle du binaire
-                if (is_simple_builtin(cmd->args[0]))
-                    exit(execute_builtin(cmd, env));
-
-					exec_path = find_exec(cmd->args[0]);
-
-					// 1) Fichier introuvable => 127
-					if (!exec_path)
-					{
-						ft_putstr_fd(cmd->args[0], 2);
-						ft_putstr_fd(": command not found\n", 2);
-						exit(127);
-					}
-					
-					// 2) On vérifie si c’est un répertoire
-					{
-						struct stat sb;
-						if (stat(exec_path, &sb) == 0)
-						{
-							if (S_ISDIR(sb.st_mode))
-							{
-								ft_putstr_fd(cmd->args[0], 2);
-								ft_putstr_fd(": Is a directory\n", 2);
-								exit(126);
-							}
-						}
-						else
-						{
-							// Cas bizarre où stat échoue => on considère "pas trouvé" 
-							// (ou "plus accessible"), code 127
-							ft_putstr_fd(cmd->args[0], 2);
-							ft_putstr_fd(": command not found\n", 2);
-							exit(127);
-						}
-					}
-					
-					// 3) Vérifier la permission (X_OK)
-					if (access(exec_path, X_OK) != 0)
-					{
-						ft_putstr_fd(cmd->args[0], 2);
-						ft_putstr_fd(": Permission denied\n", 2);
-						exit(126);
-					}
-					
-					// 4) Exécuter
-					execve(exec_path, cmd->args, env);
-					
-					// 5) Si on arrive ici, execve a échoué pour une autre raison
-					//    (ou de nouveau EACCES si la permission a changé entre-temps)
-					if (errno == EACCES)
-					{
-						ft_putstr_fd(cmd->args[0], 2);
-						ft_putstr_fd(": Permission denied\n", 2);
-						exit(126);
-					}
-					
-					// Sinon, on affiche l’erreur du système
-					perror(cmd->args[0]);
-					exit(1);
-					
-                perror(cmd->args[0]);
-                exit(1);
+                close(fd[1]);
+                prev_fd = fd[0];
             }
             else
             {
-                // -- Père --
-                waitpid(pid, &status, 0);
-                if (WIFEXITED(status))
-                    gexitstatus = WEXITSTATUS(status);
-
-                if (prev_fd != -1)
-                    close(prev_fd);
-
-                if (cmd->next)
-                {
-                    close(fd[1]);
-                    prev_fd = fd[0];
-                }
-                cmd = cmd->next;
+                prev_fd = -1;
             }
         }
-    } // Fin du while
+
+        c = c->next;
+    }
+
+    int j = 0;
+    while (j < nb_cmds)
+    {
+        int status = 0;
+        waitpid(pids[j], &status, 0);
+
+        if (WIFEXITED(status))
+            shell->exit_status = WEXITSTATUS(status);
+        else if (WIFSIGNALED(status))
+            shell->exit_status = 128 + WTERMSIG(status);
+
+        j++;
+    }
+
+    free(pids);
 }

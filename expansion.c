@@ -1,22 +1,19 @@
 #include "minishell.h"
 
-static char *get_env_value(const char *var, char **env)
+static char *get_local_env_value(const char *var, t_shell *shell)
 {
-    int   i = 0;
-    size_t len = strlen(var);
-
-    while (env && env[i])
+    int i = 0;
+    int len = ft_strlen(var);
+    while (shell->env && shell->env[i])
     {
-        if (strncmp(env[i], var, len) == 0 && env[i][len] == '=')
-        {
-            return strdup(env[i] + len + 1);
-        }
+        if (ft_strncmp(shell->env[i], var, len) == 0 && shell->env[i][len] == '=')
+            return ft_strdup(shell->env[i] + len + 1);
         i++;
     }
-    return strdup("");
+    return ft_strdup("");
 }
 
-static char *expand_string(const char *str, char **env)
+static char *expand_string(const char *str, t_shell *shell)
 {
     char buffer[4096];
     int idx = 0;
@@ -32,7 +29,7 @@ static char *expand_string(const char *str, char **env)
             if (str[i] == '?')
             {
                 i++;
-                char *exit_str = ft_itoa(gexitstatus);
+                char *exit_str = ft_itoa(shell->exit_status);
                 int k = 0;
                 while (exit_str[k] && idx < 4095)
                     buffer[idx++] = exit_str[k++];
@@ -46,7 +43,7 @@ static char *expand_string(const char *str, char **env)
                 int length = i - start;
                 char *var_name = strndup(str + start, length);
 
-                char *val = get_env_value(var_name, env);
+                char *val = get_local_env_value(var_name, shell);
                 free(var_name);
 
                 // on recopie val dans buffer
@@ -71,23 +68,20 @@ static char *expand_string(const char *str, char **env)
         }
     }
     buffer[idx] = '\0';
-    return strdup(buffer);
+    return ft_strdup(buffer);
 }
 
-void expand_tokens(t_token *tokens, char **env)
+void expand_tokens(t_token *tokens, t_shell *shell)
 {
-    t_token *curr = tokens;
-    while (curr)
+    t_token *cur = tokens;
+    while (cur)
     {
-        if (curr->type == TOKEN_WORD)
+        if (cur->type == TOKEN_WORD && !cur->has_single_quote)
         {
-            if (curr->has_single_quote == 0)
-            {
-                char *expanded = expand_string(curr->value, env);
-                free(curr->value);
-                curr->value = expanded;
-            }
+            char *expanded = expand_string(cur->value, shell);
+            free(cur->value);
+            cur->value = expanded;
         }
-        curr = curr->next;
+        cur = cur->next;
     }
 }

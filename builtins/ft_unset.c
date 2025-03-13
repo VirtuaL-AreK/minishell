@@ -1,46 +1,35 @@
 #include "../minishell.h"
 
-void unset_var(char *var)
+static void unset_var_from_env(t_shell *shell, const char *name)
 {
-    int i;
-    int var_len;
-    // int j;
+    int i = 0;
+    int len = ft_strlen(name);
 
-    if (!is_valid_varname(var))
+    while (shell->env && shell->env[i])
     {
-        perror("unset : is not a valid variable\n");
-        return ;
-    }
-    i = 0;
-    // j = 0;
-    var_len = ft_strlen(var);
-    // ft_unsetenv(var);
-    while (environ[i] != NULL)
-    {
-        if ((ft_strncmp(environ[i], var, var_len) == 0) && environ[i][var_len] == '=')
+        if (ft_strncmp(shell->env[i], name, len) == 0 && shell->env[i][len] == '=')
         {
-            while (environ[i] != NULL)
+            free(shell->env[i]);
+            while (shell->env[i + 1])
             {
-                environ[i] = environ [i + 1];
+                shell->env[i] = shell->env[i + 1];
                 i++;
             }
-            return ;
+            shell->env[i] = NULL;
+            return;
         }
         i++;
     }
 }
 
-void ft_unset(t_command *cmd)
+int ft_unset(t_command *cmd, t_shell *shell)
 {
-    int i;
-
-    i = 1;
-    if (!cmd->args[1])
-        return ;
+    int i = 1;
     while (cmd->args[i])
     {
-        unset_var(cmd->args[i]);
+        unset_var_from_env(shell, cmd->args[i]);
         i++;
     }
-
+    shell->exit_status = 0;
+    return 0;
 }

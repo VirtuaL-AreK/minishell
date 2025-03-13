@@ -72,76 +72,54 @@ void fill_command(t_command *cmd, t_token **tokens)
 {
     int arg_count = 0;
 
-    while (*tokens && (*tokens)->type != 1)
+    while (*tokens && (*tokens)->type != TOKEN_PIPE)
     {
-        if ((*tokens)->type == 0)
+        if ((*tokens)->type == TOKEN_WORD)
         {
             cmd->args[arg_count++] = ft_strdup((*tokens)->value);
             *tokens = (*tokens)->next;
         }
-        else if ((*tokens)->type == 2 && (*tokens)->next)
+        else if ((*tokens)->type == TOKEN_REDIR_IN && (*tokens)->next)
         {
-            *tokens = (*tokens)->next;  // passer le token "<"
+            *tokens = (*tokens)->next;
             int in_fd = open((*tokens)->value, O_RDONLY);
             if (in_fd < 0)
             {
                 perror((*tokens)->value);
                 cmd->redir_error_code = 1;
-                while (*tokens && (*tokens)->type != 1)
+                while (*tokens && (*tokens)->type != TOKEN_PIPE)
                     *tokens = (*tokens)->next;
                 break;
             }
-            else
-            {
-                close(in_fd);
-            }
-            if (cmd->infile)
-                free(cmd->infile);
+            close(in_fd);
+            free(cmd->infile);
             cmd->infile = ft_strdup((*tokens)->value);
             *tokens = (*tokens)->next;
         }
-        else if (((*tokens)->type == 3 || (*tokens)->type == 4))
+        else if ((*tokens)->type == TOKEN_REDIR_OUT || (*tokens)->type == TOKEN_APPEND)
         {
-            if (!(*tokens)->next)
-            {
-                ft_putstr_fd("Syntax error: missing file for redirection\n", 2);
-                cmd->redir_error_code = 1;
-                while (*tokens && (*tokens)->type != 1)
-                    *tokens = (*tokens)->next;
-                break;
-            }
-            if ((*tokens)->type == 4)
-                cmd->append = 1;
-            else
-                cmd->append = 0;
-            *tokens = (*tokens)->next;  // passer au token contenant le nom du fichier
-
+            int is_append = ((*tokens)->type == TOKEN_APPEND);
+            *tokens = (*tokens)->next; 
             int flags = O_WRONLY | O_CREAT;
-            if (cmd->append)
+            if (is_append)
                 flags |= O_APPEND;
             else
                 flags |= O_TRUNC;
-            int fd = open((*tokens)->value, flags, 0644);
-            if (fd < 0)
+
+            int out_fd = open((*tokens)->value, flags, 0644);
+            if (out_fd < 0)
             {
                 perror((*tokens)->value);
                 cmd->redir_error_code = 1;
-                if (cmd->outfile)
-                {
-                    free(cmd->outfile);
-                    cmd->outfile = NULL;
-                }
-                while (*tokens && (*tokens)->type != 1)
+                while (*tokens && (*tokens)->type != TOKEN_PIPE)
                     *tokens = (*tokens)->next;
                 break;
             }
-            else
-            {
-                close(fd);
-            }
-            if (cmd->outfile)
-                free(cmd->outfile);
+            close(out_fd);
+
+            free(cmd->outfile);
             cmd->outfile = ft_strdup((*tokens)->value);
+            cmd->append = is_append;
             *tokens = (*tokens)->next;
         }
         else
@@ -151,6 +129,7 @@ void fill_command(t_command *cmd, t_token **tokens)
     }
     cmd->args[arg_count] = NULL;
 }
+
 
 
 static void fix_empty_first_arg(t_command *cmd)

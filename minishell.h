@@ -24,8 +24,15 @@
 #define CYAN    "\x1B[36m"
 #define WHITE   "\x1B[37m"
 
-extern char **environ;
-extern int is_single_quote;
+// extern char **environ;
+// extern int is_single_quote;
+
+typedef struct s_shell {
+    char **env;         // copie locale de l'environnement
+    int exit_status;    // ancien shell->exit_status
+} t_shell;
+
+extern t_shell g_shell;
 
 typedef enum e_token_type
 {
@@ -53,7 +60,7 @@ typedef enum s_exit_status
     SIGQUIT_RECEIVED = 131
 } t_exit_status;
 
-extern t_exit_status gexitstatus;
+// extern t_shell g_shell;
 
 // Linked list
 typedef enum e_quote_type
@@ -89,6 +96,10 @@ typedef struct s_command {
 char	**ft_split(char const *s, char c);
 void ft_free_args(char **args);
 
+// 1) Gestion de l'environnement local
+char **clone_envp(char **envp);
+void  free_envp(char **envp);
+
 // syntax
 int check_unclosed_quotes(const char *input);
 
@@ -115,27 +126,31 @@ t_command *command_parser(t_token *tokens);
 void free_commands(t_command *cmd);
 
 // expansion
-
-void expand_tokens(t_token *tokens, char **env);
+char *add_or_replace_var(t_shell *shell, const char *name, const char *value);
+void expand_tokens(t_token *tokens, t_shell *shell);
 
 // execution
 
 char *find_exec(char *cmd);
 void execute_command(char **args, char **env);
-int execute_builtin(t_command *cmd, char **env);
-void execute_pipeline(t_command *cmd, char **env);
+int  execute_builtin(t_command *cmd, t_shell *shell);
+void parse_command(char *input, t_shell *shell);
+void execute_pipeline(t_command *cmd, t_shell *shell);
 void execute_command_line(t_command *cmd, char **env);
 
 // Builtins
 
-int ft_echo(t_command *cmd);
-int ft_cd(t_command *cmd);
-int ft_pwd(t_command *cmd);
-int ft_export(t_command *cmd);
-int is_valid_varname(char *var);
-void ft_unset(t_command *cmd);
-int ft_env(t_command *cmd);
-int ft_exit(t_command *cmd);
+int ft_env(t_command *cmd, t_shell *shell);
+int ft_export(t_command *cmd, t_shell *shell);
+int ft_unset(t_command *cmd, t_shell *shell);
+int ft_cd(t_command *cmd, t_shell *shell);
+int ft_echo(t_command *cmd, t_shell *shell);
+int ft_exit(t_command *cmd, t_shell *shell);
+int ft_pwd(t_command *cmd, t_shell *shell);
+
+
+int  check_unclosed_quotes(const char *input);
+void prompt_loop(t_shell *shell);
 
 // Signals
 void sig_handler(int sig);
