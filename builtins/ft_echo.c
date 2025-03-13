@@ -19,19 +19,10 @@ int ft_echo(t_command *cmd)
     int i = 1; 
     int no_newline = 0;
     // 77 test
-    if ((cmd->args[0] && strcmp(cmd->args[1], "-n") == 0
-        && strcmp(cmd->args[2], "-n") == 0 && !cmd->args[3])
-        || strncmp(cmd->args[2], "-nn", 3) == 0)
-        return (0);
-    if (cmd->args[0] && strcmp(cmd->args[1], "-n") == 0
-        && strcmp(cmd->args[2], "-n") == 0 && cmd->args[3])
-        i = 2;
 
     while (i < cmd->nb_arg)
     {
-        if (cmd->args[i] && strncmp(cmd->args[i], "-n", 2) == 0)
-            i = i;
-        if (cmd->args[i] && strncmp(cmd->args[i], "-n", 2) == 0 && !cmd->args[i][2])
+        if (cmd->args[0] && strncmp(cmd->args[1], "-n\0", 3) == 0)
         {
             no_newline = 1;
             i++;
