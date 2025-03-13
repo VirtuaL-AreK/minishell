@@ -1,10 +1,5 @@
 #include "minishell.h"
 
-/**
- * clone_envp:
- *   Duplique le tableau de char** (envp) reçu par main()
- *   pour le stocker dans shell->env.
- */
 char **clone_envp(char **envp)
 {
     int i = 0;
@@ -25,10 +20,6 @@ char **clone_envp(char **envp)
     return copy;
 }
 
-/**
- * free_envp:
- *   Libère un tableau de char**, comme ft_free_strarray
- */
 void free_envp(char **envp)
 {
     int i = 0;
