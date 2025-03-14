@@ -72,16 +72,6 @@ int is_valid_varname(char *var)
     return (1);
 }
 
-// int is_invalid_export_case(char *arg)
-// {
-//     if (strcmp(arg, "") == 0 || strcmp(arg, "=") == 0)
-//     {
-//         shell->exit_status = 1;
-//         return 1;
-//     }
-//     return 0;
-// }
-
 static void export_var(t_shell *shell, const char *arg)
 {
     char *eq = ft_strchr(arg, '='); 

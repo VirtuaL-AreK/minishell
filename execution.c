@@ -172,43 +172,6 @@ int execute_builtin(t_command *cmd, t_shell *shell)
     return (1);
 }
 
-#include <string.h>
-
-int is_simple_builtin(const char *cmd)
-{
-	if (!cmd)
-		return 0;
-	if (strcmp(cmd, "echo") == 0)
-		return 1;
-	if (strcmp(cmd, "pwd") == 0)
-		return 1;
-	if (strcmp(cmd, "export") == 0)
-		return 1;
-    return 0;
-}
-
-int is_builtin(const char *cmd)
-{
-	if (!cmd)
-		return 0;
-	if (strcmp(cmd, "cd") == 0)
-		return 1;
-	if (strcmp(cmd, "env") == 0)
-		return 1;
-	if (strcmp(cmd, "export") == 0)
-		return 1;
-	if (strcmp(cmd, "unset") == 0)
-		return 1;
-	if (strcmp(cmd, "exit") == 0)
-		return 1;
-    return 0;
-}
-
-// static int is_last_command(t_command *cmd)
-// {
-//     return (cmd->next == NULL);
-// }
-
 static int count_commands(t_command *cmd)
 {
     int count = 0;
@@ -240,10 +203,16 @@ static int is_critical_builtin(const char *cmd)
 void execute_pipeline(t_command *cmd, t_shell *shell)
 {
     if (cmd && !cmd->next && cmd->args[0] && is_critical_builtin(cmd->args[0]))
+{
+    if (cmd->redir_error_code != 0)
     {
-        execute_builtin(cmd, shell);
+        shell->exit_status = 1;
         return;
     }
+    execute_builtin(cmd, shell);
+    return;
+}
+
 
     int nb_cmds = count_commands(cmd);
     pid_t *pids = malloc(sizeof(pid_t) * nb_cmds);

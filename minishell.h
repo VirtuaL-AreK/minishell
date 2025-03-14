@@ -24,13 +24,17 @@
 #define CYAN    "\x1B[36m"
 #define WHITE   "\x1B[37m"
 
-// extern char **environ;
-// extern int is_single_quote;
-
 typedef struct s_shell {
-    char **env;         // copie locale de l'environnement
-    int exit_status;    // ancien shell->exit_status
+    char **env;
+    int exit_status;
 } t_shell;
+
+typedef struct s_strlist {
+    char   *str;
+    int    has_single_quote;
+    int    has_double_quote;
+    struct s_strlist *next;
+} t_strlist;
 
 extern t_shell g_shell;
 
@@ -61,15 +65,6 @@ typedef enum s_exit_status
 } t_exit_status;
 
 // extern t_shell g_shell;
-
-// Linked list
-typedef enum e_quote_type
-{
-    NO_QUOTE = 0,
-    SINGLE_QUOTED,
-    DOUBLE_QUOTED
-} t_quote_type;
-
 
 typedef struct s_token {
     char *value;
