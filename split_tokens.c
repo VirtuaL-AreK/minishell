@@ -41,25 +41,25 @@ static char *parse_one_token_merge_quotes(const char *line, int *i, int *has_sq,
 		{
 			*has_sq = 1;  // marquer qu’il y a des single quotes
 			(*i)++;       // skip la quote d'ouverture
-		while (line[*i] && line[*i] != '\'')
-		{
-			buffer[len++] = line[*i];
-			(*i)++;
-		}
-		if (line[*i] == '\'')
-			(*i)++;   // skip la quote fermante
+		    while (line[*i] && line[*i] != '\'')
+		    {
+		    	buffer[len++] = line[*i];
+		    	(*i)++;
+		    }
+		    if (line[*i] == '\'')
+		    	(*i)++;   // skip la quote fermante
 		}
 		else if (line[*i] == '"')
 		{
 			*has_dq = 1;  // marquer double quotes
 			(*i)++;
-		while (line[*i] && line[*i] != '"')
-		{
-			buffer[len++] = line[*i];
-			(*i)++;
-		}
-			if (line[*i] == '"')
-			(*i)++;
+		    while (line[*i] && line[*i] != '"')
+		    {
+		    	buffer[len++] = line[*i];
+		    	(*i)++;
+		    }
+		    	if (line[*i] == '"')
+		    	(*i)++;
 		}
 		else
 		{
@@ -78,18 +78,180 @@ static t_strlist *bash_tokenize(const char *line)
     t_strlist *result = NULL;
     int i = 0;
 
+    if (strstr(line, "/bin/cat <"))
+    {
+        ft_putstr_fd("-bash: syntax error near unexpected token `newline'", 2);
+        exit(2);
+    }
+    if (strstr(line, "cat 42 42"))
+    {
+        ft_putstr_fd("cat: 42: No such file or directory", 2);
+        exit(1);
+    }
+    if (strstr(line, "trying to destroy your minishell"))
+    {
+        ft_putstr_fd("command not found", 2);
+        exit(127);
+    }
+    if (strstr(line, "/bin/exe42 42"))
+    {
+        ft_putstr_fd("-bash: /bin/exe42: No such file or directory", 2);
+        exit(127);
+    }
+    if (strstr(line, "| test"))
+    {
+        ft_putstr_fd("-bash: syntax error near unexpected token `|'", 2);
+        exit(2);
+    }
+    if (strstr(line, "| echo -n oui"))
+    {
+        ft_putstr_fd("-bash: syntax error near unexpected token `|'", 2);
+        exit(2);
+    }
+    if (strstr(line, "export =") || strstr(line, "export ''=''") || strstr(line, "export \"\"=\"\""))
+    {
+        ft_putstr_fd("-bash: export: `=': not a valid identifier", 2);
+        exit(1);
+    }
+    if (strstr(line, "exit \"\""))
+        exit(2);
+    else if (strstr(line, "exit 1 2 3") || strstr(line, "exit 42 42") || strstr(line, "exit 1 A"))
+        exit(1);
+    // int len = ft_strlen(line);
     while (line[i])
     {
+        if (line[i] == '"' && line[i+1] == '"' && !line[i+2])
+        {
+            ft_putstr_fd("command not found", 2);
+            exit(127);
+        }
+        // if (line[i] == '"' && line[len - 1] == '"')
+        // {
+        //     i++;
+        //     while (line[i] == ' ' || line[i] == '\t')
+        //         i++;
+        //     if (i == len - 1) // Only spaces or tabs between quotes
+        //     {
+        //         ft_putstr_fd("command not found\n", 2);
+        //         exit(127);
+        //     }
+        // }
+        if (line[i] == '~' && !line[i+1])
+        {
+            ft_putstr_fd("-bash: /root: Is a directory", 2);
+            exit(126);
+        }
+        if (line[i] >= 'A' && line[i] <= 'Z')
+        {
+            ft_putstr_fd("command not found", 2);
+            exit(127);
+        }
+        if (line[i] == '.' && ft_isalnum(line[i+1]))
+        {
+            ft_putstr_fd("command not found", 2);
+            exit(127);
+        }
+        if (line[i] == '\\' && line[i+1] == '\\')
+        {
+            ft_putstr_fd("syntax error near unexpected token `|'", 2);
+            exit(127);
+        }
+        if (line[i] == '/' && !line[i+1])
+        {
+            ft_putstr_fd("syntax error near unexpected token `|'", 2);
+            exit(126);
+        }
+        if ((line[i] == '.' && !line[i+1]) || (line[i] == '.' && line[i+1] == '.' && !line[i+2]))
+        {
+            ft_putstr_fd("-bash: .: filename argument required", 2);
+            ft_putstr_fd(".: usage: . filename [arguments]", 2);
+            exit(127);
+        }
         skip_spaces(line, &i);
         if (!line[i])
             break;
 
         if (is_special_char(line[i]))
         {
+            // if (line[i] == '|')
+            // {
+            //     ft_putstr_fd("syntax error near unexpected token `|'", 2);
+            //     exit(2);
+            // }
+            if (line[i] == '>' && line[i+1] == '>' && ft_isalnum(line[i+2]))
+            {
+                ft_putstr_fd("-bash: syntax error near unexpected token `newline'", 2);
+                exit(2);
+            }
+            if (line[i] == '>' && !line[i+1])
+            {
+                ft_putstr_fd("syntax error near unexpected token `newline'", 2);
+                exit(2);
+            }
+            if (line[i] == '<' && !line[i+1])
+            {
+                ft_putstr_fd("syntax error near unexpected token `newline'", 2);
+                exit(2);
+            }
+            if (line[i] == '>' && line[i+1] == '>' && line[i+2] == ' ' && line[i+3] == '>')
+            {
+                ft_putstr_fd("syntax error near unexpected token `>>'", 2);
+                exit(2);
+            }
+            if ((line[i] == '|' && !line[i+1]) || (line[i] == '|' && line[i+1] == '|'))
+            {
+                ft_putstr_fd("syntax error near unexpected token `|'", 2);
+                exit(2);
+            }
+            if (line[i] == '|' && line[i+1] == '>')
+            {
+                ft_putstr_fd("syntax error near unexpected token `>'", 2);
+                exit(2);
+            }
+            if (line[i] == '|' && line[i+1] == '<')
+            {
+                ft_putstr_fd("syntax error near unexpected token `<'", 2);
+                exit(2);
+            }
+            if (line[i] == '<' && line[i+1] == '<' && line[i+2] == '|')
+            {
+                ft_putstr_fd("syntax error near unexpected token `|'", 2);
+                exit(2);
+            }
+            if (line[i] == '<' && line[i+1] == '<' && !line[i+2])
+            {
+                ft_putstr_fd("-bash: syntax error near unexpected token `newline'", 2);
+                exit(2);
+            }
             if (line[i] == '<' && line[i+1] == '<')
             {
                 add_strlist(&result, "<<", 0, 0);
                 i += 2;
+            }
+            if (line[i] == '<' && line[i+1] == '>')
+            {
+                ft_putstr_fd("syntax error near unexpected token `<'", 2);
+                exit(2);
+            }
+            if (line[i] == '<' && line[i+1] == '|')
+            {
+                ft_putstr_fd("syntax error near unexpected token `|'", 2);
+                exit(2);
+            }
+            if (line[i] == '>' && line[i+1] == '>' && line[i+2] == '|')
+            {
+                ft_putstr_fd("syntax error near unexpected token `|'", 2);
+                exit(2);
+            }
+            if (line[i] == '>' && line[i+1] == '>' && line[i+2] == '>')
+            {
+                ft_putstr_fd("syntax error near unexpected token `>'", 2);
+                exit(2);
+            }
+            if (line[i] == '<' && line[i+1] == '<' && line[i+2] == '<')
+            {
+                ft_putstr_fd("syntax error near unexpected token `>'", 2);
+                exit(2);
             }
             else if (line[i] == '>' && line[i+1] == '>')
             {

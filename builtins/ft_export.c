@@ -58,21 +58,20 @@ char *add_or_replace_var(t_shell *shell, const char *name, const char *value)
 
 int is_valid_varname(char *var)
 {
-    int i;
+    int i = 0;
 
-    i = 1;
     if (!var || (!ft_isalpha(var[0]) && var[0] != '_'))
-        return (0);
-    while (var[i])
+        return 0;
+
+    while (var[++i])
     {
-        if(!ft_isalnum(var[i]) && var[i] != '_')
-            return (0);
-        i++;
+        if (!ft_isalnum(var[i]) && var[i] != '_')
+            return 0;
     }
-    return (1);
+    return 1;
 }
 
-static void export_var(t_shell *shell, const char *arg)
+void export_var(t_shell *shell, const char *arg)
 {
     char *eq = ft_strchr(arg, '='); 
     char *name;
@@ -85,7 +84,7 @@ static void export_var(t_shell *shell, const char *arg)
     }
     else
     {
-        size_t name_len = eq - arg; // position du '=' - début
+        size_t name_len = eq - arg;
         name = ft_substr(arg, 0, name_len);
         value = ft_strdup(eq + 1);
     }
@@ -101,24 +100,61 @@ static void export_var(t_shell *shell, const char *arg)
         free(value);
         return;
     }
-
     add_or_replace_var(shell, name, value);
 
     free(name);
     free(value);
 }
 
+static int compare_env_vars(const void *a, const void *b)
+{
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
+static void print_sorted_env(t_shell *shell)
+{
+    int i = 0;
+    while (shell->env && shell->env[i])
+        i++;
+
+    char **sorted_env = malloc(sizeof(char *) * (i + 1));
+    if (!sorted_env)
+    {
+        perror("malloc");
+        shell->exit_status = 1;
+        return;
+    }
+
+    for (int j = 0; j < i; j++)
+        sorted_env[j] = shell->env[j];
+    sorted_env[i] = NULL;
+
+    qsort(sorted_env, i, sizeof(char *), compare_env_vars);
+
+    for (int j = 0; j < i; j++)
+    {
+        char *eq = ft_strchr(sorted_env[j], '=');
+        if (eq)
+        {
+            printf("declare -x ");
+            fwrite(sorted_env[j], 1, eq - sorted_env[j] + 1, stdout);
+            printf("\"%s\"\n", eq + 1);
+        }
+        else
+        {
+            printf("declare -x %s\n", sorted_env[j]);
+        }
+    }
+
+    free(sorted_env);
+    shell->exit_status = 0;
+}
+
 int ft_export(t_command *cmd, t_shell *shell)
 {
     if (!cmd->args[1])
     {
-        int i = 0;
-        while (shell->env && shell->env[i])
-        {
-            printf("%s\n", shell->env[i]);
-            i++;
-        }
-        shell->exit_status = 0;
+        print_sorted_env(shell);
         return 0;
     }
 
@@ -132,9 +168,39 @@ int ft_export(t_command *cmd, t_shell *shell)
             i++;
             continue;
         }
+
+        char *eq = ft_strchr(cmd->args[i], '=');
+        if (eq)
+        {
+            size_t name_len = eq - cmd->args[i];
+            char *name = ft_substr(cmd->args[i], 0, name_len);
+            if (!is_valid_varname(name))
+            {
+                ft_putstr_fd("export: `", 2);
+                ft_putstr_fd(name, 2);
+                ft_putstr_fd("': not a valid identifier\n", 2);
+                shell->exit_status = 1;
+                free(name);
+                i++;
+                continue;
+            }
+            free(name);
+        }
+        else
+        {
+            if (!is_valid_varname(cmd->args[i]))
+            {
+                ft_putstr_fd("export: `", 2);
+                ft_putstr_fd(cmd->args[i], 2);
+                ft_putstr_fd("': not a valid identifier\n", 2);
+                shell->exit_status = 1;
+                i++;
+                continue;
+            }
+        }
+
         export_var(shell, cmd->args[i]);
         i++;
     }
     return (shell->exit_status == 1 ? 1 : 0);
 }
-

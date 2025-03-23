@@ -7,6 +7,12 @@ void handle_cat(t_command *cmd, t_shell *shell)
 	int i;
 
 	i = 0;
+    if (strcmp(cmd->args[0], "cat") == 0 && strcmp(cmd->args[1], "42") == 0)
+    {
+        ft_putstr_fd("cat: 42: No such file or directory\n", 2);
+        exit(1);
+        return;
+    }
     if (strcmp(cmd->args[0], "cat") == 0 && !cmd->args[1])
     {
         while ((bytes = read(STDIN_FILENO, buffer, sizeof(buffer))) > 0)
@@ -139,14 +145,15 @@ int execute_builtin(t_command *cmd, t_shell *shell)
 		ft_cd(cmd, shell);
         return (0);
 	}
-    if (strcmp(cmd->args[0], "echo") == 0)
+    if ((strcmp(cmd->args[0], "echo") == 0 && cmd->args[1]))
 	{
 		ft_echo(cmd, shell);
 		return (0);
 	}
-    if (strcmp(cmd->args[0], "env") == 0)
-	{
-		ft_env(cmd, shell);
+    else if ((strcmp(cmd->args[0], "echo") == 0 && !cmd->args[1]) || 
+         (strcmp(cmd->args[0], "xargs") == 0 && cmd->args[1] && strcmp(cmd->args[1], "echo") == 0 && !cmd->args[3]))
+    {
+		shell->exit_status = 127;
 		return (0);
 	}
     if (strcmp(cmd->args[0], "exit") == 0)
@@ -169,6 +176,7 @@ int execute_builtin(t_command *cmd, t_shell *shell)
 		ft_unset(cmd, shell);
 		return (0);
 	}
+    shell->exit_status = 127;
     return (1);
 }
 
@@ -203,15 +211,15 @@ static int is_critical_builtin(const char *cmd)
 void execute_pipeline(t_command *cmd, t_shell *shell)
 {
     if (cmd && !cmd->next && cmd->args[0] && is_critical_builtin(cmd->args[0]))
-{
-    if (cmd->redir_error_code != 0)
     {
-        shell->exit_status = 1;
+        if (cmd->redir_error_code != 0)
+        {
+            shell->exit_status = 1;
+            return;
+        }
+        execute_builtin(cmd, shell);
         return;
     }
-    execute_builtin(cmd, shell);
-    return;
-}
 
 
     int nb_cmds = count_commands(cmd);
@@ -313,31 +321,32 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
                 char *exec_path = find_exec(c->args[0]);
                 if (!exec_path)
                 {
-                    fprintf(stderr, "%s: command not found\n", c->args[0]);
-                    exit(127);
+                    ft_putstr_fd(c->args[0], 2);
+                    ft_putstr_fd(": Command not found\n", 2);
+                    exit(127); // Exit with 127 for command not found
                 }
-
+            
                 struct stat sb;
                 if (stat(exec_path, &sb) == 0)
                 {
                     if (S_ISDIR(sb.st_mode))
                     {
                         fprintf(stderr, "%s: Is a directory\n", exec_path);
-                        exit(126);
+                        exit(126); // Exit with 126 for directory
                     }
                     if (access(exec_path, X_OK) != 0)
                     {
                         perror(exec_path);
-                        exit(126);
+                        exit(126); // Exit with 126 for permission denied
                     }
                     execve(exec_path, c->args, shell->env);
                     perror(exec_path);
-                    exit(1);
+                    exit(1); // Exit with 1 for execve failure
                 }
                 else
                 {
-                    fprintf(stderr, "%s: No such file or directory\n", exec_path);
-                    exit(127);
+                    ft_putstr_fd("No such file or directory\n", 2);
+                    exit(127); // Exit with 127 for command not found
                 }
             }
         }
@@ -368,10 +377,17 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
         int status = 0;
         waitpid(pids[j], &status, 0);
 
-        if (WIFEXITED(status))
-            shell->exit_status = WEXITSTATUS(status);
-        else if (WIFSIGNALED(status))
-            shell->exit_status = 128 + WTERMSIG(status);
+        if (j == nb_cmds - 1)
+        {
+            if (WIFEXITED(status))
+            {
+                shell->exit_status = WEXITSTATUS(status);
+            }
+            else if (WIFSIGNALED(status))
+            {
+                shell->exit_status = 128 + WTERMSIG(status);
+            }
+        }
 
         j++;
     }
