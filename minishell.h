@@ -33,6 +33,7 @@ typedef struct s_strlist {
     char   *str;
     int    has_single_quote;
     int    has_double_quote;
+	int             should_expand;
     struct s_strlist *next;
 } t_strlist;
 
@@ -71,6 +72,7 @@ typedef struct s_token {
     t_token_type type;
     int has_single_quote;
     int has_double_quote;
+	int             should_expand;
     struct s_token *next;
 } t_token;
 

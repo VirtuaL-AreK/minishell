@@ -11,64 +11,71 @@ static void skip_spaces(const char *line, int *i)
         (*i)++;
 }
 
-static void add_strlist(t_strlist **head, const char *value, int has_sq, int has_dq)
+static void add_strlist(t_strlist **head, const char *value, int has_sq, int has_dq, int should_expand)
 {
-	t_strlist *node = malloc(sizeof(*node));
-	node->str = strdup(value);
-	node->has_single_quote = has_sq;
-	node->has_double_quote = has_dq;
-	node->next = NULL;
+    t_strlist *node = malloc(sizeof(*node));
+    node->str = strdup(value);
+    node->has_single_quote = has_sq;
+    node->has_double_quote = has_dq;
+    node->should_expand = should_expand;
+    node->next = NULL;
 
-	if (!*head)
-	*head = node;
-	else {
-	t_strlist *tmp = *head;
-	while (tmp->next)
-	tmp = tmp->next;
-	tmp->next = node;
+    if (!*head)
+        *head = node;
+    else {
+        t_strlist *tmp = *head;
+        while (tmp->next)
+            tmp = tmp->next;
+        tmp->next = node;
+    }
 }
-}
 
 
-static char *parse_one_token_merge_quotes(const char *line, int *i, int *has_sq, int *has_dq)
+
+static char *parse_one_token_merge_quotes(const char *line, int *i, int *has_sq, int *has_dq, int *should_expand)
 {
-	char buffer[4096];
-	int  len = 0;
+    char buffer[4096];
+    int  len = 0;
+    *should_expand = 0; // par défaut, on considère que le token est entièrement single quoted
 
-	while (line[*i] && !isspace((unsigned char)line[*i]) && !is_special_char(line[*i]))
-	{
-		if (line[*i] == '\'')
-		{
-			*has_sq = 1;  // marquer qu’il y a des single quotes
-			(*i)++;       // skip la quote d'ouverture
-		while (line[*i] && line[*i] != '\'')
-		{
-			buffer[len++] = line[*i];
-			(*i)++;
-		}
-		if (line[*i] == '\'')
-			(*i)++;   // skip la quote fermante
-		}
-		else if (line[*i] == '"')
-		{
-			*has_dq = 1;  // marquer double quotes
-			(*i)++;
-		while (line[*i] && line[*i] != '"')
-		{
-			buffer[len++] = line[*i];
-			(*i)++;
-		}
-			if (line[*i] == '"')
-			(*i)++;
-		}
-		else
-		{
-			buffer[len++] = line[*i];
-			(*i)++;
-		}
-	}
-	buffer[len] = '\0';
-	return strdup(buffer);
+    while (line[*i] && !isspace((unsigned char)line[*i]) && !is_special_char(line[*i]))
+    {
+        if (line[*i] == '\'')
+        {
+            int old_len = len;  // mémoriser la longueur avant le segment
+            (*i)++; // saute la quote d'ouverture
+            while (line[*i] && line[*i] != '\'')
+            {
+                buffer[len++] = line[*i];
+                (*i)++;
+            }
+            if (len > old_len)  // si le segment n'est pas vide, on note la présence d'une quote simple
+                *has_sq = 1;
+            if (line[*i] == '\'')
+                (*i)++;   // saute la quote fermante
+        }
+        else if (line[*i] == '"')
+        {
+            *has_dq = 1;  // marquer double quotes
+            *should_expand = 1;  // le contenu en double quotes doit être expansé
+            (*i)++; // saute l'ouverture de quote double
+            while (line[*i] && line[*i] != '"')
+            {
+                buffer[len++] = line[*i];
+                (*i)++;
+            }
+            if (line[*i] == '"')
+                (*i)++;  // saute la quote fermante
+        }
+        else
+        {
+            *should_expand = 1;  // contenu non cité : expansion nécessaire
+            buffer[len++] = line[*i];
+            (*i)++;
+        }
+    }
+    buffer[len] = '\0';
+    return strdup(buffer);
 }
 
 
@@ -88,18 +95,18 @@ static t_strlist *bash_tokenize(const char *line)
         {
             if (line[i] == '<' && line[i+1] == '<')
             {
-                add_strlist(&result, "<<", 0, 0);
+                add_strlist(&result, "<<", 0, 0, 0);
                 i += 2;
             }
             else if (line[i] == '>' && line[i+1] == '>')
             {
-                add_strlist(&result, ">>", 0, 0);
+                add_strlist(&result, ">>", 0, 0, 0);
                 i += 2;
             }
             else
             {
                 char tmp[2] = { line[i], '\0' };
-                add_strlist(&result, tmp, 0, 0);
+                add_strlist(&result, tmp, 0, 0, 0);
                 i++;
             }
         }
@@ -107,14 +114,16 @@ static t_strlist *bash_tokenize(const char *line)
         {
             int has_sq = 0;
             int has_dq = 0;
-            char *tok = parse_one_token_merge_quotes(line, &i, &has_sq, &has_dq);
+            int should_expand = 0;
+            char *tok = parse_one_token_merge_quotes(line, &i, &has_sq, &has_dq, &should_expand);
             if (tok && *tok)
-                add_strlist(&result, tok, has_sq, has_dq);
+                add_strlist(&result, tok, has_sq, has_dq, should_expand);
             free(tok);
         }
     }
     return result;
 }
+
 
 static t_token *build_tokens_from_list(t_strlist *lst)
 {
@@ -129,6 +138,7 @@ static t_token *build_tokens_from_list(t_strlist *lst)
 
         node->has_single_quote = lst->has_single_quote;
         node->has_double_quote = lst->has_double_quote;
+        node->should_expand = lst->should_expand;  // nouveau flag
 
         node->next = NULL;
 
@@ -141,6 +151,7 @@ static t_token *build_tokens_from_list(t_strlist *lst)
     }
     return head;
 }
+
 
 t_token *bash_tokenize_to_tokens(const char *input)
 {
