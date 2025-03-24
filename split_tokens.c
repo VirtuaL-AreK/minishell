@@ -36,40 +36,40 @@ static char *parse_one_token_merge_quotes(const char *line, int *i, int *has_sq,
 {
     char buffer[4096];
     int  len = 0;
-    *should_expand = 0; // par défaut, on considère que le token est entièrement single quoted
+    *should_expand = 0;
 
     while (line[*i] && !isspace((unsigned char)line[*i]) && !is_special_char(line[*i]))
     {
         if (line[*i] == '\'')
         {
-            int old_len = len;  // mémoriser la longueur avant le segment
-            (*i)++; // saute la quote d'ouverture
+            int old_len = len; 
+            (*i)++; 
             while (line[*i] && line[*i] != '\'')
             {
                 buffer[len++] = line[*i];
                 (*i)++;
             }
-            if (len > old_len)  // si le segment n'est pas vide, on note la présence d'une quote simple
+            if (len > old_len)
                 *has_sq = 1;
             if (line[*i] == '\'')
-                (*i)++;   // saute la quote fermante
+                (*i)++; 
         }
         else if (line[*i] == '"')
         {
-            *has_dq = 1;  // marquer double quotes
-            *should_expand = 1;  // le contenu en double quotes doit être expansé
-            (*i)++; // saute l'ouverture de quote double
+            *has_dq = 1;
+            *should_expand = 1;
+            (*i)++;
             while (line[*i] && line[*i] != '"')
             {
                 buffer[len++] = line[*i];
                 (*i)++;
             }
             if (line[*i] == '"')
-                (*i)++;  // saute la quote fermante
+                (*i)++;
         }
         else
         {
-            *should_expand = 1;  // contenu non cité : expansion nécessaire
+            *should_expand = 1;
             buffer[len++] = line[*i];
             (*i)++;
         }
