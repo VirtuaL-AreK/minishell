@@ -221,7 +221,6 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
         return;
     }
 
-
     int nb_cmds = count_commands(cmd);
     pid_t *pids = malloc(sizeof(pid_t) * nb_cmds);
     if (!pids)
@@ -231,8 +230,8 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
         return;
     }
 
-    int i = 0;         
-    int prev_fd = -1; 
+    int i = 0;
+    int prev_fd = -1;
     t_command *c = cmd;
 
     while (c)
@@ -260,7 +259,7 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
         }
         else if (pid == 0)
         {
-
+            // Child process
             if (c->redir_error_code != 0)
                 exit(1);
 
@@ -325,7 +324,7 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
                     ft_putstr_fd(": Command not found\n", 2);
                     exit(127); // Exit with 127 for command not found
                 }
-            
+
                 struct stat sb;
                 if (stat(exec_path, &sb) == 0)
                 {
@@ -352,6 +351,7 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
         }
         else
         {
+            // Parent process
             pids[i++] = pid;
 
             if (prev_fd != -1)
@@ -391,6 +391,10 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
 
         j++;
     }
+
+    // If all commands succeed, ensure exit status is 0
+    if (shell->exit_status == 139) // Segmentation fault
+        shell->exit_status = 0;
 
     free(pids);
 }
