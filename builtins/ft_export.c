@@ -79,15 +79,13 @@ void export_var(t_shell *shell, const char *arg)
 
     if (!eq)
     {
-        name = ft_strdup(arg);
-        value = ft_strdup("");
+        shell->exit_status = 1;
+        return;
     }
-    else
-    {
-        size_t name_len = eq - arg;
-        name = ft_substr(arg, 0, name_len);
-        value = ft_strdup(eq + 1);
-    }
+
+    size_t name_len = eq - arg;
+    name = ft_substr(arg, 0, name_len);
+    value = ft_strdup(eq + 1);
 
     if (!is_valid_varname(name))
     {
@@ -100,6 +98,7 @@ void export_var(t_shell *shell, const char *arg)
         free(value);
         return;
     }
+
     add_or_replace_var(shell, name, value);
 
     free(name);
@@ -159,6 +158,8 @@ int ft_export(t_command *cmd, t_shell *shell)
     }
 
     int i = 1;
+    shell->exit_status = 0;
+
     while (cmd->args[i])
     {
         if (ft_strlen(cmd->args[i]) == 0 || strcmp(cmd->args[i], "=") == 0)
@@ -185,6 +186,7 @@ int ft_export(t_command *cmd, t_shell *shell)
                 continue;
             }
             free(name);
+            export_var(shell, cmd->args[i]);
         }
         else
         {
@@ -194,13 +196,10 @@ int ft_export(t_command *cmd, t_shell *shell)
                 ft_putstr_fd(cmd->args[i], 2);
                 ft_putstr_fd("': not a valid identifier\n", 2);
                 shell->exit_status = 1;
-                i++;
-                continue;
             }
         }
-
-        export_var(shell, cmd->args[i]);
         i++;
     }
+
     return (shell->exit_status == 1 ? 1 : 0);
 }
