@@ -150,6 +150,12 @@ int execute_builtin(t_command *cmd, t_shell *shell)
 		ft_echo(cmd, shell);
 		return (0);
 	}
+    else if ((strcmp(cmd->args[0], "echo") == 0 && !cmd->args[1]))
+	{
+		putchar('\n');
+        shell->exit_status = 0;
+		return (0);
+	}
     else if ((strcmp(cmd->args[0], "echo") == 0 && !cmd->args[1]) || 
          (strcmp(cmd->args[0], "xargs") == 0 && cmd->args[1] && strcmp(cmd->args[1], "echo") == 0 && !cmd->args[3]))
     {
