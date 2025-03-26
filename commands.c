@@ -68,6 +68,7 @@ t_command *new_command(t_token *tokens)
     return (cmd);
 }
 
+
 void fill_command(t_command *cmd, t_token **tokens)
 {
     int arg_count = 0;

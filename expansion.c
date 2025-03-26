@@ -13,7 +13,7 @@ static char *get_local_env_value(const char *var, t_shell *shell)
     return ft_strdup("");
 }
 
-static char *expand_string(const char *str, t_shell *shell)
+char *expand_string(const char *str, t_shell *shell)
 {
     char buffer[4096];
     int idx = 0;
@@ -131,7 +131,6 @@ void expand_tokens(t_token *tokens, t_shell *shell)
     t_token *cur = tokens;
     while (cur)
     {
-        // On n'expanse que si le token doit l'être
         if (cur->type == TOKEN_WORD && cur->should_expand)
         {
             char *expanded = expand_string(cur->value, shell);
@@ -141,4 +140,5 @@ void expand_tokens(t_token *tokens, t_shell *shell)
         cur = cur->next;
     }
 }
+
 

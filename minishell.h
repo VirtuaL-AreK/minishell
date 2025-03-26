@@ -125,6 +125,8 @@ void free_commands(t_command *cmd);
 // expansion
 char *add_or_replace_var(t_shell *shell, const char *name, const char *value);
 void expand_tokens(t_token *tokens, t_shell *shell);
+char *expand_string(const char *str, t_shell *shell);
+
 
 // execution
 
