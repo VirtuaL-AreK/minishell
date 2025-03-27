@@ -32,51 +32,65 @@ static void add_strlist(t_strlist **head, const char *value, int has_sq, int has
 
 
 
-static char *parse_one_token_merge_quotes(const char *line, int *i, int *has_sq, int *has_dq, int *should_expand)
+static char *parse_one_token_merge_quotes(const char *line, int *i,
+	int *has_sq, int *has_dq,
+	int *should_expand)
 {
-    char buffer[4096];
-    int  len = 0;
-    *should_expand = 0;
+	char buffer[4096];
+	int  len = 0;
 
-    while (line[*i] && !isspace((unsigned char)line[*i]) && !is_special_char(line[*i]))
-    {
-        if (line[*i] == '\'')
-        {
-            int old_len = len; 
-            (*i)++; 
-            while (line[*i] && line[*i] != '\'')
-            {
-                buffer[len++] = line[*i];
-                (*i)++;
-            }
-            if (len > old_len)
-                *has_sq = 1;
-            if (line[*i] == '\'')
-                (*i)++; 
-        }
-        else if (line[*i] == '"')
-        {
-            *has_dq = 1;
-            *should_expand = 1;
-            (*i)++;
-            while (line[*i] && line[*i] != '"')
-            {
-                buffer[len++] = line[*i];
-                (*i)++;
-            }
-            if (line[*i] == '"')
-                (*i)++;
-        }
-        else
-        {
-            *should_expand = 1;  // contenu non cité : expansion nécessaire
-            buffer[len++] = line[*i];
-            (*i)++;
-        }
-    }
-    buffer[len] = '\0';
-    return strdup(buffer);
+	while (line[*i] && !isspace((unsigned char)line[*i]) && !is_special_char(line[*i]))
+	{
+		if (line[*i] == '\'')
+		{
+			buffer[len++] = line[*i];
+			(*i)++;
+
+			while (line[*i] && line[*i] != '\'')
+			{
+				buffer[len++] = line[*i];
+				(*i)++;
+			}
+			if (line[*i] == '\'')
+			{
+				buffer[len++] = line[*i];
+				(*i)++;
+			}
+		}
+		else if (line[*i] == '"')
+		{
+			buffer[len++] = line[*i];
+			(*i)++;
+			while (line[*i] && line[*i] != '"')
+			{
+				buffer[len++] = line[*i];
+				(*i)++;
+			}
+			if (line[*i] == '"')
+			{
+				buffer[len++] = line[*i];
+				(*i)++;
+			}
+		}
+		else
+		{
+			buffer[len++] = line[*i];
+			(*i)++;
+		}
+	}
+
+	buffer[len] = '\0';
+
+	if (strchr(buffer, '\''))
+	*has_sq = 1;
+	if (strchr(buffer, '"'))
+	*has_dq = 1;
+
+	*should_expand = 1;
+
+	return ft_strdup(buffer);
 }
+
 
 
 
