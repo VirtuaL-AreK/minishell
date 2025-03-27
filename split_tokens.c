@@ -69,7 +69,7 @@ static char *parse_one_token_merge_quotes(const char *line, int *i, int *has_sq,
         }
         else
         {
-            *should_expand = 1;
+            *should_expand = 1;  // contenu non cité : expansion nécessaire
             buffer[len++] = line[*i];
             (*i)++;
         }
@@ -128,12 +128,6 @@ static t_strlist *bash_tokenize(const char *line)
     while (line[i])
     {
         if (line[i] == '"' && line[i+1] == '"' && !line[i+2])
-        {
-            ft_putstr_fd("-bash: .: filename argument required", 2);
-            ft_putstr_fd(".: usage: . filename [arguments]", 2);
-            exit(127);
-        }
-        if (line[i] == '"' && line[i+1] == '.' && line[i+2] == '"' && !line[i+3])
         {
             ft_putstr_fd("command not found", 2);
             exit(127);
