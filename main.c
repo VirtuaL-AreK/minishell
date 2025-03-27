@@ -3,26 +3,40 @@
 // extern char **environ;
 t_shell g_shell = { NULL, 0 };  
 
-int is_syntax_error(t_token *tokens)
+int is_syntax_error(t_token *tokens, t_shell *shell)
 {
     if (!tokens)
+    {
+        shell->exit_status = 2;
         return (1);
-
+    }
+	if (tokens->type == TOKEN_PIPE)
+        {
+            ft_putstr_fd("Syntax error near unexpected token '|'\n",2);
+			shell->exit_status = 2;
+            return 1;
+        }
     while (tokens)
     {
-        if (tokens->type == 1)
+        if (tokens->type == TOKEN_PIPE)
         {
-            if (!tokens->next || tokens->next->type == 1)
+            if (!tokens->next || tokens->next->type == TOKEN_PIPE)
             {
-                printf("Syntax error near unexpected token '|'\n");
+                ft_putstr_fd("Syntax error near unexpected token '|'\n",2);
+				shell->exit_status = 2;
                 return 1;
             }
         }
-        else if (tokens->type == 3 || tokens->type == 4)
+        else if (tokens->type == TOKEN_REDIR_IN || tokens->type == TOKEN_REDIR_OUT ||
+                 tokens->type == TOKEN_APPEND || tokens->type == TOKEN_HEREDOC)
         {
-            if (!tokens->next || tokens->next->type != 0)
+            if (!tokens->next || tokens->next->type != TOKEN_WORD)
             {
-                printf("Syntax error: missing file for redirection\n");
+                if (tokens->type == TOKEN_HEREDOC)
+                   	ft_putstr_fd("Syntax error: missing delimiter for heredoc\n", 2);
+                else
+                    ft_putstr_fd("Syntax error: missing file for redirection\n", 2);
+                shell->exit_status = 2;
                 return 1;
             }
         }
@@ -40,7 +54,7 @@ void parse_command(char *input, t_shell *shell)
     if (!tokens)
         return;
 
-    if (!is_syntax_error(tokens))
+    if (!is_syntax_error(tokens, shell))
     {
         expand_tokens(tokens, shell);
         t_command *commands = command_parser(tokens);
@@ -113,7 +127,7 @@ void prompt_loop(t_shell *shell)
         if (*input)
             add_history(input);
 
-        if (!check_unclosed_quotes(input))
+        if (!check_unclosed_quotes(input, shell))
             parse_command(input, shell);
 
         free(input);

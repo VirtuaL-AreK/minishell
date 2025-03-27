@@ -1,6 +1,6 @@
 #include "minishell.h"
 
-int check_unclosed_quotes(const char *input)
+int check_unclosed_quotes(const char *input, t_shell *shell)
 {
     int single_quote = 0;
     int double_quote = 0;
@@ -17,6 +17,7 @@ int check_unclosed_quotes(const char *input)
     if (single_quote || double_quote)
     {
         printf("Syntax error: unclosed quote\n");
+		shell->exit_status = 2;
         return 1;
     }
     return 0;

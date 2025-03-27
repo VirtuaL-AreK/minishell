@@ -98,7 +98,7 @@ char **clone_envp(char **envp);
 void  free_envp(char **envp);
 
 // syntax
-int check_unclosed_quotes(const char *input);
+int check_unclosed_quotes(const char *input, t_shell *shell);
 
 // split_tokens
 // void skip_spaces(const char *input, int *i);
@@ -147,8 +147,6 @@ int ft_echo(t_command *cmd, t_shell *shell);
 int ft_exit(t_command *cmd, t_shell *shell);
 int ft_pwd(t_command *cmd, t_shell *shell);
 
-
-int  check_unclosed_quotes(const char *input);
 void prompt_loop(t_shell *shell);
 
 // Signals
