@@ -73,35 +73,22 @@ int is_valid_varname(char *var)
 
 void export_var(t_shell *shell, const char *arg)
 {
-    // 1) Détecter la sous-chaîne "+="
     char *plus_eq = strstr(arg, "+=");
-    // 2) Détecter le premier '='
     char *eq = ft_strchr(arg, '=');
 
-    /**
-     * CAS 1 : "export VAR+=..."
-     * => Concaténer la nouvelle valeur à l'ancienne (si elle existe).
-     */
     if (plus_eq)
     {
-        // Longueur de la partie avant le '+'
         size_t name_len = plus_eq - arg; 
-        // Exemple : arg = "b+=1"
-        //           plus_eq = &arg[1]
-        // => name_len = 1 -> name = "b"
-
         char *name = ft_substr(arg, 0, name_len);
         char *to_append = ft_strdup(plus_eq + 2); // ce qui vient après "+="
 
         if (!name || !to_append)
         {
-            // Gérer vos erreurs malloc si besoin
             free(name);
             free(to_append);
             return;
         }
 
-        // Vérifier que le nom ("b") est valide
         if (!is_valid_varname(name))
         {
             ft_putstr_fd("export: `", 2);
@@ -113,19 +100,16 @@ void export_var(t_shell *shell, const char *arg)
             return;
         }
 
-        // Chercher s'il existe déjà "b" dans l'env
         int i = 0;
         int found = 0;
         char *old_val = NULL;
 
         while (shell->env && shell->env[i])
         {
-            // Comparer jusqu'au signe '='
             if (ft_strncmp(shell->env[i], name, ft_strlen(name)) == 0
                 && shell->env[i][ft_strlen(name)] == '=')
             {
                 found = 1;
-                // Récupérer l'ancienne valeur (après "b=")
                 old_val = ft_strdup(shell->env[i] + ft_strlen(name) + 1);
                 break;
             }
@@ -134,10 +118,8 @@ void export_var(t_shell *shell, const char *arg)
         if (!found)
             old_val = ft_strdup(""); // Si pas trouvé, on considère que c'était vide
 
-        // Concaténer ancienne valeur + nouvelle
         char *new_val = ft_strjoin(old_val, to_append);
 
-        // Mettre à jour (ou ajouter) "b=new_val" dans l'environnement
         add_or_replace_var(shell, name, new_val);
 
         free(old_val);
@@ -146,13 +128,8 @@ void export_var(t_shell *shell, const char *arg)
         free(name);
         return;
     }
-    /**
-     * CAS 2 : "export VAR=..."
-     * => Affectation classique
-     */
     else if (eq)
     {
-        // Ex : arg = "b=hello"
         size_t name_len = eq - arg;
         char *name = ft_substr(arg, 0, name_len);
         char *value = ft_strdup(eq + 1);
@@ -181,13 +158,9 @@ void export_var(t_shell *shell, const char *arg)
         free(value);
         return;
     }
-    /**
-     * CAS 3 : "export VAR" sans '='
-     * => Bash n'ajoute PAS VAR s'il n'existe pas, donc on ne le crée pas
-     */
+
     else
     {
-        // Vérifier si c'est un nom de variable valide
         char *name = ft_strdup(arg);
         if (!name)
             return; // gérer vos erreurs malloc
@@ -199,7 +172,6 @@ void export_var(t_shell *shell, const char *arg)
             ft_putstr_fd("': not a valid identifier\n", 2);
             shell->exit_status = 1;
         }
-        // Si c'est valide, on ne fait rien (Bash ne crée pas la variable vide)
         free(name);
         return;
     }
@@ -253,7 +225,6 @@ static void print_sorted_env(t_shell *shell)
 
 int ft_export(t_command *cmd, t_shell *shell)
 {
-    // S'il n'y a pas d'argument après "export", on affiche l'env trié
     if (!cmd->args[1])
     {
         print_sorted_env(shell);
@@ -263,7 +234,6 @@ int ft_export(t_command *cmd, t_shell *shell)
     int i = 1;
     while (cmd->args[i])
     {
-        // Si l'argument est vide ou équivaut à "=", on crie erreur
         if (ft_strlen(cmd->args[i]) == 0 || strcmp(cmd->args[i], "=") == 0)
         {
             shell->exit_status = 1;
@@ -272,12 +242,9 @@ int ft_export(t_command *cmd, t_shell *shell)
             continue;
         }
 
-        // On délègue la logique de gestion à export_var()
         export_var(shell, cmd->args[i]);
 
         i++;
     }
-    // Si l'on a eu au moins une erreur, le code de retour est 1
-    // Sinon 0
     return (shell->exit_status == 1 ? 1 : 0);
 }
