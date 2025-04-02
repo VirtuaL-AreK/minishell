@@ -85,7 +85,7 @@ void parse_command(char *input, t_shell *shell)
 //         if (*input)
 //             add_history(input);
 
-//         if (!check_unclosed_quotes(input))
+//         if (!check_unclosed_quotes(input, shell))
 //             parse_command(input, shell);
 
 //         free(input);

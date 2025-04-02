@@ -68,6 +68,36 @@ t_command *new_command(t_token *tokens)
     return (cmd);
 }
 
+char *handle_heredoc(const char *delimiter)
+{
+    char *line;
+    char template[] = "/tmp/minishell_heredoc_XXXXXX";
+    int fd = mkstemp(template);
+    if (fd < 0)
+    {
+        perror("mkstemp");
+        return NULL;
+    }
+    // Vous pouvez choisir de ne pas unlink() ici pour pouvoir ouvrir le fichier plus tard,
+    // ou unlink() après l'ouverture dans le processus enfant.
+    
+    while (1)
+    {
+        line = readline("> ");
+        if (!line)
+            break;
+        if (strcmp(line, delimiter) == 0)
+        {
+            free(line);
+            break;
+        }
+        write(fd, line, strlen(line));
+        write(fd, "\n", 1);
+        free(line);
+    }
+    close(fd);
+    return strdup(template);
+}
 
 void fill_command(t_command *cmd, t_token **tokens)
 {
@@ -95,6 +125,31 @@ void fill_command(t_command *cmd, t_token **tokens)
             close(in_fd);
             free(cmd->infile);
             cmd->infile = ft_strdup((*tokens)->value);
+            *tokens = (*tokens)->next;
+        }
+        else if ((*tokens)->type == TOKEN_HEREDOC)
+        {
+            // Passer au token contenant le délimiteur
+            *tokens = (*tokens)->next;
+            if (!(*tokens) || (*tokens)->type != TOKEN_WORD)
+            {
+                ft_putstr_fd("Syntax error: missing delimiter for heredoc\n", 2);
+                cmd->redir_error_code = 1;
+                break;
+            }
+            // Récupérer le délimiteur
+            char *delimiter = (*tokens)->value;
+            // Lire le heredoc et récupérer le chemin du fichier temporaire
+            char *temp_file = handle_heredoc(delimiter);
+            if (!temp_file)
+            {
+                cmd->redir_error_code = 1;
+                *tokens = (*tokens)->next;
+                continue;
+            }
+            if (cmd->infile)
+                free(cmd->infile);
+            cmd->infile = temp_file;
             *tokens = (*tokens)->next;
         }
         else if ((*tokens)->type == TOKEN_REDIR_OUT || (*tokens)->type == TOKEN_APPEND)
@@ -130,6 +185,7 @@ void fill_command(t_command *cmd, t_token **tokens)
     }
     cmd->args[arg_count] = NULL;
 }
+
 
 
 

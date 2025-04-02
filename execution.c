@@ -31,6 +31,7 @@ void handle_cat(t_command *cmd, t_shell *shell)
     {
         while ((bytes = read(STDIN_FILENO, buffer, sizeof(buffer))) > 0)
         {
+			i = 0;
             while (i < bytes)
             {
                 if (buffer[i] == '\n')
@@ -312,11 +313,11 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
             if (!c->args[0] || c->args[0][0] == '\0')
                 exit(0);
 
-            if (strcmp(c->args[0], "cat") == 0)
-            {
-                handle_cat(c, shell);
-                exit(shell->exit_status);
-            }
+            // if (strcmp(c->args[0], "cat") == 0)
+            // {
+            //     handle_cat(c, shell);
+            //     exit(shell->exit_status);
+            // }
             else if (!execute_builtin(c, shell))
             {
                 exit(shell->exit_status);
