@@ -54,19 +54,15 @@ char *expand_string(const char *str, t_shell *shell)
         if (input_str[i] == '\\')
         {
             int count = 0;
-            /* Compter le nombre de backslashes consécutifs */
             while (input_str[i] && input_str[i] == '\\')
             {
                 count++;
                 i++;
             }
-            /* Si le caractère suivant est '$' et que l'on n'est pas dans une quote simple */
             if (!in_sq && input_str[i] == '$')
             {
                 if (count % 2 == 1)
                 {
-                    /* Nombre impair de '\' : le '$' est échappé
-                       On imprime count/2 backslashes littéraux et un '$' */
                     int k = 0;
                     while (k < count / 2 && idx < 4095)
                     {
@@ -75,25 +71,20 @@ char *expand_string(const char *str, t_shell *shell)
                     }
                     if (idx < 4095)
                         buffer[idx++] = '$';
-                    i++; /* Consommer le '$' échappé */
+                    i++;
                 }
                 else
                 {
-                    /* Nombre pair de '\' : on imprime count/2 backslashes,
-                       et on laisse le '$' non consommé pour expansion */
                     int k = 0;
                     while (k < count / 2 && idx < 4095)
                     {
                         buffer[idx++] = '\\';
                         k++;
                     }
-                    /* Ne consommer PAS le '$' ici, il sera traité dans l'itération suivante */
                 }
             }
             else
             {
-                /* Pas suivi d'un '$' ou dans une quote simple :
-                   On imprime tous les '\' */
                 int k = 0;
                 while (k < count && idx < 4095)
                 {

@@ -136,6 +136,8 @@ int  execute_builtin(t_command *cmd, t_shell *shell);
 void parse_command(char *input, t_shell *shell);
 void execute_pipeline(t_command *cmd, t_shell *shell);
 void execute_command_line(t_command *cmd, char **env);
+void ft_free_strarray(char **arr);
+
 
 // Builtins
 

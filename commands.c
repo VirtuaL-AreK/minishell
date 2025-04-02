@@ -78,9 +78,6 @@ char *handle_heredoc(const char *delimiter)
         perror("mkstemp");
         return NULL;
     }
-    // Vous pouvez choisir de ne pas unlink() ici pour pouvoir ouvrir le fichier plus tard,
-    // ou unlink() après l'ouverture dans le processus enfant.
-    
     while (1)
     {
         line = readline("> ");
@@ -129,7 +126,6 @@ void fill_command(t_command *cmd, t_token **tokens)
         }
         else if ((*tokens)->type == TOKEN_HEREDOC)
         {
-            // Passer au token contenant le délimiteur
             *tokens = (*tokens)->next;
             if (!(*tokens) || (*tokens)->type != TOKEN_WORD)
             {
@@ -137,9 +133,7 @@ void fill_command(t_command *cmd, t_token **tokens)
                 cmd->redir_error_code = 1;
                 break;
             }
-            // Récupérer le délimiteur
             char *delimiter = (*tokens)->value;
-            // Lire le heredoc et récupérer le chemin du fichier temporaire
             char *temp_file = handle_heredoc(delimiter);
             if (!temp_file)
             {

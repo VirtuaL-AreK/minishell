@@ -163,7 +163,7 @@ void export_var(t_shell *shell, const char *arg)
     {
         char *name = ft_strdup(arg);
         if (!name)
-            return; // gérer vos erreurs malloc
+            return;
 
         if (!is_valid_varname(name))
         {
@@ -175,13 +175,6 @@ void export_var(t_shell *shell, const char *arg)
         free(name);
         return;
     }
-}
-
-
-
-static int compare_env_vars(const void *a, const void *b)
-{
-    return strcmp(*(const char **)a, *(const char **)b);
 }
 
 static void print_sorted_env(t_shell *shell)
@@ -198,13 +191,33 @@ static void print_sorted_env(t_shell *shell)
         return;
     }
 
-    for (int j = 0; j < i; j++)
+    int j = 0;
+    while (j < i)
+    {
         sorted_env[j] = shell->env[j];
+        j++;
+    }
     sorted_env[i] = NULL;
 
-    qsort(sorted_env, i, sizeof(char *), compare_env_vars);
+    int swapped;
+    do {
+        swapped = 0;
+        j = 0;
+        while (j < i - 1)
+        {
+            if (strcmp(sorted_env[j], sorted_env[j + 1]) > 0)
+            {
+                char *temp = sorted_env[j];
+                sorted_env[j] = sorted_env[j + 1];
+                sorted_env[j + 1] = temp;
+                swapped = 1;
+            }
+            j++;
+        }
+    } while (swapped);
 
-    for (int j = 0; j < i; j++)
+    j = 0;
+    while (j < i)
     {
         char *eq = ft_strchr(sorted_env[j], '=');
         if (eq)
@@ -217,11 +230,13 @@ static void print_sorted_env(t_shell *shell)
         {
             printf("declare -x %s\n", sorted_env[j]);
         }
+        j++;
     }
 
     free(sorted_env);
     shell->exit_status = 0;
 }
+
 
 int ft_export(t_command *cmd, t_shell *shell)
 {
