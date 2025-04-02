@@ -16,12 +16,11 @@ int ft_cd(t_command *cmd, t_shell *shell)
 
     if (cmd->nb_arg < 2 || (cmd->args[1] && strcmp(cmd->args[1], "~") == 0))
     {
-        // Handle no argument or `~`
         while (shell->env && shell->env[i])
         {
             if (ft_strncmp(shell->env[i], "HOME=", 5) == 0)
             {
-                path = shell->env[i] + 5; 
+                path = shell->env[i] + 5;
                 break;
             }
             i++;
@@ -33,9 +32,26 @@ int ft_cd(t_command *cmd, t_shell *shell)
             return 1;
         }
     }
+    else if (cmd->args[1] && strcmp(cmd->args[1], "-") == 0)
+    {
+        while (shell->env && shell->env[i])
+        {
+            if (ft_strncmp(shell->env[i], "OLDPWD=", 7) == 0)
+            {
+                path = shell->env[i] + 7;
+                break;
+            }
+            i++;
+        }
+        if (!shell->env[i])
+        {
+            ft_putstr_fd("minishell: cd: OLDPWD not set\n", 2);
+            shell->exit_status = 1;
+            return 1;
+        }
+    }
     else if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
     {
-        // Handle `~/subdir`
         char *home = NULL;
         while (shell->env && shell->env[i])
         {
@@ -52,7 +68,7 @@ int ft_cd(t_command *cmd, t_shell *shell)
             shell->exit_status = 1;
             return 1;
         }
-        path = ft_strjoin(home, cmd->args[1] + 1); // Concatenate HOME with the rest of the path
+        path = ft_strjoin(home, cmd->args[1] + 1);
         if (!path)
         {
             perror("malloc");
@@ -69,11 +85,17 @@ int ft_cd(t_command *cmd, t_shell *shell)
     if (chdir(path) != 0)
     {
         perror("cd");
-        if (path != cmd->args[1]) // Free dynamically allocated path
+        if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
             free(path);
         free(oldpwd);
         shell->exit_status = 1;
         return 1;
+    }
+
+    if (cmd->args[1] && strcmp(cmd->args[1], "-") == 0)
+    {
+        if (getcwd(cwd, sizeof(cwd)))
+            ft_putendl_fd(cwd, 1);
     }
 
     if (oldpwd)
@@ -84,7 +106,7 @@ int ft_cd(t_command *cmd, t_shell *shell)
     if (getcwd(cwd, sizeof(cwd)))
         add_or_replace_var(shell, "PWD", cwd);
 
-    if (path != cmd->args[1] && path != shell->env[i] + 5) // Free dynamically allocated path
+    if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
         free(path);
 
     shell->exit_status = 0;

@@ -17,13 +17,13 @@ char *expand_string(const char *str, t_shell *shell)
 {
     char *input_str;
 
-    /* Si le token commence par '~' et que le caractère suivant est '\0' ou '/' */
+    /* Gestion de l'expansion de la tilde */
     if (str[0] == '~' && (str[1] == '\0' || str[1] == '/'))
     {
         char *home = get_local_env_value("HOME", shell);
         if (!home)
-            home = ft_strdup("");  // Si HOME n'est pas défini
-        input_str = ft_strjoin(home, str + 1);  // Concatène HOME et le reste
+            home = ft_strdup("");
+        input_str = ft_strjoin(home, str + 1);
         free(home);
     }
     else
@@ -34,10 +34,10 @@ char *expand_string(const char *str, t_shell *shell)
     char buffer[4096];
     int idx = 0;
     int i = 0;
-    int in_sq = 0;
-    int in_dq = 0;
+    int in_sq = 0; // flag : dans une quote simple
+    int in_dq = 0; // flag : dans une quote double
 
-    while (input_str[i])
+    while (input_str[i] && idx < 4095)
     {
         if (input_str[i] == '\'' && !in_dq)
         {
@@ -45,49 +45,64 @@ char *expand_string(const char *str, t_shell *shell)
             i++;
             continue;
         }
-
         if (input_str[i] == '"' && !in_sq)
         {
             in_dq = !in_dq;
             i++;
             continue;
         }
-
         if (input_str[i] == '\\')
         {
             int count = 0;
-            while (input_str[i] == '\\')
+            /* Compter le nombre de backslashes consécutifs */
+            while (input_str[i] && input_str[i] == '\\')
             {
                 count++;
                 i++;
             }
+            /* Si le caractère suivant est '$' et que l'on n'est pas dans une quote simple */
             if (!in_sq && input_str[i] == '$')
             {
                 if (count % 2 == 1)
                 {
-                    int bs_to_print = count / 2; // paires complètes
-                    for (int k = 0; k < bs_to_print && idx < 4095; k++)
+                    /* Nombre impair de '\' : le '$' est échappé
+                       On imprime count/2 backslashes littéraux et un '$' */
+                    int k = 0;
+                    while (k < count / 2 && idx < 4095)
+                    {
                         buffer[idx++] = '\\';
+                        k++;
+                    }
                     if (idx < 4095)
                         buffer[idx++] = '$';
-                    i++;
+                    i++; /* Consommer le '$' échappé */
                 }
                 else
                 {
-                    int bs_to_print = count / 2;
-                    for (int k = 0; k < bs_to_print && idx < 4095; k++)
+                    /* Nombre pair de '\' : on imprime count/2 backslashes,
+                       et on laisse le '$' non consommé pour expansion */
+                    int k = 0;
+                    while (k < count / 2 && idx < 4095)
+                    {
                         buffer[idx++] = '\\';
-                    i--;
+                        k++;
+                    }
+                    /* Ne consommer PAS le '$' ici, il sera traité dans l'itération suivante */
                 }
             }
             else
             {
-                for (int k = 0; k < count && idx < 4095; k++)
+                /* Pas suivi d'un '$' ou dans une quote simple :
+                   On imprime tous les '\' */
+                int k = 0;
+                while (k < count && idx < 4095)
+                {
                     buffer[idx++] = '\\';
+                    k++;
+                }
             }
             continue;
         }
-
         if (input_str[i] == '$' && !in_sq)
         {
             i++;
@@ -95,23 +110,32 @@ char *expand_string(const char *str, t_shell *shell)
             {
                 i++;
                 char *exit_str = ft_itoa(shell->exit_status);
-                for (int k = 0; exit_str[k] && idx < 4095; k++)
+                int k = 0;
+                while (exit_str[k] && idx < 4095)
+                {
                     buffer[idx++] = exit_str[k];
+                    k++;
+                }
                 free(exit_str);
                 continue;
             }
-
             int start = i;
             while (input_str[i] && (isalnum((unsigned char)input_str[i]) || input_str[i] == '_'))
+            {
                 i++;
+            }
             int var_len = i - start;
             if (var_len > 0)
             {
                 char *var_name = strndup(input_str + start, var_len);
-                char *val = get_local_env_value(var_name, shell); // Récupère la valeur
+                char *val = get_local_env_value(var_name, shell); // Récupère la valeur de la variable
                 free(var_name);
-                for (int k = 0; val[k] && idx < 4095; k++)
+                int k = 0;
+                while (val[k] && idx < 4095)
+                {
                     buffer[idx++] = val[k];
+                    k++;
+                }
                 free(val);
             }
             else
@@ -127,7 +151,6 @@ char *expand_string(const char *str, t_shell *shell)
             i++;
         }
     }
-
     buffer[idx] = '\0';
     free(input_str);
     return ft_strdup(buffer);
