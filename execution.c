@@ -66,15 +66,17 @@ void ft_free_strarray(char **arr)
     free(arr);
 }
 
-char *find_exec(char *cmd)
+char *find_exec(char *cmd, char **env)
 {
     char    **paths;
-    char    *path;
+    char    *env_path;
     char    *full_path;
     char    *tmp;
     int     i;
+    char    *cwd;
+    size_t  len;
 
-    if (ft_strchr(cmd, '/'))
+    if (strchr(cmd, '/'))
     {
         if (access(cmd, F_OK) == 0)
             return ft_strdup(cmd);
@@ -82,36 +84,68 @@ char *find_exec(char *cmd)
             return NULL;
     }
 
-    path = getenv("PATH");
-    if (!path || !*path)
-        return NULL; 
-
-    paths = ft_split(path, ':');
-    if (!paths)
-        return NULL;
-
     i = 0;
-    while (paths[i])
+    env_path = NULL;
+    while (env && env[i])
     {
-        tmp = ft_strjoin(paths[i], "/");
-        full_path = ft_strjoin(tmp, cmd);
-        free(tmp);
-
-        if (access(full_path, F_OK) == 0)
+        if (ft_strncmp(env[i], "PATH=", 5) == 0)
         {
-            ft_free_strarray(paths);
-            return full_path;
+            env_path = env[i] + 5; 
+            break;
         }
-        free(full_path);
         i++;
     }
 
-    ft_free_strarray(paths);
-    return NULL;
+    if (env_path)
+    {
+        if (env_path[0] == '\0')
+            return NULL;
+
+        paths = ft_split(env_path, ':');
+        if (!paths)
+            return NULL;
+        i = 0;
+        while (paths[i])
+        {
+            tmp = ft_strjoin(paths[i], "/");
+            full_path = ft_strjoin(tmp, cmd);
+            free(tmp);
+            if (access(full_path, F_OK) == 0)
+            {
+                ft_free_strarray(paths);
+                return full_path;
+            }
+            free(full_path);
+            i++;
+        }
+        ft_free_strarray(paths);
+        return NULL;
+    }
+    else
+    {
+        //PATH est unset : on récupère le répertoire courant
+        cwd = getcwd(NULL, 0);
+        if (cwd)
+        {
+            len = ft_strlen(cwd);
+            if (len >= 4 && strcmp(cwd + len - 4, "/bin") == 0)
+            {
+                tmp = ft_strjoin(cwd, "/");
+                full_path = ft_strjoin(tmp, cmd);
+                free(tmp);
+                free(cwd);
+                if (access(full_path, F_OK) == 0)
+                    return full_path;
+                free(full_path);
+                return NULL;
+            }
+            free(cwd);
+        }
+        return NULL;
+    }
 }
 
-
-
+  
 void execute_command(char **args, char **env)
 {
 	(void)env;
@@ -121,7 +155,7 @@ void execute_command(char **args, char **env)
 	{
 		exec_path = args[0];
 		if(access(exec_path, X_OK) != 0)
-			exec_path = find_exec(args[0]);
+			exec_path = find_exec(args[0], env);
 		if(!exec_path)
 		{
 			printf("%s: Command not found\n", args[0]);
@@ -324,7 +358,7 @@ void execute_pipeline(t_command *cmd, t_shell *shell)
             }
             else
             {
-                char *exec_path = find_exec(c->args[0]);
+                char *exec_path = find_exec(c->args[0], shell->env);
                 if (!exec_path)
                 {
                     ft_putstr_fd(c->args[0], 2);

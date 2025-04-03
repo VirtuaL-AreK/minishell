@@ -130,7 +130,7 @@ char *expand_string(const char *str, t_shell *shell);
 
 // execution
 
-char *find_exec(char *cmd);
+char *find_exec(char *cmd, char **env);
 void execute_command(char **args, char **env);
 int  execute_builtin(t_command *cmd, t_shell *shell);
 void parse_command(char *input, t_shell *shell);
