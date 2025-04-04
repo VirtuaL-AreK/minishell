@@ -1,5 +1,11 @@
 #include "minishell.h"
 
+typedef struct s_token_flags {
+    int has_sq;
+    int has_dq;
+    int should_expand;
+} t_token_flags;
+
 static int is_special_char(int c)
 {
     return (c == '|' || c == '<' || c == '>');
@@ -11,286 +17,163 @@ static void skip_spaces(const char *line, int *i)
         (*i)++;
 }
 
-static void add_strlist(t_strlist **head, const char *value, int has_sq, int has_dq, int should_expand)
+static void add_strlist(t_strlist **head, const char *value, t_token_flags flags)
 {
-    t_strlist *node = malloc(sizeof(*node));
-    node->str = strdup(value);
-    node->has_single_quote = has_sq;
-    node->has_double_quote = has_dq;
-    node->should_expand = should_expand;
-    node->next = NULL;
+    t_strlist *node;
+    t_strlist *tmp;
 
+    node = malloc(sizeof(*node));
+    node->str = strdup(value);
+    node->has_single_quote = flags.has_sq;
+    node->has_double_quote = flags.has_dq;
+    node->should_expand = flags.should_expand;
+    node->next = NULL;
     if (!*head)
+    {
         *head = node;
-    else {
-        t_strlist *tmp = *head;
+    }
+    else
+    {
+        tmp = *head;
         while (tmp->next)
             tmp = tmp->next;
         tmp->next = node;
     }
 }
 
-
-
-static char *parse_one_token_merge_quotes(const char *line, int *i, int *has_sq, int *has_dq, int *should_expand)
+static void process_single_quote(const char *line, int *i, char *buffer, int *len)
 {
-    char buffer[4096];
-    int  len = 0;
-    *should_expand = 0;
-
-    while (line[*i] && !isspace((unsigned char)line[*i]) && !is_special_char(line[*i]))
+    buffer[*len] = line[*i];
+    *len = *len + 1;
+    *i = *i + 1;
+    while (line[*i] && line[*i] != '\'')
     {
-        if (line[*i] == '\'')
-        {
-            int old_len = len; 
-            (*i)++; 
-            while (line[*i] && line[*i] != '\'')
-            {
-                buffer[len++] = line[*i];
-                (*i)++;
-            }
-            if (len > old_len)
-                *has_sq = 1;
-            if (line[*i] == '\'')
-                (*i)++; 
-        }
-        else if (line[*i] == '"')
-        {
-            *has_dq = 1;
-            *should_expand = 1;
-            (*i)++;
-            while (line[*i] && line[*i] != '"')
-            {
-                buffer[len++] = line[*i];
-                (*i)++;
-            }
-            if (line[*i] == '"')
-                (*i)++;
-        }
-        else
-        {
-            *should_expand = 1;
-            buffer[len++] = line[*i];
-            (*i)++;
-        }
+        buffer[*len] = line[*i];
+        *len = *len + 1;
+        *i = *i + 1;
     }
-    buffer[len] = '\0';
-    return strdup(buffer);
+    if (line[*i] == '\'')
+    {
+        buffer[*len] = line[*i];
+        *len = *len + 1;
+        *i = *i + 1;
+    }
 }
 
+static void process_double_quote(const char *line, int *i, char *buffer, int *len)
+{
+    buffer[*len] = line[*i];
+    *len = *len + 1;
+    *i = *i + 1;
+    while (line[*i] && line[*i] != '"')
+    {
+        buffer[*len] = line[*i];
+        *len = *len + 1;
+        *i = *i + 1;
+    }
+    if (line[*i] == '"')
+    {
+        buffer[*len] = line[*i];
+        *len = *len + 1;
+        *i = *i + 1;
+    }
+}
+
+static void process_unquoted_char(const char *line, int *i, char *buffer, int *len)
+{
+    buffer[*len] = line[*i];
+    *len = *len + 1;
+    *i = *i + 1;
+}
+
+static char *parse_one_token_merge_quotes(const char *line, int *i, t_token_flags *flags)
+{
+    char buffer[4096];
+    int len;
+
+    len = 0;
+    while (line[*i] && !isspace((unsigned char)line[*i]) && 
+           !is_special_char(line[*i]))
+    {
+        if (line[*i] == '\'')
+            process_single_quote(line, i, buffer, &len);
+        else if (line[*i] == '"')
+            process_double_quote(line, i, buffer, &len);
+        else
+            process_unquoted_char(line, i, buffer, &len);
+    }
+    buffer[len] = '\0';
+    if (strchr(buffer, '\''))
+        flags->has_sq = 1;
+    if (strchr(buffer, '"'))
+        flags->has_dq = 1;
+    flags->should_expand = 1;
+    return ft_strdup(buffer);
+}
+
+static void process_special_char_token(const char *line, int *i, t_strlist **result)
+{
+    t_token_flags flags;
+
+    flags.has_sq = 0;
+    flags.has_dq = 0;
+    flags.should_expand = 0;
+    if (line[*i] == '<' && line[*i + 1] == '<')
+    {
+        add_strlist(result, "<<", flags);
+        *i = *i + 2;
+    }
+    else if (line[*i] == '>' && line[*i + 1] == '>')
+    {
+        add_strlist(result, ">>", flags);
+        *i = *i + 2;
+    }
+    else
+    {
+        char tmp[2];
+
+        tmp[0] = line[*i];
+        tmp[1] = '\0';
+        add_strlist(result, tmp, flags);
+        *i = *i + 1;
+    }
+}
+
+static void process_normal_token(const char *line, int *i, t_strlist **result)
+{
+    t_token_flags flags;
+    char *tok;
+
+    flags.has_sq = 0;
+    flags.has_dq = 0;
+    flags.should_expand = 0;
+    tok = parse_one_token_merge_quotes(line, i, &flags);
+    if (tok && *tok)
+        add_strlist(result, tok, flags);
+    free(tok);
+}
 
 
 static t_strlist *bash_tokenize(const char *line)
 {
-    t_strlist *result = NULL;
-    int i = 0;
+    t_strlist *result;
+    int i;
 
-    if (strstr(line, "/bin/cat <"))
-    {
-        ft_putstr_fd("-bash: syntax error near unexpected token `newline'", 2);
-        exit(2);
-    }
-    if (strstr(line, "cat 42 42"))
-    {
-        ft_putstr_fd("cat: 42: No such file or directory", 2);
-        exit(1);
-    }
-    if (strstr(line, "trying to destroy your minishell"))
-    {
-        ft_putstr_fd("command not found", 2);
-        exit(127);
-    }
-    if (strstr(line, "/bin/exe42 42"))
-    {
-        ft_putstr_fd("-bash: /bin/exe42: No such file or directory", 2);
-        exit(127);
-    }
-    if (strstr(line, "| test"))
-    {
-        ft_putstr_fd("-bash: syntax error near unexpected token `|'", 2);
-        exit(2);
-    }
-    if (strstr(line, "| echo -n oui"))
-    {
-        ft_putstr_fd("-bash: syntax error near unexpected token `|'", 2);
-        exit(2);
-    }
-    if (strstr(line, "export =") || strstr(line, "export ''=''") || strstr(line, "export \"\"=\"\""))
-    {
-        ft_putstr_fd("-bash: export: `=': not a valid identifier", 2);
-        exit(1);
-    }
-    if (strstr(line, "exit \"\""))
-        exit(2);
-    else if (strstr(line, "exit 1 2 3") || strstr(line, "exit 42 42") || strstr(line, "exit 1 A"))
-        exit(1);
-    // int len = ft_strlen(line);
+    result = NULL;
+    i = 0;
     while (line[i])
     {
-        if (line[i] == '"' && line[i+1] == '"' && !line[i+2])
-        {
-            ft_putstr_fd("-bash: .: filename argument required", 2);
-            ft_putstr_fd(".: usage: . filename [arguments]", 2);
-            exit(127);
-        }
-        if (line[i] == '"' && line[i+1] == '.' && line[i+2] == '"' && !line[i+3])
-        {
-            ft_putstr_fd("command not found", 2);
-            exit(127);
-        }
-        // if (line[i] == '"' && line[len - 1] == '"')
-        // {
-        //     i++;
-        //     while (line[i] == ' ' || line[i] == '\t')
-        //         i++;
-        //     if (i == len - 1) // Only spaces or tabs between quotes
-        //     {
-        //         ft_putstr_fd("command not found\n", 2);
-        //         exit(127);
-        //     }
-        // }
-        if (line[i] == '~' && !line[i+1])
-        {
-            ft_putstr_fd("-bash: /root: Is a directory", 2);
-            exit(126);
-        }
-        if (line[i] >= 'A' && line[i] <= 'Z')
-        {
-            ft_putstr_fd("command not found", 2);
-            exit(127);
-        }
-        if (line[i] == '.' && ft_isalnum(line[i+1]))
-        {
-            ft_putstr_fd("command not found", 2);
-            exit(127);
-        }
-        if (line[i] == '\\' && line[i+1] == '\\')
-        {
-            ft_putstr_fd("syntax error near unexpected token `|'", 2);
-            exit(127);
-        }
-        if (line[i] == '/' && !line[i+1])
-        {
-            ft_putstr_fd("syntax error near unexpected token `|'", 2);
-            exit(126);
-        }
-        if ((line[i] == '.' && !line[i+1]) || (line[i] == '.' && line[i+1] == '.' && !line[i+2]))
-        {
-            ft_putstr_fd("-bash: .: filename argument required", 2);
-            ft_putstr_fd(".: usage: . filename [arguments]", 2);
-            exit(127);
-        }
         skip_spaces(line, &i);
         if (!line[i])
             break;
-
         if (is_special_char(line[i]))
-        {
-            // if (line[i] == '|')
-            // {
-            //     ft_putstr_fd("syntax error near unexpected token `|'", 2);
-            //     exit(2);
-            // }
-            if (line[i] == '>' && line[i+1] == '>' && ft_isalnum(line[i+2]))
-            {
-                ft_putstr_fd("-bash: syntax error near unexpected token `newline'", 2);
-                exit(2);
-            }
-            if (line[i] == '>' && !line[i+1])
-            {
-                ft_putstr_fd("syntax error near unexpected token `newline'", 2);
-                exit(2);
-            }
-            if (line[i] == '<' && !line[i+1])
-            {
-                ft_putstr_fd("syntax error near unexpected token `newline'", 2);
-                exit(2);
-            }
-            if (line[i] == '>' && line[i+1] == '>' && line[i+2] == ' ' && line[i+3] == '>')
-            {
-                ft_putstr_fd("syntax error near unexpected token `>>'", 2);
-                exit(2);
-            }
-            if ((line[i] == '|' && !line[i+1]) || (line[i] == '|' && line[i+1] == '|'))
-            {
-                ft_putstr_fd("syntax error near unexpected token `|'", 2);
-                exit(2);
-            }
-            if (line[i] == '|' && line[i+1] == '>')
-            {
-                ft_putstr_fd("syntax error near unexpected token `>'", 2);
-                exit(2);
-            }
-            if (line[i] == '|' && line[i+1] == '<')
-            {
-                ft_putstr_fd("syntax error near unexpected token `<'", 2);
-                exit(2);
-            }
-            if (line[i] == '<' && line[i+1] == '<' && line[i+2] == '|')
-            {
-                ft_putstr_fd("syntax error near unexpected token `|'", 2);
-                exit(2);
-            }
-            if (line[i] == '<' && line[i+1] == '<' && !line[i+2])
-            {
-                ft_putstr_fd("-bash: syntax error near unexpected token `newline'", 2);
-                exit(2);
-            }
-            if (line[i] == '<' && line[i+1] == '<')
-            {
-                add_strlist(&result, "<<", 0, 0, 0);
-                i += 2;
-            }
-            if (line[i] == '<' && line[i+1] == '>')
-            {
-                ft_putstr_fd("syntax error near unexpected token `<'", 2);
-                exit(2);
-            }
-            if (line[i] == '<' && line[i+1] == '|')
-            {
-                ft_putstr_fd("syntax error near unexpected token `|'", 2);
-                exit(2);
-            }
-            if (line[i] == '>' && line[i+1] == '>' && line[i+2] == '|')
-            {
-                ft_putstr_fd("syntax error near unexpected token `|'", 2);
-                exit(2);
-            }
-            if (line[i] == '>' && line[i+1] == '>' && line[i+2] == '>')
-            {
-                ft_putstr_fd("syntax error near unexpected token `>'", 2);
-                exit(2);
-            }
-            if (line[i] == '<' && line[i+1] == '<' && line[i+2] == '<')
-            {
-                ft_putstr_fd("syntax error near unexpected token `>'", 2);
-                exit(2);
-            }
-            else if (line[i] == '>' && line[i+1] == '>')
-            {
-                add_strlist(&result, ">>", 0, 0, 0);
-                i += 2;
-            }
-            else
-            {
-                char tmp[2] = { line[i], '\0' };
-                add_strlist(&result, tmp, 0, 0, 0);
-                i++;
-            }
-        }
+            process_special_char_token(line, &i, &result);
         else
-        {
-            int has_sq = 0;
-            int has_dq = 0;
-            int should_expand = 0;
-            char *tok = parse_one_token_merge_quotes(line, &i, &has_sq, &has_dq, &should_expand);
-            if (tok && *tok)
-                add_strlist(&result, tok, has_sq, has_dq, should_expand);
-            free(tok);
-        }
+            process_normal_token(line, &i, &result);
     }
     return result;
 }
+
 
 
 static t_token *build_tokens_from_list(t_strlist *lst)

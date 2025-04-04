@@ -98,7 +98,7 @@ char **clone_envp(char **envp);
 void  free_envp(char **envp);
 
 // syntax
-int check_unclosed_quotes(const char *input);
+int check_unclosed_quotes(const char *input, t_shell *shell);
 
 // split_tokens
 // void skip_spaces(const char *input, int *i);
@@ -125,15 +125,19 @@ void free_commands(t_command *cmd);
 // expansion
 char *add_or_replace_var(t_shell *shell, const char *name, const char *value);
 void expand_tokens(t_token *tokens, t_shell *shell);
+char *expand_string(const char *str, t_shell *shell);
+
 
 // execution
 
-char *find_exec(char *cmd);
+char *find_exec(char *cmd, char **env);
 void execute_command(char **args, char **env);
 int  execute_builtin(t_command *cmd, t_shell *shell);
 void parse_command(char *input, t_shell *shell);
 void execute_pipeline(t_command *cmd, t_shell *shell);
 void execute_command_line(t_command *cmd, char **env);
+void ft_free_strarray(char **arr);
+
 
 // Builtins
 
@@ -145,8 +149,6 @@ int ft_echo(t_command *cmd, t_shell *shell);
 int ft_exit(t_command *cmd, t_shell *shell);
 int ft_pwd(t_command *cmd, t_shell *shell);
 
-
-int  check_unclosed_quotes(const char *input);
 void prompt_loop(t_shell *shell);
 
 // Signals
