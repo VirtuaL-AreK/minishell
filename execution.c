@@ -213,6 +213,8 @@ int execute_builtin(t_command *cmd, t_shell *shell)
         return 1;
     if (strcmp(cmd->args[0], "cd") == 0)
         return execute_builtin_cd(cmd, shell);
+    if (strcmp(cmd->args[0], "env") == 0)
+        return ft_env(cmd, shell);
     if (strcmp(cmd->args[0], "echo") == 0)
         return execute_builtin_echo(cmd, shell);
     if (strcmp(cmd->args[0], "xargs") == 0 &&
