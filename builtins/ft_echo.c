@@ -1,30 +1,50 @@
 #include "../minishell.h"
 
-
-int ft_echo(t_command *cmd, t_shell *shell)
+static int is_valid_echo_flag(const char *arg)
 {
-    int i = 1;
-    int no_newline = 0;
+    int j;
+    int valid;
 
+    j = 1;
+    valid = 1;
+    while (arg[j])
+    {
+        if (arg[j] != 'n')
+        {
+            valid = 0;
+            break;
+        }
+        j = j + 1;
+    }
+    return valid;
+}
+
+static int parse_echo_flags(t_command *cmd, int *start_index)
+{
+    int i;
+    int no_newline;
+    int valid;
+
+    i = 1;
+    no_newline = 0;
     while (cmd->args[i] && cmd->args[i][0] == '-' && cmd->args[i][1])
     {
-        int j = 1;
-        int valid = 1;
-        while (cmd->args[i][j])
-        {
-            if (cmd->args[i][j] != 'n')
-            {
-                valid = 0;
-                break;
-            }
-            j++;
-        }
+        valid = is_valid_echo_flag(cmd->args[i]);
         if (!valid)
             break;
         no_newline = 1;
-        i++;
+        i = i + 1;
     }
+    *start_index = i;
+    return no_newline;
+}
 
+
+static void print_echo_output(t_command *cmd, int start_index)
+{
+    int i;
+
+    i = start_index;
     while (i < cmd->nb_arg)
     {
         printf("%s", cmd->args[i]);
@@ -32,11 +52,17 @@ int ft_echo(t_command *cmd, t_shell *shell)
             putchar(' ');
         i++;
     }
+}
+
+int ft_echo(t_command *cmd, t_shell *shell)
+{
+    int start_index;
+    int no_newline;
+
+    no_newline = parse_echo_flags(cmd, &start_index);
+    print_echo_output(cmd, start_index);
     if (!no_newline)
         putchar('\n');
-
     shell->exit_status = 0;
     return 0;
 }
-
-

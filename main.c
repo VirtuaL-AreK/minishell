@@ -3,47 +3,64 @@
 // extern char **environ;
 t_shell g_shell = { NULL, 0 };  
 
-int is_syntax_error(t_token *tokens, t_shell *shell)
+static int check_initial_token(t_token *token, t_shell *shell)
 {
-    if (!tokens)
+    if (!token)
     {
         shell->exit_status = 2;
-        return (1);
+        return 1;
     }
-	if (tokens->type == TOKEN_PIPE)
+    if (token->type == TOKEN_PIPE)
+    {
+        ft_putstr_fd("Syntax error near unexpected token '|'\n", 2);
+        shell->exit_status = 2;
+        return 1;
+    }
+    return 0;
+}
+
+static int check_token_error(t_token *token, t_shell *shell)
+{
+    if (token->type == TOKEN_PIPE)
+    {
+        if (!token->next || token->next->type == TOKEN_PIPE)
         {
-            ft_putstr_fd("Syntax error near unexpected token '|'\n",2);
-			shell->exit_status = 2;
+            ft_putstr_fd("Syntax error near unexpected token '|'\n", 2);
+            shell->exit_status = 2;
             return 1;
         }
+    }
+    else if (token->type == TOKEN_REDIR_IN ||
+             token->type == TOKEN_REDIR_OUT ||
+             token->type == TOKEN_APPEND ||
+             token->type == TOKEN_HEREDOC)
+    {
+        if (!token->next || token->next->type != TOKEN_WORD)
+        {
+            if (token->type == TOKEN_HEREDOC)
+                ft_putstr_fd("Syntax error: missing delimiter for heredoc\n", 2);
+            else
+                ft_putstr_fd("Syntax error: missing file for redirection\n", 2);
+            shell->exit_status = 2;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int is_syntax_error(t_token *tokens, t_shell *shell)
+{
+    if (check_initial_token(tokens, shell))
+        return 1;
     while (tokens)
     {
-        if (tokens->type == TOKEN_PIPE)
-        {
-            if (!tokens->next || tokens->next->type == TOKEN_PIPE)
-            {
-                ft_putstr_fd("Syntax error near unexpected token '|'\n",2);
-				shell->exit_status = 2;
-                return 1;
-            }
-        }
-        else if (tokens->type == TOKEN_REDIR_IN || tokens->type == TOKEN_REDIR_OUT ||
-                 tokens->type == TOKEN_APPEND || tokens->type == TOKEN_HEREDOC)
-        {
-            if (!tokens->next || tokens->next->type != TOKEN_WORD)
-            {
-                if (tokens->type == TOKEN_HEREDOC)
-                   	ft_putstr_fd("Syntax error: missing delimiter for heredoc\n", 2);
-                else
-                    ft_putstr_fd("Syntax error: missing file for redirection\n", 2);
-                shell->exit_status = 2;
-                return 1;
-            }
-        }
+        if (check_token_error(tokens, shell))
+            return 1;
         tokens = tokens->next;
     }
     return 0;
 }
+
 
 
 
@@ -101,24 +118,17 @@ void prompt_loop(t_shell *shell)
     {
         signal(SIGQUIT, SIG_IGN);
         signal(SIGINT, sig_handler);
-
         if (isatty(fileno(stdin)))
-        {
             input = readline("\033[1;32mminishell$\033[0m ");
-        }
         else
         {
             char *line;
             line = get_next_line(fileno(stdin));
             if (!line)
-            {
-                // Fin de l'entrée non-interactive
                 exit(shell->exit_status);
-            }
             input = ft_strtrim(line, "\n");
             free(line);
         }
-
         if (!input)
         {
             rl_clear_history();
@@ -126,10 +136,8 @@ void prompt_loop(t_shell *shell)
         }
         if (*input)
             add_history(input);
-
         if (!check_unclosed_quotes(input, shell))
             parse_command(input, shell);
-
         free(input);
     }
 }
