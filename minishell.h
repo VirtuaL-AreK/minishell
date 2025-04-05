@@ -6,7 +6,7 @@
 /*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 14:03:01 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/05 14:52:29 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -196,6 +196,12 @@ char			*export_var_plus_get_old_val(t_shell *shell, const char *name);
 void			export_var_plus_update(t_shell *shell, const char *name,
 					const char *to_append, char *old_val);
 void			export_var_plus(t_shell *shell, const char *arg, char *plus_eq);
+int				extract_name_value(const char *arg, char *eq,
+					char **name, char **value);
+void			export_var_eq(t_shell *shell, const char *arg, char *eq);
+void			export_var_no_eq(t_shell *shell, const char *arg);
+void			export_var(t_shell *shell, const char *arg);
+int				count_env_vars(t_shell *shell);
 
 // Signals
 void			sig_handler(int sig);
