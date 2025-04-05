@@ -1,4 +1,4 @@
-#include "minishell.h"
+#include "../minishell.h"
 
 typedef struct s_expand_state {
 	char buffer[4096];

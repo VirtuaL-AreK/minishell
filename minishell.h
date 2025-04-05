@@ -114,6 +114,19 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
+void print_command(t_command *commands);
+int count_command_arguments(t_token *tokens);
+t_command *new_command(t_token *tokens);
+char *handle_heredoc(const char *delimiter);
+void handle_word(t_command *cmd, t_token **tokens, int *arg_count);
+
+//here doc
+void handle_redir_in(t_command *cmd, t_token **tokens);
+void handle_heredoc_token(t_command *cmd, t_token **tokens);
+void handle_redir_out_or_append(t_command *cmd, t_token **tokens);
+void fill_command(t_command *cmd, t_token **tokens);
+void fix_empty_first_arg(t_command *cmd);
+
 // utils
 char			**ft_split(char const *s, char c);
 void			ft_free_args(char **args);

@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 int	check_unclosed_quotes(const char *input, t_shell *shell)
 {

@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 static void	process_normal_token(const char *line, int *i, t_strlist **result)
 {

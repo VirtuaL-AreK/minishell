@@ -1,10 +1,10 @@
 CC = cc
 CFLAGS = -Wall -Wextra -Werror 
 NAME = minishell
-SRC = main.c utils.c syntax.c split_tokens.c split_tokens_0.c split_tokens_01.c tokenization.c env_utils.c commands.c expansion.c \
-		./builtins/ft_echo.c ./builtins/ft_cd.c execution.c ./builtins/ft_pwd.c ./builtins/ft_export.c ./builtins/ft_unset.c ./builtins/ft_env.c \
-		./builtins/ft_exit.c ./execution/signals.c ./execution/exit_status.c ./builtins/export_h/env_h_00.c ./builtins/export_h/env_h_01.c \
-		./builtins/export_h/env_h_02.c ./builtins/export_h/env_cd.c
+SRC = main.c ./parsing/syntax.c ./parsing/split_tokens.c ./parsing/split_tokens_0.c ./parsing/split_tokens_01.c ./parsing/tokenization.c env_utils.c \
+		./builtins/ft_echo.c ./builtins/ft_cd.c ./execution/execution.c ./builtins/ft_pwd.c ./builtins/ft_export.c ./builtins/ft_unset.c ./builtins/ft_env.c \
+		./builtins/ft_exit.c ./execution/signals.c ./execution/commands.c ./builtins/export_h/env_h_00.c ./builtins/export_h/env_h_01.c \
+		./builtins/export_h/env_h_02.c ./builtins/export_h/env_cd.c ./execution/expansion.c ./execution/cmd/prepare_command.c ./execution/cmd/here_doc.c
 OBJ = $(SRC:.c=.o)
 LIBFT = ./libft/libft.a
 

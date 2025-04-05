@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 void	process_unquoted_char(const char *line, int *i, char *buffer, int *len)
 {
