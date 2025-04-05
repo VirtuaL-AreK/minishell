@@ -6,7 +6,7 @@
 /*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 10:30:48 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/05 13:23:28 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,10 +53,10 @@ typedef struct s_strlist
 
 typedef struct s_token_flags
 {
-    int has_sq;
-    int has_dq;
-    int should_expand;
-} t_token_flags;
+	int	has_sq;
+	int	has_dq;
+	int	should_expand;
+}	t_token_flags;
 
 extern t_shell	g_shell;
 
@@ -111,16 +111,20 @@ typedef struct s_command
 // utils
 char			**ft_split(char const *s, char c);
 void			ft_free_args(char **args);
-int is_special_char(int c);
-void skip_spaces(const char *line, int *i);
-void add_strlist(t_strlist **head, const char *value, t_token_flags flags);
-void process_single_quote(const char *line, int *i, char *buffer, int *len);
-void process_double_quote(const char *line, int *i, char *buffer, int *len);
-void process_unquoted_char(const char *line, int *i, char *buffer, int *len);
-char *parse_one_token_merge_quotes(const char *line, int *i, t_token_flags *flags);
-void process_special_char_token(const char *line, int *i, t_strlist **result);
-
-
+int				is_special_char(int c);
+void			skip_spaces(const char *line, int *i);
+void			add_strlist(t_strlist **head,
+					const char *value, t_token_flags flags);
+void			process_single_quote(const char *line, int *i,
+					char *buffer, int *len);
+void			process_double_quote(const char *line, int *i,
+					char *buffer, int *len);
+void			process_unquoted_char(const char *line, int *i,
+					char *buffer, int *len);
+char			*parse_one_token_merge_quotes(const char *line,
+					int *i, t_token_flags *flags);
+void			process_special_char_token(const char *line,
+					int *i, t_strlist **result);
 
 // 1) Gestion de l'environnement local
 char			**clone_envp(char **envp);
