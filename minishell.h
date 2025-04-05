@@ -6,7 +6,7 @@
 /*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 13:23:28 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/05 14:03:01 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,12 @@ typedef struct s_token_flags
 }	t_token_flags;
 
 extern t_shell	g_shell;
+
+typedef struct s_export_parts
+{
+	char	*name;
+	char	*to_append;
+}	t_export_parts;
 
 typedef enum e_token_type
 {
@@ -177,6 +183,19 @@ int				ft_echo(t_command *cmd, t_shell *shell);
 int				ft_exit(t_command *cmd, t_shell *shell);
 int				ft_pwd(t_command *cmd, t_shell *shell);
 void			prompt_loop(t_shell *shell);
+char			*ft_strjoin3(const char *s1, const char *s2, const char *s3);
+int				find_var_index(t_shell *shell, const char *name, int len);
+int				count_env(t_shell *shell);
+char			*append_var(t_shell *shell, char *new_var, int count);
+char			*add_or_replace_var(t_shell *shell, const char *name,
+					const char *value);
+int				is_valid_varname(char *var);
+int				export_var_plus_get_parts(const char *arg, char *plus_eq,
+					t_export_parts *parts, t_shell *shell);
+char			*export_var_plus_get_old_val(t_shell *shell, const char *name);
+void			export_var_plus_update(t_shell *shell, const char *name,
+					const char *to_append, char *old_val);
+void			export_var_plus(t_shell *shell, const char *arg, char *plus_eq);
 
 // Signals
 void			sig_handler(int sig);
