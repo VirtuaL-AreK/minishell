@@ -6,7 +6,7 @@
 /*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 14:52:29 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/05 18:42:17 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,6 +202,11 @@ void			export_var_eq(t_shell *shell, const char *arg, char *eq);
 void			export_var_no_eq(t_shell *shell, const char *arg);
 void			export_var(t_shell *shell, const char *arg);
 int				count_env_vars(t_shell *shell);
+char			*get_home_from_env(t_shell *shell);
+char			*get_oldpwd_from_env(t_shell *shell);
+char			*resolve_cd_path_tilde(t_command *cmd, t_shell *shell);
+char			*resolve_cd_path_dash(t_command *cmd, t_shell *shell);
+char			*resolve_cd_path_home_slash(t_command *cmd, t_shell *shell);
 
 // Signals
 void			sig_handler(int sig);
