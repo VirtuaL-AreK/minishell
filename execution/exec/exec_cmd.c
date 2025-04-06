@@ -29,7 +29,7 @@ void	execute_command_child(char **args, char **env)
 			exit(1);
 		}
 		execve(exec_path, args, env);
-		perror("minishell");
+		ft_putstr_fd("minishell", 2);
 		exit(1);
 	}
 	else
@@ -69,6 +69,6 @@ void	execute_command_exec(t_command *c, t_shell *shell)
 	}
 	check_directory_and_permissions(exec_path);
 	execve(exec_path, c->args, shell->env);
-	perror(exec_path);
+	ft_putstr_fd(exec_path, 2);
 	exit(1);
 }

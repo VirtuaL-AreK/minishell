@@ -21,7 +21,7 @@ void	setup_input_redirection(t_command *c, int prev_fd)
 		in_fd = open(c->infile, O_RDONLY);
 		if (in_fd < 0)
 		{
-			perror(c->infile);
+			ft_putstr_fd(c->infile, 2);
 			exit(1);
 		}
 		dup2(in_fd, STDIN_FILENO);
@@ -49,7 +49,7 @@ void	setup_output_redirection(t_command *c, int has_pipe, int pipe_fd[2])
 		out_fd = open(c->outfile, flags, 0644);
 		if (out_fd < 0)
 		{
-			perror(c->outfile);
+			ft_putstr_fd(c->outfile, 2);
 			exit(1);
 		}
 		dup2(out_fd, STDOUT_FILENO);
@@ -88,7 +88,7 @@ void	check_directory_and_permissions(char *exec_path)
 	}
 	if (access(exec_path, X_OK) != 0)
 	{
-		perror(exec_path);
+		ft_putstr_fd(exec_path, 2);
 		exit(126);
 	}
 }

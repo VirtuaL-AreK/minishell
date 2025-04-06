@@ -20,7 +20,7 @@ int	ft_pwd(t_command *cmd, t_shell *shell)
 	cwd = getcwd(NULL, 0);
 	if (!cwd)
 	{
-		perror("pwd");
+		ft_putstr_fd("pwd", 2);
 		shell->exit_status = 1;
 		return (1);
 	}

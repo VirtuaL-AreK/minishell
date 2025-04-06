@@ -59,7 +59,7 @@ int	create_pipe_for_command(t_command *c, int pipe_fd[2])
 		ret = pipe(pipe_fd);
 		if (ret < 0)
 		{
-			perror("pipe");
+			ft_putstr_fd("pipe", 2);
 			return (-1);
 		}
 		has_pipe = 1;

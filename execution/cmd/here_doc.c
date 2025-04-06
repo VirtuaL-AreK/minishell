@@ -20,7 +20,7 @@ void	handle_redir_in(t_command *cmd, t_token **tokens)
 	in_fd = open((*tokens)->value, O_RDONLY);
 	if (in_fd < 0)
 	{
-		perror((*tokens)->value);
+		ft_putstr_fd((*tokens)->value, 2);
 		cmd->redir_error_code = 1;
 		while (*tokens && (*tokens)->type != TOKEN_PIPE)
 			*tokens = (*tokens)->next;
@@ -74,7 +74,7 @@ void	handle_redir_out_or_append(t_command *cmd, t_token **tokens)
 	out_fd = open((*tokens)->value, flags, 0644);
 	if (out_fd < 0)
 	{
-		perror((*tokens)->value);
+		ft_putstr_fd((*tokens)->value, 2);
 		cmd->redir_error_code = 1;
 		while (*tokens && (*tokens)->type != TOKEN_PIPE)
 			*tokens = (*tokens)->next;

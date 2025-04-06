@@ -6,7 +6,7 @@
 /*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/06 12:04:46 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/06 13:00:49 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ typedef struct s_command
 }	t_command;
 
 void			print_command(t_command *commands);
-int					count_command_arguments(t_token *tokens);
+int				count_command_arguments(t_token *tokens);
 t_command		*new_command(t_token *tokens);
 char			*handle_heredoc(const char *delimiter);
 void			handle_word(t_command *cmd, t_token **tokens, int *arg_count);
@@ -159,6 +159,9 @@ void			free_envp(char **envp);
 
 // syntax
 int				check_unclosed_quotes(const char *input, t_shell *shell);
+int				check_initial_token(t_token *token, t_shell *shell);
+int				check_token_error(t_token *token, t_shell *shell);
+int				is_syntax_error(t_token *tokens, t_shell *shell);
 
 // split_tokens
 // void skip_spaces(const char *input, int *i);
@@ -186,8 +189,8 @@ char			*add_or_replace_var(t_shell *shell,
 void			expand_tokens(t_token *tokens, t_shell *shell);
 char			*expand_string(const char *str, t_shell *shell);
 char			*get_local_env_value(const char *var, t_shell *shell);
-void			handle_alphanum_variable(const char *s, int *i, 
-    				t_expand_state *state, t_shell *shell);
+void			handle_alphanum_variable(const char *s, int *i,
+					t_expand_state *state, t_shell *shell);
 void			handle_variable(const char *s, int *i,
 					t_expand_state *state, t_shell *shell);
 char			process_escape_char(const char *s, int *i, char quote);

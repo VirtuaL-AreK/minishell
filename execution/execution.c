@@ -22,7 +22,7 @@ static int	fork_pipeline_command(t_command *c, int prev_fd, int pipe_fd[2],
 	pid = fork();
 	if (pid < 0)
 	{
-		perror("fork");
+		ft_putstr_fd("fork", 2);
 		return (-1);
 	}
 	else if (pid == 0)
@@ -78,7 +78,7 @@ static void	process_pipeline(t_command *cmd, t_shell *shell)
 	pids = malloc(sizeof(pid_t) * nb_cmds);
 	if (pids == NULL)
 	{
-		perror("malloc pids");
+		ft_putstr_fd("malloc pids", 2);
 		shell->exit_status = 1;
 		return ;
 	}

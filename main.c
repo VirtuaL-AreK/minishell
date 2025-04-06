@@ -1,68 +1,7 @@
 #include "minishell.h"
 
 // extern char **environ;
-t_shell g_shell = { NULL, 0 };  
-
-static int check_initial_token(t_token *token, t_shell *shell)
-{
-    if (!token)
-    {
-        shell->exit_status = 2;
-        return 1;
-    }
-    if (token->type == TOKEN_PIPE)
-    {
-        ft_putstr_fd("Syntax error near unexpected token '|'\n", 2);
-        shell->exit_status = 2;
-        return 1;
-    }
-    return 0;
-}
-
-static int check_token_error(t_token *token, t_shell *shell)
-{
-    if (token->type == TOKEN_PIPE)
-    {
-        if (!token->next || token->next->type == TOKEN_PIPE)
-        {
-            ft_putstr_fd("Syntax error near unexpected token '|'\n", 2);
-            shell->exit_status = 2;
-            return 1;
-        }
-    }
-    else if (token->type == TOKEN_REDIR_IN ||
-             token->type == TOKEN_REDIR_OUT ||
-             token->type == TOKEN_APPEND ||
-             token->type == TOKEN_HEREDOC)
-    {
-        if (!token->next || token->next->type != TOKEN_WORD)
-        {
-            if (token->type == TOKEN_HEREDOC)
-                ft_putstr_fd("Syntax error: missing delimiter for heredoc\n", 2);
-            else
-                ft_putstr_fd("Syntax error: missing file for redirection\n", 2);
-            shell->exit_status = 2;
-            return 1;
-        }
-    }
-    return 0;
-}
-
-int is_syntax_error(t_token *tokens, t_shell *shell)
-{
-    if (check_initial_token(tokens, shell))
-        return 1;
-    while (tokens)
-    {
-        if (check_token_error(tokens, shell))
-            return 1;
-        tokens = tokens->next;
-    }
-    return 0;
-}
-
-
-
+t_shell g_shell = { NULL, 0 };
 
 void parse_command(char *input, t_shell *shell)
 {

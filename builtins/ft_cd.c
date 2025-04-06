@@ -65,7 +65,7 @@ int	ft_cd(t_command *cmd, t_shell *shell)
 	oldpwd = getcwd(NULL, 0);
 	if (chdir(path) != 0)
 	{
-		perror("cd");
+		ft_putstr_fd("cd", 2);
 		if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
 			free(path);
 		free(oldpwd);

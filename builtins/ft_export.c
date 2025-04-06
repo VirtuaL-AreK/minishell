@@ -21,7 +21,7 @@ static char	**copy_env_vars(t_shell *shell, int count)
 	copy = malloc(sizeof(char *) * (count + 1));
 	if (!copy)
 	{
-		perror("malloc");
+		ft_putstr_fd("malloc", 2);
 		shell->exit_status = 1;
 		return (NULL);
 	}

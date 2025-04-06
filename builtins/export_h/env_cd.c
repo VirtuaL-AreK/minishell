@@ -95,7 +95,7 @@ char	*resolve_cd_path_home_slash(t_command *cmd, t_shell *shell)
 	path = ft_strjoin(home, cmd->args[1] + 1);
 	if (!path)
 	{
-		perror("malloc");
+		ft_putstr_fd("malloc", 2);
 		shell->exit_status = 1;
 		return (NULL);
 	}
