@@ -6,7 +6,7 @@
 /*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 18:42:17 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/06 12:04:46 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,14 @@ typedef struct s_export_parts
 	char	*to_append;
 }	t_export_parts;
 
+typedef struct s_expand_state
+{
+	char	buffer[4096];
+	int		idx;
+	int		in_sq;
+	int		in_dq;
+}	t_expand_state;
+
 typedef enum e_token_type
 {
 	TOKEN_WORD = 0,
@@ -114,18 +122,18 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
-void print_command(t_command *commands);
-int count_command_arguments(t_token *tokens);
-t_command *new_command(t_token *tokens);
-char *handle_heredoc(const char *delimiter);
-void handle_word(t_command *cmd, t_token **tokens, int *arg_count);
+void			print_command(t_command *commands);
+int					count_command_arguments(t_token *tokens);
+t_command		*new_command(t_token *tokens);
+char			*handle_heredoc(const char *delimiter);
+void			handle_word(t_command *cmd, t_token **tokens, int *arg_count);
 
 //here doc
-void handle_redir_in(t_command *cmd, t_token **tokens);
-void handle_heredoc_token(t_command *cmd, t_token **tokens);
-void handle_redir_out_or_append(t_command *cmd, t_token **tokens);
-void fill_command(t_command *cmd, t_token **tokens);
-void fix_empty_first_arg(t_command *cmd);
+void			handle_redir_in(t_command *cmd, t_token **tokens);
+void			handle_heredoc_token(t_command *cmd, t_token **tokens);
+void			handle_redir_out_or_append(t_command *cmd, t_token **tokens);
+void			fill_command(t_command *cmd, t_token **tokens);
+void			fix_empty_first_arg(t_command *cmd);
 
 // utils
 char			**ft_split(char const *s, char c);
@@ -177,6 +185,19 @@ char			*add_or_replace_var(t_shell *shell,
 					const char *name, const char *value);
 void			expand_tokens(t_token *tokens, t_shell *shell);
 char			*expand_string(const char *str, t_shell *shell);
+char			*get_local_env_value(const char *var, t_shell *shell);
+void			handle_alphanum_variable(const char *s, int *i, 
+    				t_expand_state *state, t_shell *shell);
+void			handle_variable(const char *s, int *i,
+					t_expand_state *state, t_shell *shell);
+char			process_escape_char(const char *s, int *i, char quote);
+void			process_backslash(const char *s, int *i, int *j,
+					char *result, char quote);
+char			*process_ansi_c(const char *s);
+char			*process_dollar_dquote(const char *s);
+void			append_string(t_expand_state *state, const char *s);
+void			handle_dollar_quoted(const char *s, int *i,
+					t_expand_state *state, t_shell *shell);
 
 // execution
 char			*find_exec(char *cmd, char **env);
@@ -186,6 +207,35 @@ void			parse_command(char *input, t_shell *shell);
 void			execute_pipeline(t_command *cmd, t_shell *shell);
 void			execute_command_line(t_command *cmd, char **env);
 void			ft_free_strarray(char **arr);
+
+void			ft_free_strarray(char **arr);
+char			*get_env_path(char **env);
+char			*search_in_paths(char *env_path, char *cmd);
+char			*search_in_cwd(char *cmd);
+char			*find_exec(char *cmd, char **env);
+int				is_critical_builtin(const char *cmd);
+int				execute_builtin_cd(t_command *cmd, t_shell *shell);
+int				execute_builtin_echo(t_command *cmd, t_shell *shell);
+int				execute_builtin_exit(t_command *cmd, t_shell *shell);
+int				execute_builtin_export(t_command *cmd, t_shell *shell);
+int				execute_builtin_pwd(t_command *cmd, t_shell *shell);
+int				execute_builtin_unset(t_command *cmd, t_shell *shell);
+int				execute_builtin_xargs(t_command *cmd, t_shell *shell);
+int				execute_builtin(t_command *cmd, t_shell *shell);
+void			execute_command_child(char **args, char **env);
+void			execute_command(char **args, char **env);
+int				count_commands(t_command *cmd);
+void			execute_command_exec(t_command *c, t_shell *shell);
+void			setup_input_redirection(t_command *c, int prev_fd);
+void			setup_output_redirection(t_command *c,
+					int has_pipe, int pipe_fd[2]);
+void			setup_redirection(t_command *c, int prev_fd,
+					int pipe_fd[2], int has_pipe);
+void			check_directory_and_permissions(char *exec_path);
+void			wait_for_pipeline(pid_t *pids, int nb_cmds, t_shell *shell);
+void			execute_pipeline_child(t_command *c, int prev_fd,
+					int pipe_fd[2], int has_pipe, t_shell *shell);
+int				create_pipe_for_command(t_command *c, int pipe_fd[2]);
 
 // Builtins
 int				ft_env(t_command *cmd, t_shell *shell);

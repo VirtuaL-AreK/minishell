@@ -4,7 +4,9 @@ NAME = minishell
 SRC = main.c ./parsing/syntax.c ./parsing/split_tokens.c ./parsing/split_tokens_0.c ./parsing/split_tokens_01.c ./parsing/tokenization.c env_utils.c \
 		./builtins/ft_echo.c ./builtins/ft_cd.c ./execution/execution.c ./builtins/ft_pwd.c ./builtins/ft_export.c ./builtins/ft_unset.c ./builtins/ft_env.c \
 		./builtins/ft_exit.c ./execution/signals.c ./execution/commands.c ./builtins/export_h/env_h_00.c ./builtins/export_h/env_h_01.c \
-		./builtins/export_h/env_h_02.c ./builtins/export_h/env_cd.c ./execution/expansion.c ./execution/cmd/prepare_command.c ./execution/cmd/here_doc.c
+		./builtins/export_h/env_h_02.c ./builtins/export_h/env_cd.c ./parsing/expansion.c ./execution/cmd/prepare_command.c ./execution/cmd/here_doc.c \
+		./execution/exec/exec.c ./execution/exec/exec_built.c ./execution/exec/exec_built_2.c ./execution/exec/exec_cmd.c ./execution/exec/exec_redir.c \
+		./execution/exec/exec_pipe.c ./parsing/exp/exp_env.c ./parsing/exp/pre_expansion.c
 OBJ = $(SRC:.c=.o)
 LIBFT = ./libft/libft.a
 
