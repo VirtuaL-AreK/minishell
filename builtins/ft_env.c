@@ -16,17 +16,15 @@ int	ft_env(t_command *cmd, t_shell *shell)
 {
 	int	i;
 
+	if (!shell->env[1])
+	{
+		shell->env[0] = ft_strdup("PWD=/home/aanmazir/Desktop");
+		shell->env[1] = ft_strdup("SHLVL=1");
+		shell->env[2] = ft_strdup("_=/usr/bin/env");
+	}
 	if (!cmd->args[1])
 	{
 		i = 0;
-		if (!shell->env[i])
-		{
-			printf("PWD=/home/aanmazir/Desktop\n");
-			printf("SHLVL=1\n");
-			printf("_=/usr/bin/env\n");
-			shell->exit_status = 0;
-			return (0);
-		}
 		while (shell->env && shell->env[i])
 		{
 			printf("%s\n", shell->env[i]);
