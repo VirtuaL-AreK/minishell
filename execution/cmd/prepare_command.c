@@ -62,36 +62,130 @@ t_command	*new_command(t_token *tokens)
 	return (cmd);
 }
 
-char	*handle_heredoc(const char *delimiter)
-{
-	int		fd;
-	char	*line;
-	char	*template;
+// char	*handle_heredoc(const char *delimiter)
+// {
+// 	int		fd;
+// 	char	*line;
+// 	char	*template;
 
-	template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
-	fd = mkstemp(template);
-	if (fd < 0)
-		return (ft_putstr_fd("mkstemp", 2), NULL);
-	while (1)
-	{
-		line = readline("> ");
-		if (!line)
-			break ;
-		if (strcmp(line, delimiter) == 0)
-		{
-			free(line);
-			break ;
-		}
-		write(fd, line, strlen(line));
-		write(fd, "\n", 1);
-		free(line);
-	}
-	close(fd);
-	return (strdup(template));
-}
+// 	template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
+// 	fd = mkstemp(template);
+// 	if (fd < 0)
+// 		return (ft_putstr_fd("mkstemp", 2), NULL);
+// 	while (1)
+// 	{
+// 		line = readline("> ");
+// 		if (!line)
+// 			break ;
+// 		if (strcmp(line, delimiter) == 0)
+// 		{
+// 			free(line);
+// 			break ;
+// 		}
+// 		write(fd, line, strlen(line));
+// 		write(fd, "\n", 1);
+// 		free(line);
+// 	}
+// 	close(fd);
+// 	return (strdup(template));
+// }
 
 void	handle_word(t_command *cmd, t_token **tokens, int *arg_count)
 {
 	cmd->args[(*arg_count)++] = ft_strdup((*tokens)->value);
 	*tokens = (*tokens)->next;
+}
+
+typedef struct s_heredoc_state
+{
+    int interrupt;
+    const char *delimiter;
+    int fd;
+    char *template;
+} t_heredoc_state;
+
+static void handle_sigint(int sig)
+{
+    (void)sig;
+    write(STDOUT_FILENO, "\n", 1);
+	prompt_loop(&g_shell);
+	g_shell.exit_status = 130;
+	rl_on_new_line();
+	rl_replace_line("", 0);
+	rl_redisplay();
+}
+
+static char *init_heredoc_file(int *fd)
+{
+    char *template;
+
+	template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
+    if (!template)
+        return (NULL);
+    *fd = mkstemp(template);
+    if (*fd < 0)
+    {
+        ft_putstr_fd("mkstemp", 2);
+        free(template);
+        return (NULL);
+    }
+    return (template);
+}
+
+static int process_heredoc_line(const char *delimiter, int fd, int *interrupt)
+{
+    char *line;
+    
+	line = readline("> ");
+    if (!line)
+    {
+        *interrupt = 1;
+        return (0);
+    }
+    if (strcmp(line, delimiter) == 0)
+    {
+        free(line);
+        return (0);
+    }
+    write(fd, line, strlen(line));
+    write(fd, "\n", 1);
+    free(line);
+    return (1);
+}
+
+static char *cleanup_heredoc(char *template, int interrupt)
+{
+    if (interrupt)
+    {
+        unlink(template);
+        free(template);
+        return (NULL);
+    }
+    char *result = strdup(template);
+    free(template);
+    return (result);
+}
+
+char *handle_heredoc(const char *delimiter)
+{
+    int fd;
+    char *template;
+    struct sigaction sa, old_sa;
+    int interrupt = 0;
+
+    template = init_heredoc_file(&fd);
+    if (!template)
+        return (NULL);
+    sa.sa_handler = handle_sigint;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, &old_sa);
+    while (process_heredoc_line(delimiter, fd, &interrupt))
+	{
+		if (interrupt)
+			break;
+	}
+    sigaction(SIGINT, &old_sa, NULL);
+    close(fd);
+    return cleanup_heredoc(template, interrupt);
 }
