@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/06 13:00:49 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/09 19:06:19 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@
 # include <sys/wait.h>
 # include <readline/readline.h>
 # include <readline/history.h>
+#include <termios.h>
+#include <sys/ioctl.h>
 # include "libft/libft.h"
 
 # include <sys/stat.h>
@@ -39,8 +41,18 @@
 typedef struct s_shell
 {
 	char	**env;
+	char	*path;
 	int		exit_status;
+	int heredoc_interrupted;
 }	t_shell;
+
+typedef struct s_heredoc_ctx
+{
+    int            fd;
+    int            is_quoted;
+    const char     *delimiter;
+    t_shell        *shell;
+}   t_heredoc_ctx;
 
 typedef struct s_strlist
 {
@@ -125,7 +137,8 @@ typedef struct s_command
 void			print_command(t_command *commands);
 int				count_command_arguments(t_token *tokens);
 t_command		*new_command(t_token *tokens);
-char			*handle_heredoc(const char *delimiter);
+// char			*handle_heredoc(const char *delimiter);
+char *handle_heredoc(const char *delimiter, int is_quoted, t_shell *shell);
 void			handle_word(t_command *cmd, t_token **tokens, int *arg_count);
 
 //here doc
@@ -134,6 +147,7 @@ void			handle_heredoc_token(t_command *cmd, t_token **tokens);
 void			handle_redir_out_or_append(t_command *cmd, t_token **tokens);
 void			fill_command(t_command *cmd, t_token **tokens);
 void			fix_empty_first_arg(t_command *cmd);
+char *expand_heredoc_line(const char *line, t_shell *shell);
 
 // utils
 char			**ft_split(char const *s, char c);

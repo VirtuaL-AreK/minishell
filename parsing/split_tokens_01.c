@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   split_tokens_01.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 12:01:56 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 12:15:42 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/07 15:08:35 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,7 @@ void	process_unquoted_char(const char *line, int *i, char *buffer, int *len)
 	*i = *i + 1;
 }
 
-char	*parse_one_token_merge_quotes(const char *line,
-		int *i, t_token_flags *flags)
+char	*parse_one_token_merge_quotes(const char *line, int *i, t_token_flags *flags)
 {
 	char	buffer[4096];
 	int		len;

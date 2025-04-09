@@ -1,7 +1,7 @@
 #include "minishell.h"
 
 // extern char **environ;
-t_shell g_shell = { NULL, 0 };
+t_shell g_shell = { NULL, 0 , '\0', 0};
 
 void parse_command(char *input, t_shell *shell)
 {
@@ -88,6 +88,7 @@ int main(int ac, char **av, char **env)
 
 	g_shell.env = clone_envp(env);
     g_shell.exit_status = 0;
+    // g_shell.path = NULL;
 
     // On lance la boucle
     prompt_loop(&g_shell);

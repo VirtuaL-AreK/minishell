@@ -3,12 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   ft_cd.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 18:35:19 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 18:39:52 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/09 19:27:38 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#include "../minishell.h"
 
 #include "../minishell.h"
 
@@ -65,7 +67,6 @@ int	ft_cd(t_command *cmd, t_shell *shell)
 	oldpwd = getcwd(NULL, 0);
 	if (chdir(path) != 0)
 	{
-		ft_putstr_fd("cd", 2);
 		if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
 			free(path);
 		free(oldpwd);
@@ -75,6 +76,13 @@ int	ft_cd(t_command *cmd, t_shell *shell)
 	if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
 		free(path);
 	ret = update_cd_env(cmd, shell, oldpwd);
+	shell->path = getcwd(NULL, 0);
+	if (!shell->path)
+	{
+		// ft_putstr_fd("pwd", 2);
+		shell->exit_status = 1;
+		return (1);
+	}
 	shell->exit_status = 0;
 	return (ret);
 }

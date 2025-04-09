@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_export.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 17:41:56 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 17:50:45 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/09 19:11:43 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ static char	**copy_env_vars(t_shell *shell, int count)
 	copy = malloc(sizeof(char *) * (count + 1));
 	if (!copy)
 	{
-		ft_putstr_fd("malloc", 2);
 		shell->exit_status = 1;
 		return (NULL);
 	}
