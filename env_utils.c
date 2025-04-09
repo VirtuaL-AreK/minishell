@@ -12,12 +12,13 @@
 
 #include "minishell.h"
 
-char **handle_shlvl(char **envir)
+char **handle_shlvl(char **envir, t_shell *shell)
 {
     int i;
     char *var;
     int n;
 	char *new_value;
+    char *sm;
 
     i = 0;
     while (envir[i])
@@ -39,12 +40,18 @@ char **handle_shlvl(char **envir)
                 ft_putstr_fd("malloc failed", 2);
                 return (envir);
             }
-            snprintf(new_value, 8, "SHLVL=%d", n); // had l function khassha thayed
+            ft_strlcpy(new_value, "SHLVL=", 7);
+            sm = ft_itoa(n);
+            var = ft_strjoin(new_value, sm);
             free(envir[i]);
-            envir[i] = new_value;
+            envir[i] = var;
             return (envir);
         }
         i++;
+    }
+    if (strncmp(envir[i], "SHLVL=", 6) != 0)
+    {
+        export_var(shell, var);
     }
     return (envir);
 }
@@ -67,7 +74,7 @@ char	**clone_envp(char **envp)
 		i++;
 	}
 	copy[i] = NULL;
-	return (handle_shlvl(copy));
+	return (handle_shlvl(copy, &g_shell));
 }
 
 void	free_envp(char **envp)
