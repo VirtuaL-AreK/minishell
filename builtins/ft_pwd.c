@@ -18,9 +18,15 @@ int	ft_pwd(t_command *cmd, t_shell *shell)
 
 	(void)cmd;
 	cwd = getcwd(NULL, 0);
+	// if (!cwd)
+	// {
+	// 	ft_putstr_fd("pwd", 2);
+	// 	shell->exit_status = 1;
+	// 	return (1);
+	// }
 	if (!cwd)
 	{
-		ft_putstr_fd("pwd", 2);
+		printf("%s\n", shell->path);
 		shell->exit_status = 1;
 		return (1);
 	}

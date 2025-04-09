@@ -39,6 +39,7 @@
 typedef struct s_shell
 {
 	char	**env;
+	char	*path;
 	int		exit_status;
 }	t_shell;
 

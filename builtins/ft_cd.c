@@ -75,6 +75,13 @@ int	ft_cd(t_command *cmd, t_shell *shell)
 	if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
 		free(path);
 	ret = update_cd_env(cmd, shell, oldpwd);
+	shell->path = getcwd(NULL, 0);
+	if (!shell->path)
+	{
+		ft_putstr_fd("pwd", 2);
+		shell->exit_status = 1;
+		return (1);
+	}
 	shell->exit_status = 0;
 	return (ret);
 }
