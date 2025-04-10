@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/09 19:06:19 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/10 19:24:01 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,11 +80,12 @@ typedef struct s_export_parts
 
 typedef struct s_expand_state
 {
-	char	buffer[4096];
-	int		idx;
-	int		in_sq;
-	int		in_dq;
-}	t_expand_state;
+    char    *buffer;
+    int     idx;
+    int     capacity;
+    int     in_sq;
+    int     in_dq;
+}   t_expand_state;
 
 typedef enum e_token_type
 {
@@ -156,12 +157,12 @@ int				is_special_char(int c);
 void			skip_spaces(const char *line, int *i);
 void			add_strlist(t_strlist **head,
 					const char *value, t_token_flags flags);
-void			process_single_quote(const char *line, int *i,
-					char *buffer, int *len);
-void			process_double_quote(const char *line, int *i,
-					char *buffer, int *len);
-void			process_unquoted_char(const char *line, int *i,
-					char *buffer, int *len);
+					int	process_unquoted_char(const char *line, int *i, char **buf, int *len, int *cap);
+int	append_str(char **buf, int *len, int *cap, const char *s);
+int	append_char(char **buf, int *len, int *cap, char c);
+int	process_single_quote(const char *line, int *i, char **buf, int *len, int *cap);
+int	process_double_quote(const char *line, int *i, char **buf, int *len, int *cap);
+// void			process_unquoted_char(const char *line, int *i, char *buffer, int *len);
 char			*parse_one_token_merge_quotes(const char *line,
 					int *i, t_token_flags *flags);
 void			process_special_char_token(const char *line,
@@ -198,24 +199,26 @@ t_command		*command_parser(t_token *tokens);
 void			free_commands(t_command *cmd);
 
 // expansion
+int	init_expand_state(t_expand_state *st, int init_cap);
+int	expand_buffer_if_needed(t_expand_state *st, int needed);
+int	expand_add_char(t_expand_state *st, char c);
+int	expand_add_string(t_expand_state *st, const char *s);
+int	process_dollar_branch(const char *str, int i, t_expand_state *state, t_shell *shell);
+int	process_backslash_branch(const char *str, int i, t_expand_state *state);
 char			*add_or_replace_var(t_shell *shell,
 					const char *name, const char *value);
 void			expand_tokens(t_token *tokens, t_shell *shell);
 char			*expand_string(const char *str, t_shell *shell);
 char			*get_local_env_value(const char *var, t_shell *shell);
-void			handle_alphanum_variable(const char *s, int *i,
-					t_expand_state *state, t_shell *shell);
-void			handle_variable(const char *s, int *i,
-					t_expand_state *state, t_shell *shell);
+int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st, t_shell *shell);
+int	handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell);
+int	handle_dollar_quoted(const char *s, int *i, t_expand_state *st, t_shell *shell);
 char			process_escape_char(const char *s, int *i, char quote);
 void			process_backslash(const char *s, int *i, int *j,
 					char *result, char quote);
 char			*process_ansi_c(const char *s);
 char			*process_dollar_dquote(const char *s);
-void			append_string(t_expand_state *state, const char *s);
-void			handle_dollar_quoted(const char *s, int *i,
-					t_expand_state *state, t_shell *shell);
-
+int	append_string(t_expand_state *st, const char *s);
 // execution
 char			*find_exec(char *cmd, char **env);
 void			execute_command(char **args, char **env);

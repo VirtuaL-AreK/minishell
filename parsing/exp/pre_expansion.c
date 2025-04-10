@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pre_expansion.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:15:47 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/06 11:17:15 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/10 19:28:24 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,15 +97,9 @@ char	*process_dollar_dquote(const char *s)
 	return (result);
 }
 
-void	append_string(t_expand_state *state, const char *s)
+int	append_string(t_expand_state *st, const char *s)
 {
-	int	k;
-
-	k = 0;
-	while (s[k] && state->idx < 4095)
-	{
-		state->buffer[state->idx] = s[k];
-		state->idx = state->idx + 1;
-		k = k + 1;
-	}
+	if (!s)
+		return (0);
+	return (expand_add_string(st, s));
 }

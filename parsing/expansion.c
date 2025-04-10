@@ -3,17 +3,72 @@
 /*                                                        :::      ::::::::   */
 /*   expansion.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 10:56:27 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/06 11:01:50 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/10 19:29:18 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-static int	process_dollar_branch(const char *str, int i,
-		t_expand_state *state, t_shell *shell)
+int	init_expand_state(t_expand_state *st, int init_cap)
+{
+	st->buffer = (char *)malloc(init_cap);
+	if (!st->buffer)
+		return (-1);
+	st->capacity = init_cap;
+	st->idx = 0;
+	st->in_sq = 0;
+	st->in_dq = 0;
+	return (0);
+}
+
+int	expand_buffer_if_needed(t_expand_state *st, int needed)
+{
+	char	*new_buf;
+	int		new_cap;
+
+	if (st->idx + needed < st->capacity)
+		return (0);
+	new_cap = st->capacity;
+	while (new_cap < st->idx + needed)
+		new_cap *= 2;
+	new_buf = (char *)malloc(new_cap);
+	if (!new_buf)
+		return (-1);
+	memcpy(new_buf, st->buffer, st->idx);
+	free(st->buffer);
+	st->buffer = new_buf;
+	st->capacity = new_cap;
+	return (0);
+}
+
+
+int	expand_add_char(t_expand_state *st, char c)
+{
+	if (expand_buffer_if_needed(st, 1 + 1) < 0)
+		return (-1);
+	st->buffer[st->idx] = c;
+	st->idx++;
+	return (0);
+}
+
+int	expand_add_string(t_expand_state *st, const char *s)
+{
+	int	i;
+
+	i = 0;
+	while (s[i])
+	{
+		if (expand_add_char(st, s[i]) < 0)
+			return (-1);
+		i++;
+	}
+	return (0);
+}
+
+int	process_dollar_branch(const char *str, int i, t_expand_state *state, t_shell *shell)
 {
 	if (str[i + 1] == '\'' || str[i + 1] == '"')
 		handle_dollar_quoted(str, &i, state, shell);
@@ -22,8 +77,7 @@ static int	process_dollar_branch(const char *str, int i,
 	return (i);
 }
 
-static int	process_backslash_branch(const char *str, int i,
-		t_expand_state *state)
+int	process_backslash_branch(const char *str, int i, t_expand_state *state)
 {
 	i = i + 1;
 	if (str[i])
@@ -35,48 +89,72 @@ static int	process_backslash_branch(const char *str, int i,
 	return (i);
 }
 
-static int	process_char_in_expand(const char *str, int i,
-		t_expand_state *state, t_shell *shell)
+int	process_char_in_expand(const char *str, int i,
+		t_expand_state *st, t_shell *shell)
 {
-	if (!state->in_sq && str[i] == '$')
-		return (process_dollar_branch(str, i, state, shell));
-	else if (str[i] == '\'' && !state->in_dq)
+	if (!st->in_sq && str[i] == '$')
 	{
-		state->in_sq = !state->in_sq;
+		if (handle_variable(str, &i, st, shell) < 0)
+			return (-1);
+		return (i);
+	}
+	else if (str[i] == '\'' && !st->in_dq)
+	{
+		st->in_sq = !st->in_sq;
 		return (i + 1);
 	}
-	else if (str[i] == '"' && !state->in_sq)
+	else if (str[i] == '"' && !st->in_sq)
 	{
-		state->in_dq = !state->in_dq;
+		st->in_dq = !st->in_dq;
 		return (i + 1);
 	}
 	else if (str[i] == '\\')
-		return (process_backslash_branch(str, i, state));
+	{
+		i++;
+		if (str[i])
+		{
+			if (expand_add_char(st, str[i]) < 0)
+				return (-1);
+			i++;
+		}
+		return (i);
+	}
 	else
 	{
-		state->buffer[state->idx] = str[i];
-		state->idx = state->idx + 1;
+		if (expand_add_char(st, str[i]) < 0)
+			return (-1);
 		return (i + 1);
 	}
 }
 
 char	*expand_string(const char *str, t_shell *shell)
 {
-	t_expand_state	state;
+	t_expand_state	st;
 	int				i;
-	char			*result;
+	int				ret;
 
-	state.idx = 0;
-	state.in_sq = 0;
-	state.in_dq = 0;
+	(void)shell;
+	if (!str)
+		return (NULL);
+	if (init_expand_state(&st, 64) < 0)
+		return (NULL);
 	i = 0;
-	while (str[i] && state.idx < 4095)
+	while (str[i])
 	{
-		i = process_char_in_expand(str, i, &state, shell);
+		ret = process_char_in_expand(str, i, &st, shell); 
+		if (ret < 0)
+		{
+			free(st.buffer);
+			return (NULL);
+		}
+		i = ret; 
 	}
-	state.buffer[state.idx] = '\0';
-	result = ft_strdup(state.buffer);
-	return (result);
+	if (expand_add_char(&st, '\0') < 0)
+	{
+		free(st.buffer);
+		return (NULL);
+	}
+	return (st.buffer);
 }
 
 void	expand_tokens(t_token *tokens, t_shell *shell)
@@ -96,3 +174,4 @@ void	expand_tokens(t_token *tokens, t_shell *shell)
 		cur = cur->next;
 	}
 }
+

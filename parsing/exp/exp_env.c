@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exp_env.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:04:56 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/06 11:13:29 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/10 19:28:37 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,78 +33,96 @@ char	*get_local_env_value(const char *var, t_shell *shell)
 	return (ft_strdup(""));
 }
 
-void	handle_alphanum_variable(const char *s, int *i,
-		t_expand_state *state, t_shell *shell)
+int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st, t_shell *shell)
 {
 	int		start;
 	int		var_len;
 	char	*var_name;
 	char	*val;
+	int		ret;
 
 	start = *i;
 	while (s[*i] && (((s[*i] >= 'A' && s[*i] <= 'Z')
 				|| (s[*i] >= 'a' && s[*i] <= 'z')
-				|| (s[*i] >= '0' && s[*i] <= '9'))
-			|| s[*i] == '_'))
-		(*i) = (*i) + 1;
+				|| (s[*i] >= '0' && s[*i] <= '9')) || s[*i] == '_'))
+		(*i)++;
 	var_len = *i - start;
 	var_name = strndup(s + start, var_len);
+	if (!var_name)
+		return (-1);
 	val = get_local_env_value(var_name, shell);
 	free(var_name);
-	append_string(state, val);
+	if (!val)
+		return (-1);
+	ret = append_string(st, val);
 	free(val);
+	return (ret);
 }
 
-void	handle_variable(const char *s, int *i,
-		t_expand_state *state, t_shell *shell)
+int	handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell)
 {
-	char	*exit_str;
+char	*exit_str;
 
-	(*i) = (*i) + 1;
-	if (s[*i] == '?')
+(*i)++;
+if (s[*i] == '?')
+{
+	(*i)++;
+	exit_str = ft_itoa(shell->exit_status);
+	if (!exit_str)
+		return (-1);
+	if (append_string(st, exit_str) < 0)
 	{
-		(*i) = (*i) + 1;
-		exit_str = ft_itoa(shell->exit_status);
-		append_string(state, exit_str);
 		free(exit_str);
+		return (-1);
 	}
-	else if ((s[*i] >= 'A' && s[*i] <= 'Z')
-		|| (s[*i] >= 'a' && s[*i] <= 'z')
-		|| s[*i] == '_')
-	{
-		handle_alphanum_variable(s, i, state, shell);
-	}
-	else
-	{
-		state->buffer[state->idx] = '$';
-		state->idx = state->idx + 1;
-	}
+	free(exit_str);
+}
+else if ((s[*i] >= 'A' && s[*i] <= 'Z')
+	|| (s[*i] >= 'a' && s[*i] <= 'z')
+	|| s[*i] == '_')
+{
+	if (handle_alphanum_variable(s, i, st, shell) < 0)
+		return (-1);
+}
+else
+{
+	if (expand_add_char(st, '$') < 0)
+		return (-1);
+}
+return (0);
 }
 
-void	handle_dollar_quoted(const char *s, int *i,
-		t_expand_state *state, t_shell *shell)
+int	handle_dollar_quoted(const char *s, int *i, t_expand_state *st, t_shell *shell)
 {
 	char	quote;
 	int		seg_start;
 	int		seg_len;
 	char	*segment;
 	char	*processed;
+	int		ret;
 
 	(void)shell;
 	quote = s[*i + 1];
-	*i = *i + 2;
+	*i += 2;
 	seg_start = *i;
 	while (s[*i] && s[*i] != quote)
-		(*i) = (*i) + 1;
+		(*i)++;
 	seg_len = *i - seg_start;
 	segment = strndup(s + seg_start, seg_len);
+	if (!segment)
+		return (-1);
 	if (quote == '\'')
 		processed = process_ansi_c(segment);
 	else
 		processed = process_dollar_dquote(segment);
 	free(segment);
-	append_string(state, processed);
+	if (!processed)
+		return (-1);
+	ret = append_string(st, processed);
 	free(processed);
+	if (ret < 0)
+		return (-1);
 	if (s[*i] == quote)
-		(*i) = (*i) + 1;
+		(*i)++;
+	return (0);
 }

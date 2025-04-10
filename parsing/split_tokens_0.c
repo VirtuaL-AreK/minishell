@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   split_tokens_0.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 11:57:59 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 12:01:07 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/10 19:30:20 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,40 +47,92 @@ void	add_strlist(t_strlist **head, const char *value, t_token_flags flags)
 	}
 }
 
-void	process_single_quote(const char *line, int *i, char *buffer, int *len)
+int	append_char(char **buf, int *len, int *cap, char c)
 {
-	buffer[*len] = line[*i];
-	*len = *len + 1;
-	*i = *i + 1;
+	char	*new_buf;
+	int		new_cap;
+
+	if (*len + 1 < *cap)
+	{
+		(*buf)[*len] = c;
+		(*len)++;
+		return (0);
+	}
+	new_cap = (*cap) * 2;
+	new_buf = malloc(new_cap);
+	if (!new_buf)
+		return (-1);
+	memcpy(new_buf, *buf, *len);
+	free(*buf);
+	*buf = new_buf;
+	*cap = new_cap;
+	(*buf)[*len] = c;
+	(*len)++;
+	return (0);
+}
+
+int	append_str(char **buf, int *len, int *cap, const char *s)
+{
+	int	i;
+
+	i = 0;
+	while (s[i])
+	{
+		if (append_char(buf, len, cap, s[i]) < 0)
+			return (-1);
+		i++;
+	}
+	return (0);
+}
+
+int	process_single_quote(const char *line, int *i,
+	char **buf, int *len, int *cap)
+{
+	if (append_char(buf, len, cap, line[*i]) < 0)
+		return (-1);
+	(*i)++;
 	while (line[*i] && line[*i] != '\'')
 	{
-		buffer[*len] = line[*i];
-		*len = *len + 1;
-		*i = *i + 1;
+		if (append_char(buf, len, cap, line[*i]) < 0)
+			return (-1);
+		(*i)++;
 	}
 	if (line[*i] == '\'')
 	{
-		buffer[*len] = line[*i];
-		*len = *len + 1;
-		*i = *i + 1;
+		if (append_char(buf, len, cap, line[*i]) < 0)
+			return (-1);
+		(*i)++;
 	}
+	return (0);
 }
 
-void	process_double_quote(const char *line, int *i, char *buffer, int *len)
+/*
+** process_double_quote: idem pour les ".
+*/
+int	process_double_quote(const char *line, int *i, char **buf, int *len, int *cap)
 {
-	buffer[*len] = line[*i];
-	*len = *len + 1;
-	*i = *i + 1;
+	if (append_char(buf, len, cap, line[*i]) < 0)
+		return (-1);
+	(*i)++;
 	while (line[*i] && line[*i] != '"')
 	{
-		buffer[*len] = line[*i];
-		*len = *len + 1;
-		*i = *i + 1;
+		if (append_char(buf, len, cap, line[*i]) < 0)
+			return (-1);
+		(*i)++;
 	}
 	if (line[*i] == '"')
 	{
-		buffer[*len] = line[*i];
-		*len = *len + 1;
-		*i = *i + 1;
+		if (append_char(buf, len, cap, line[*i]) < 0)
+			return (-1);
+		(*i)++;
 	}
+	return (0);
+}
+
+int	process_unquoted_char(const char *line, int *i, char **buf, int *len, int *cap)
+{
+	if (append_char(buf, len, cap, line[*i]) < 0)
+		return (-1);
+	(*i)++;
+	return (0);
 }

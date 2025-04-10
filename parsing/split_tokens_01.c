@@ -6,43 +6,57 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 12:01:56 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/07 15:08:35 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/10 19:29:53 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-void	process_unquoted_char(const char *line, int *i, char *buffer, int *len)
+char	*parse_one_token_merge_quotes(const char *line,
+	int *i, t_token_flags *flags)
 {
-	buffer[*len] = line[*i];
-	*len = *len + 1;
-	*i = *i + 1;
-}
-
-char	*parse_one_token_merge_quotes(const char *line, int *i, t_token_flags *flags)
-{
-	char	buffer[4096];
+	char	*buf;
+	int		capacity;
 	int		len;
+	int		ret;
 
+	capacity = 64;
+	buf = malloc(capacity);
+	if (!buf)
+		return (NULL);
 	len = 0;
+
 	while (line[*i] && !isspace((unsigned char)line[*i])
 		&& !is_special_char(line[*i]))
 	{
 		if (line[*i] == '\'')
-			process_single_quote(line, i, buffer, &len);
+			ret = process_single_quote(line, i, &buf, &len, &capacity);
 		else if (line[*i] == '"')
-			process_double_quote(line, i, buffer, &len);
+			ret = process_double_quote(line, i, &buf, &len, &capacity);
 		else
-			process_unquoted_char(line, i, buffer, &len);
+			ret = process_unquoted_char(line, i, &buf, &len, &capacity);
+		if (ret < 0)
+		{
+			free(buf);
+			return (NULL);
+		}
 	}
-	buffer[len] = '\0';
-	if (strchr(buffer, '\''))
+
+	if (append_char(&buf, &len, &capacity, '\0') < 0)
+	{
+		free(buf);
+		return (NULL);
+	}
+
+	if (strchr(buf, '\''))
 		flags->has_sq = 1;
-	if (strchr(buffer, '"'))
+	if (strchr(buf, '"'))
 		flags->has_dq = 1;
 	flags->should_expand = 1;
-	return (ft_strdup(buffer));
+
+	return (buf);
 }
+
 
 void	process_special_char_token(const char *line, int *i, t_strlist **result)
 {
