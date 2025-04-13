@@ -27,9 +27,9 @@ static char	*resolve_cd_path(t_command *cmd, t_shell *shell)
 	}
 	if (cmd->nb_arg < 2 || (cmd->args[1] && strcmp(cmd->args[1], "~") == 0))
 		path = resolve_cd_path_tilde(cmd, shell);
-	else if (cmd->args[1] && strcmp(cmd->args[1], "-") == 0)
+	else if (cmd->args[1] && ft_strncmp(cmd->args[1], "-", 1) == 0 && !cmd->args[1])
 		path = resolve_cd_path_dash(cmd, shell);
-	else if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
+	else if (cmd->args[1] && ft_strncmp(cmd->args[1], "~/", 2) == 0)
 		path = resolve_cd_path_home_slash(cmd, shell);
 	else
 		path = cmd->args[1];
@@ -55,13 +55,33 @@ static int	update_cd_env(t_command *cmd, t_shell *shell, char *oldpwd)
 	return (0);
 }
 
+char *check_command(t_command *cmd)
+{
+	char *path;
+
+	path = NULL;
+	if (cmd->args[1][0] == '-' && !cmd->args[2])
+	{
+		ft_putstr_fd("bash: cd: -: invalid option\n", 2);
+		ft_putstr_fd("cd: usage: cd [-L|[-P [-e]] [-@]] [dir]\n", 2);
+		g_shell.exit_status = 2;
+		return (NULL);
+	}
+	else if (ft_strncmp(cmd->args[1], "--", 2) == 0 && cmd->args[2])
+		path = cmd->args[2];
+	return (path);
+}
+
 int	ft_cd(t_command *cmd, t_shell *shell)
 {
 	char	*path;
 	char	*oldpwd;
 	int		ret;
 
-	path = resolve_cd_path(cmd, shell);
+	if (ft_strncmp(cmd->args[1], "-", 1) == 0)
+		path = check_command(cmd);
+	else
+		path = resolve_cd_path(cmd, shell);
 	if (!path)
 		return (1);
 	oldpwd = getcwd(NULL, 0);
