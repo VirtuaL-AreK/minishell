@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 20:28:14 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/07 15:05:09 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/18 12:15:52 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,31 +168,35 @@ static int check_heredoc_token_error(t_token **tokens, t_command *cmd)
     return 0;
 }
 
-void handle_heredoc_token(t_command *cmd, t_token **tokens)
+void	handle_heredoc_token(t_command *cmd, t_token **tokens, t_shell *shell)
 {
-    char *delimiter;
-    int is_quoted;
-    char *clean_delim;
-    char *temp_file;
+	char			*delimiter;
+	int				is_quoted;
+	char			*clean;
+	char			*tmp;
 
-    (*tokens) = (*tokens)->next;
-    if (check_heredoc_token_error(tokens, cmd))
-        return;
-    delimiter = (*tokens)->value;
-    is_quoted = ((*tokens)->has_single_quote || (*tokens)->has_double_quote);
-    clean_delim = remove_surrounding_quotes_if_any(delimiter);
-    temp_file = handle_heredoc(clean_delim, is_quoted, &g_shell);
-    free(clean_delim);
-    if (!temp_file)
-    {
-        cmd->redir_error_code = 1;
-        (*tokens) = (*tokens)->next;
-        return;
-    }
-    if (cmd->infile)
-        free(cmd->infile);
-    cmd->infile = temp_file;
-    (*tokens) = (*tokens)->next;
+	*tokens = (*tokens)->next;
+	if (check_heredoc_token_error(tokens, cmd))
+		return ;
+	delimiter = (*tokens)->value;
+	is_quoted = ((*tokens)->has_single_quote || (*tokens)->has_double_quote);
+	clean = remove_surrounding_quotes_if_any(delimiter);
+	tmp = handle_heredoc(clean, is_quoted, shell);
+	free(clean);
+	if (!tmp)
+	{
+		cmd->redir_error_code = 1;
+		if (g_last_signal == SIGINT)
+		{
+			*tokens = NULL;
+			return ;
+		}
+		*tokens = (*tokens)->next;
+		return ;
+	}
+	free(cmd->infile);
+	cmd->infile = tmp;
+	*tokens     = (*tokens)->next;
 }
 
 void	handle_redir_out_or_append(t_command *cmd, t_token **tokens)
@@ -224,26 +228,24 @@ void	handle_redir_out_or_append(t_command *cmd, t_token **tokens)
 	*tokens = (*tokens)->next;
 }
 
-void	fill_command(t_command *cmd, t_token **tokens)
+void fill_command(t_command *cmd, t_token **tokens, t_shell *shell)
 {
-	int	arg_count;
-
-	arg_count = 0;
-	while (*tokens && (*tokens)->type != TOKEN_PIPE)
-	{
-		if ((*tokens)->type == TOKEN_WORD)
-			handle_word(cmd, tokens, &arg_count);
-		else if ((*tokens)->type == TOKEN_REDIR_IN && (*tokens)->next)
-			handle_redir_in(cmd, tokens);
-		else if ((*tokens)->type == TOKEN_HEREDOC)
-			handle_heredoc_token(cmd, tokens);
-		else if ((*tokens)->type == TOKEN_REDIR_OUT
-			|| (*tokens)->type == TOKEN_APPEND)
-			handle_redir_out_or_append(cmd, tokens);
-		else
-			*tokens = (*tokens)->next;
-	}
-	cmd->args[arg_count] = NULL;
+    int arg_count = 0;
+    while (*tokens && (*tokens)->type != TOKEN_PIPE)
+    {
+        if ((*tokens)->type == TOKEN_WORD)
+            handle_word(cmd, tokens, &arg_count);
+        else if ((*tokens)->type == TOKEN_REDIR_IN && (*tokens)->next)
+            handle_redir_in(cmd, tokens);
+        else if ((*tokens)->type == TOKEN_HEREDOC)
+            handle_heredoc_token(cmd, tokens, shell);
+        else if ((*tokens)->type == TOKEN_REDIR_OUT
+              || (*tokens)->type == TOKEN_APPEND)
+            handle_redir_out_or_append(cmd, tokens);
+        else
+            *tokens = (*tokens)->next;
+    }
+    cmd->args[arg_count] = NULL;
 }
 
 void	fix_empty_first_arg(t_command *cmd)

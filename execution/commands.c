@@ -3,37 +3,37 @@
 /*                                                        :::      ::::::::   */
 /*   commands.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 20:21:48 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 20:26:01 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/18 11:35:32 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-t_command	*command_parser(t_token *tokens)
+t_command *command_parser(t_token *tokens, t_shell *shell)
 {
-	t_command	*head;
-	t_command	*last;
-	t_command	*cmd;
+    t_command *head = NULL;
+    t_command *last = NULL;
+    t_command *cmd;
 
-	head = NULL;
-	last = NULL;
-	while (tokens)
-	{
-		cmd = new_command(tokens);
-		fill_command(cmd, &tokens);
-		fix_empty_first_arg(cmd);
-		if (!head)
-			head = cmd;
-		else
-			last->next = cmd;
-		last = cmd;
-		if (tokens && tokens->type == TOKEN_PIPE)
-			tokens = tokens->next;
-	}
-	return (head);
+    while (tokens)
+    {
+        cmd = new_command(tokens);
+        fill_command(cmd, &tokens, shell);    // on passe shell ici
+        fix_empty_first_arg(cmd);
+        if (!head)
+            head = cmd;
+        else
+            last->next = cmd;
+        last = cmd;
+
+        if (tokens && tokens->type == TOKEN_PIPE)
+            tokens = tokens->next;
+    }
+
+    return head;
 }
 
 void	free_commands(t_command *cmd)

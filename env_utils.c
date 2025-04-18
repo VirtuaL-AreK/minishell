@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 09:27:11 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/09 19:27:04 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/18 11:38:39 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,25 +62,25 @@ char **handle_shlvl(char **envir, t_shell *shell)
     return (envir);
 }
 
-char	**clone_envp(char **envp)
+char **clone_envp(char **envp, t_shell *shell)
 {
-	int		i;
-	char	**copy;
+    int   i;
+    char **copy;
 
-	i = 0;
-	while (envp && envp[i])
-		i++;
-	copy = malloc(sizeof(char *) * (i + 1));
-	if (!copy)
-		return (NULL);
-	i = 0;
-	while (envp && envp[i])
-	{
-		copy[i] = ft_strdup(envp[i]);
-		i++;
-	}
-	copy[i] = NULL;
-	return (handle_shlvl(copy, &g_shell));
+    i = 0;
+    while (envp && envp[i])
+        i++;
+    copy = malloc(sizeof(char *) * (i + 1));
+    if (!copy)
+        return (NULL);
+    i = 0;
+    while (envp && envp[i])
+    {
+        copy[i] = ft_strdup(envp[i]);
+        i++;
+    }
+    copy[i] = NULL;
+    return handle_shlvl(copy, shell);
 }
 
 void	free_envp(char **envp)

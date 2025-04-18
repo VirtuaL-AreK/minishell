@@ -6,36 +6,35 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 09:40:08 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/09 18:54:16 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/18 13:22:30 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../minishell.h" 
 
-int	count_command_arguments(t_token *tokens)
+int count_command_arguments(t_token *tokens)
 {
-	int	count;
-
-	count = 0;
-	while (tokens && tokens->type != 1)
-	{
-		if (tokens->type == 2 || tokens->type == 3 || tokens->type == 4)
-		{
-			tokens = tokens->next;
-			if (tokens)
-				tokens = tokens->next;
-		}
-		else if (tokens->type == 0)
-		{
-			count++;
-			tokens = tokens->next;
-		}
-		else
-		{
-			tokens = tokens->next;
-		}
-	}
-	return (count);
+    int count = 0;
+    while (tokens && tokens->type != TOKEN_PIPE)
+    {
+        if (tokens->type == TOKEN_REDIR_IN
+         || tokens->type == TOKEN_REDIR_OUT
+         || tokens->type == TOKEN_APPEND
+         || tokens->type == TOKEN_HEREDOC)
+        {
+            tokens = tokens->next;
+            if (tokens)
+                tokens = tokens->next;
+        }
+        else if (tokens->type == TOKEN_WORD)
+        {
+            count++;
+            tokens = tokens->next;
+        }
+        else
+            tokens = tokens->next;
+    }
+    return count;
 }
 
 t_command	*new_command(t_token *tokens)
@@ -83,34 +82,32 @@ int handle_heredoc_line(t_heredoc_ctx *ctx, char *line)
     return 0;
 }
 
-static void sigint_handler_heredoc(int sig)
+void	sigint_handler_heredoc(int sig)
 {
-    (void)sig;
-    write(STDOUT_FILENO, "\n", 1);
-    g_shell.exit_status = 130;
-    rl_on_new_line();
-    rl_replace_line("", 0);
-    rl_done = 1;
-    g_shell.heredoc_interrupted = 1;
-	char newline = 32;
-    ioctl(STDIN_FILENO, TIOCSTI, &newline);
+	(void)sig;
+	g_last_signal = SIGINT;
+	rl_done = 1;
+	{
+		char	nl;
+
+		nl = '\n';
+		ioctl(STDIN_FILENO, TIOCSTI, &nl);
+	}
 }
 
-
-static void init_heredoc_signals(struct sigaction *old_sa)
+void init_heredoc_signals(struct sigaction *old_sa)
 {
     struct sigaction sa;
 
     ft_memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = &sigint_handler_heredoc;
+    sa.sa_handler = sigint_handler_heredoc;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, old_sa);
     signal(SIGQUIT, SIG_IGN);
-    g_shell.heredoc_interrupted = 0;
 }
 
-static void restore_heredoc_signals(struct sigaction *old_sa)
+void restore_heredoc_signals(struct sigaction *old_sa)
 {
     sigaction(SIGINT, old_sa, NULL);
     signal(SIGQUIT, SIG_DFL);
@@ -131,55 +128,59 @@ int create_heredoc_file(char *template)
 
 int read_heredoc_and_write(t_heredoc_ctx *ctx)
 {
-    char                *line;
-    int                 status;
-    struct sigaction    old_sa;
+    char             *line;
+    int               status;
+    struct sigaction  old_sa;
 
     init_heredoc_signals(&old_sa);
+
     while (1)
     {
         line = readline("> ");
-        if (!line || g_shell.heredoc_interrupted)
+        if (!line || g_last_signal == SIGINT)
             break;
         status = handle_heredoc_line(ctx, line);
         free(line);
         if (status != 0)
             break;
     }
+
     restore_heredoc_signals(&old_sa);
-    if (!line || g_shell.heredoc_interrupted)
-        return (1);
-    return (0);
+
+    return (g_last_signal == SIGINT);
 }
 
 
 char *handle_heredoc(const char *delimiter, int is_quoted, t_shell *shell)
 {
     t_heredoc_ctx ctx;
-    char *template;
-    int fd;
-    int status;
+    char         *template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
+    int           fd, status;
 
-    template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
-    fd = create_heredoc_file(template);
+    fd = mkstemp(template);
     if (fd < 0)
     {
         free(template);
         return NULL;
     }
-    ctx.fd = fd;
+
+    ctx.fd        = fd;
     ctx.is_quoted = is_quoted;
     ctx.delimiter = delimiter;
-    ctx.shell = shell;
+    ctx.shell     = shell;
+
     status = read_heredoc_and_write(&ctx);
     close(fd);
+
     if (status != 0)
     {
+        shell->exit_status = 130; 
         free(template);
         return NULL;
     }
-    return ft_strdup(template);
+    return template;
 }
+
 
 
 

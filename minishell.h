@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/10 19:24:01 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/18 13:05:58 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ typedef struct s_shell
 	char	**env;
 	char	*path;
 	int		exit_status;
-	int heredoc_interrupted;
+	// int heredoc_interrupted;
 }	t_shell;
 
 typedef struct s_heredoc_ctx
@@ -70,7 +70,9 @@ typedef struct s_token_flags
 	int	should_expand;
 }	t_token_flags;
 
-extern t_shell	g_shell;
+// extern t_shell	g_shell;
+
+extern volatile sig_atomic_t g_last_signal;
 
 typedef struct s_export_parts
 {
@@ -144,9 +146,9 @@ void			handle_word(t_command *cmd, t_token **tokens, int *arg_count);
 
 //here doc
 void			handle_redir_in(t_command *cmd, t_token **tokens);
-void			handle_heredoc_token(t_command *cmd, t_token **tokens);
+void handle_heredoc_token(t_command *cmd, t_token **tokens, t_shell *shell);
 void			handle_redir_out_or_append(t_command *cmd, t_token **tokens);
-void			fill_command(t_command *cmd, t_token **tokens);
+void fill_command(t_command *cmd, t_token **tokens, t_shell *shell);
 void			fix_empty_first_arg(t_command *cmd);
 char *expand_heredoc_line(const char *line, t_shell *shell);
 
@@ -169,7 +171,7 @@ void			process_special_char_token(const char *line,
 					int *i, t_strlist **result);
 
 // 1) Gestion de l'environnement local
-char			**clone_envp(char **envp);
+char **clone_envp(char **envp, t_shell *shell);
 void			free_envp(char **envp);
 
 // syntax
@@ -195,7 +197,7 @@ int				check_quotes(char *str);
 
 // commands
 void			print_command(t_command *commands);
-t_command		*command_parser(t_token *tokens);
+t_command      *command_parser(t_token *tokens, t_shell *shell);
 void			free_commands(t_command *cmd);
 
 // expansion
@@ -294,5 +296,6 @@ char			*resolve_cd_path_home_slash(t_command *cmd, t_shell *shell);
 // Signals
 void			sig_handler(int sig);
 void			exit_here(t_exit_status order);
+void sigint_handler_prompt(int sig);
 
 #endif

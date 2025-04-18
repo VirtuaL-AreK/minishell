@@ -3,22 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   signals.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 13:25:15 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 13:25:47 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/18 13:23:23 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-void	sig_handler(int sig)
+void sigint_handler_prompt(int sig)
 {
-	if (sig == SIGINT)
-	{
-		printf("\n");
-		rl_replace_line("", 0);
-		rl_on_new_line();
-		rl_redisplay();
-	}
+    (void)sig;
+    g_last_signal = SIGINT;
+    write(STDOUT_FILENO, "\n", 1);
+    rl_replace_line("", 0);
+    rl_on_new_line();
+    rl_redisplay();
 }
