@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/18 13:05:58 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/18 18:20:25 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ typedef struct s_shell
 	char	**env;
 	char	*path;
 	int		exit_status;
-	// int heredoc_interrupted;
+	int heredoc_interrupted;
 }	t_shell;
 
 typedef struct s_heredoc_ctx

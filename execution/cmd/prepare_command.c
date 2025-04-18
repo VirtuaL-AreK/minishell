@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 09:40:08 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/18 13:22:30 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/18 18:21:59 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,20 +82,45 @@ int handle_heredoc_line(t_heredoc_ctx *ctx, char *line)
     return 0;
 }
 
-void	sigint_handler_heredoc(int sig)
-{
-	(void)sig;
-	g_last_signal = SIGINT;
-	rl_done = 1;
-	{
-		char	nl;
+// void	sigint_handler_heredoc(int sig)
+// {
+// 	(void)sig;
+// 	g_last_signal = SIGINT;
+// 	rl_done = 1;
+// 	{
+// 		char	nl;
 
-		nl = '\n';
-		ioctl(STDIN_FILENO, TIOCSTI, &nl);
-	}
+// 		nl = '\n';
+// 		ioctl(STDIN_FILENO, TIOCSTI, &nl);
+// 	}
+// }
+
+static void sigint_handler_heredoc(int sig)
+{
+    (void)sig;
+    g_last_signal = SIGINT;
+    rl_on_new_line();
+    rl_replace_line("", 0);
+    rl_done = 1;
+    {
+        char nl = '\n';
+        ioctl(STDIN_FILENO, TIOCSTI, &nl);
+    }
 }
 
-void init_heredoc_signals(struct sigaction *old_sa)
+// void init_heredoc_signals(struct sigaction *old_sa)
+// {
+//     struct sigaction sa;
+
+//     ft_memset(&sa, 0, sizeof(sa));
+//     sa.sa_handler = sigint_handler_heredoc;
+//     sigemptyset(&sa.sa_mask);
+//     sa.sa_flags = 0;
+//     sigaction(SIGINT, &sa, old_sa);
+//     signal(SIGQUIT, SIG_IGN);
+// }
+
+static void init_heredoc_signals(struct sigaction *old_sa)
 {
     struct sigaction sa;
 
@@ -107,7 +132,13 @@ void init_heredoc_signals(struct sigaction *old_sa)
     signal(SIGQUIT, SIG_IGN);
 }
 
-void restore_heredoc_signals(struct sigaction *old_sa)
+// void restore_heredoc_signals(struct sigaction *old_sa)
+// {
+//     sigaction(SIGINT, old_sa, NULL);
+//     signal(SIGQUIT, SIG_DFL);
+// }
+
+static void restore_heredoc_signals(struct sigaction *old_sa)
 {
     sigaction(SIGINT, old_sa, NULL);
     signal(SIGQUIT, SIG_DFL);
@@ -126,14 +157,37 @@ int create_heredoc_file(char *template)
     return fd;
 }
 
+// int read_heredoc_and_write(t_heredoc_ctx *ctx)
+// {
+//     char             *line;
+//     int               status;
+//     struct sigaction  old_sa;
+
+//     init_heredoc_signals(&old_sa);
+
+//     while (1)
+//     {
+//         line = readline("> ");
+//         if (!line || g_last_signal == SIGINT)
+//             break;
+//         status = handle_heredoc_line(ctx, line);
+//         free(line);
+//         if (status != 0)
+//             break;
+//     }
+
+//     restore_heredoc_signals(&old_sa);
+
+//     return (g_last_signal == SIGINT);
+// }
+
 int read_heredoc_and_write(t_heredoc_ctx *ctx)
 {
-    char             *line;
-    int               status;
-    struct sigaction  old_sa;
+    struct sigaction old_sa;
+    char           *line;
+    int             status;
 
     init_heredoc_signals(&old_sa);
-
     while (1)
     {
         line = readline("> ");
@@ -144,45 +198,74 @@ int read_heredoc_and_write(t_heredoc_ctx *ctx)
         if (status != 0)
             break;
     }
-
     restore_heredoc_signals(&old_sa);
-
     return (g_last_signal == SIGINT);
 }
 
+// char *handle_heredoc(const char *delimiter, int is_quoted, t_shell *shell)
+// {
+//     t_heredoc_ctx ctx;
+//     char         *template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
+//     int           fd, status;
 
-char *handle_heredoc(const char *delimiter, int is_quoted, t_shell *shell)
+//     fd = mkstemp(template);
+//     if (fd < 0)
+//     {
+//         free(template);
+//         return NULL;
+//     }
+
+//     ctx.fd        = fd;
+//     ctx.is_quoted = is_quoted;
+//     ctx.delimiter = delimiter;
+//     ctx.shell     = shell;
+
+//     status = read_heredoc_and_write(&ctx);
+//     close(fd);
+
+//     if (status != 0)
+//     {
+//         shell->exit_status = 130; 
+//         free(template);
+//         return NULL;
+//     }
+//     return template;
+// }
+
+
+char *handle_heredoc(const char *delimiter,
+                     int is_quoted,
+                     t_shell *shell)
 {
-    t_heredoc_ctx ctx;
-    char         *template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
-    int           fd, status;
+    t_heredoc_ctx    ctx;
+    char            *template;
+    int              fd;
+    int              interrupted;
 
+    template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
     fd = mkstemp(template);
     if (fd < 0)
     {
         free(template);
-        return NULL;
+        return (NULL);
     }
+    ctx.fd         = fd;
+    ctx.is_quoted  = is_quoted;
+    ctx.delimiter  = delimiter;
+    ctx.shell      = shell;
 
-    ctx.fd        = fd;
-    ctx.is_quoted = is_quoted;
-    ctx.delimiter = delimiter;
-    ctx.shell     = shell;
-
-    status = read_heredoc_and_write(&ctx);
+    interrupted = read_heredoc_and_write(&ctx);
     close(fd);
-
-    if (status != 0)
+    if (interrupted)
     {
-        shell->exit_status = 130; 
+        shell->exit_status         = 130;
+        shell->heredoc_interrupted = 1;
+        g_last_signal              = 0;
         free(template);
-        return NULL;
+        return (NULL);
     }
-    return template;
+    return (template);
 }
-
-
-
 
 void	handle_word(t_command *cmd, t_token **tokens, int *arg_count)
 {

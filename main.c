@@ -5,24 +5,50 @@
 
 volatile sig_atomic_t g_last_signal = 0;
 
+// void parse_command(char *input, t_shell *shell)
+// {
+//     t_token *tokens = bash_tokenize_to_tokens(input);
+// 	// print_tokens(tokens);
+//     if (!tokens)
+//         return;
+
+//     if (!is_syntax_error(tokens, shell))
+//     {
+//         expand_tokens(tokens, shell);
+//         // t_command *commands = command_parser(tokens);
+//         t_command *commands = command_parser(tokens, shell);
+// 		// print_command(commands);
+// 		execute_pipeline(commands, shell);
+//         free_commands(commands);
+//     }
+//     free_tokens(tokens);
+// }
+
 void parse_command(char *input, t_shell *shell)
 {
-    t_token *tokens = bash_tokenize_to_tokens(input);
-	// print_tokens(tokens);
+    t_token   *tokens;
+    t_command *commands;
+
+    tokens = bash_tokenize_to_tokens(input);
     if (!tokens)
         return;
-
     if (!is_syntax_error(tokens, shell))
     {
         expand_tokens(tokens, shell);
-        // t_command *commands = command_parser(tokens);
-        t_command *commands = command_parser(tokens, shell);
-		// print_command(commands);
-		execute_pipeline(commands, shell);
+        commands = command_parser(tokens, shell);
+        if (shell->heredoc_interrupted)
+        {
+            free_commands(commands);
+            shell->heredoc_interrupted = 0;
+            free_tokens(tokens);
+            return;
+        }
+        execute_pipeline(commands, shell);
         free_commands(commands);
     }
     free_tokens(tokens);
 }
+
 
 // KEEP THIS CODE BELOW
 
@@ -102,6 +128,7 @@ int	main(int argc, char **argv, char **envp)
 	(void)argc;
 	(void)argv;
 	shell.exit_status = 0;
+	shell.heredoc_interrupted = 0;
 	shell.env = clone_envp(envp, &shell);
 
 	signal(SIGINT, sigint_handler_prompt);
