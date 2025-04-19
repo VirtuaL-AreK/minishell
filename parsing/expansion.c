@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 10:56:27 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 12:49:48 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 17:54:56 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -205,27 +205,86 @@ char *remove_quotes(const char *s)
     return st.buffer;
 }
 
+char *expand_word(const char *s, t_shell *shell)
+{
+    t_expand_state st;
+    int in_sq = 0, in_dq = 0, i = 0;
+
+    if (init_expand_state(&st, 64) < 0)
+        return NULL;
+
+    while (s[i])
+    {
+        if (s[i] == '\'' && !in_dq)
+        {
+            in_sq = !in_sq;
+            i++;
+        }
+        else if (s[i] == '"' && !in_sq)
+        {
+            in_dq = !in_dq;
+            i++;
+        }
+        else if (!in_sq && !in_dq && s[i] == '$' && s[i + 1] == '\'')
+        {
+            if (handle_dollar_quoted(s, &i, &st, shell) < 0)
+            {
+                free(st.buffer);
+                return NULL;
+            }
+        }
+        else if (!in_sq && s[i] == '$')
+        {
+            if (handle_variable(s, &i, &st, shell) < 0)
+            {
+                free(st.buffer);
+                return NULL;
+            }
+        }
+        else if (in_dq && s[i] == '\\'
+                 && (s[i+1] == '"' || s[i+1] == '\\'
+                     || s[i+1] == '$'  || s[i+1] == '`'))
+        {
+            i++;
+            expand_add_char(&st, s[i]);
+            i++;
+        }
+        else if (!in_sq && !in_dq && s[i] == '\\')
+        {
+            i++;
+            if (s[i])
+                expand_add_char(&st, s[i]);
+            i++;
+        }
+        else if (!in_sq && !in_dq && i == 0 && s[i] == '~'
+                 && (s[i+1] == '\0' || s[i+1] == '/'))
+        {
+            char *home = get_local_env_value("HOME", shell);
+            expand_add_string(&st, home);
+            free(home);
+            i++;
+        }
+        else
+        {
+            expand_add_char(&st, s[i]);
+            i++;
+        }
+    }
+
+    expand_add_char(&st, '\0');
+    return st.buffer;
+}
+
 void expand_tokens(t_token *tokens, t_shell *shell)
 {
     t_token *cur = tokens;
-
     while (cur)
     {
-        if (cur->type == TOKEN_WORD && cur->should_expand)
+        if (cur->type == TOKEN_WORD)
         {
-            char *tmp;
-
-            tmp = expand_tilde(cur->value, shell);
+            char *new = expand_word(cur->value, shell);
             free(cur->value);
-            cur->value = tmp;
-
-            tmp = expand_string(cur->value, shell);
-            free(cur->value);
-            cur->value = tmp;
-
-            tmp = remove_quotes(cur->value);
-            free(cur->value);
-            cur->value = tmp;
+            cur->value = new;
         }
         cur = cur->next;
     }

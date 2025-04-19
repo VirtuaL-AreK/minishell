@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 18:35:19 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 12:52:08 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 17:56:58 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,36 +83,44 @@ static char *check_command(t_command *cmd, t_shell *shell)
 }
 
 
-int	ft_cd(t_command *cmd, t_shell *shell)
+int ft_cd(t_command *cmd, t_shell *shell)
 {
-	char *path;
-	char *oldpwd;
-	int   ret;
+    char  *path;
+    char  *oldpwd;
+    int    ret;
+    char *err_msg;
 
-	path = check_command(cmd, shell);
-	if (!path)
-		return 1;
+    path = check_command(cmd, shell);
+    if (!path)
+        return 1;
 
-	oldpwd = getcwd(NULL, 0);
-	if (chdir(path) != 0)
-	{
-		free(oldpwd);
-		shell->exit_status = 1;
-		return 1;
-	}
+    oldpwd = getcwd(NULL, 0);
+    if (!oldpwd)
+        oldpwd = ft_strdup("");
 
-	if (cmd->nb_arg >= 2 && strcmp(cmd->args[1], "-") == 0)
-	{
-		char *newpwd = getcwd(NULL, 0);
-		if (newpwd)
-		{
-			ft_putendl_fd(newpwd, 1);
-			free(newpwd);
-		}
-	}
+    if (chdir(path) != 0)
+    {
+        if (errno == ENOENT)
+            err_msg = "No such file or directory";
+        else if (errno == ENOTDIR)
+            err_msg = "Not a directory";
+        else if (errno == EACCES)
+            err_msg = "Permission denied";
+        else
+            err_msg = "Error";
 
-	ret = update_cd_env(cmd, shell, oldpwd);
-	shell->path = getcwd(NULL, 0);
-	shell->exit_status = 0;
-	return ret;
+        ft_putstr_fd("minishell: cd: ", 2);
+        ft_putstr_fd(path, 2);
+        ft_putstr_fd(": ", 2);
+        ft_putendl_fd(err_msg, 2);
+
+        free(oldpwd);
+        shell->exit_status = 1;
+        return 1;
+    }
+
+    ret = update_cd_env(cmd, shell, oldpwd);
+    shell->path = getcwd(NULL, 0);
+    shell->exit_status = 0;
+    return ret;
 }

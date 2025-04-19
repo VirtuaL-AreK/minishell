@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 11:57:59 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/10 19:30:20 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 17:54:44 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,9 +106,6 @@ int	process_single_quote(const char *line, int *i,
 	return (0);
 }
 
-/*
-** process_double_quote: idem pour les ".
-*/
 int	process_double_quote(const char *line, int *i, char **buf, int *len, int *cap)
 {
 	if (append_char(buf, len, cap, line[*i]) < 0)

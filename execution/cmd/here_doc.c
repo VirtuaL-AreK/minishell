@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 20:28:14 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 12:50:54 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 17:56:29 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,24 +167,36 @@ static int check_heredoc_token_error(t_token **tokens, t_command *cmd)
     return (0);
 }
 
-void handle_heredoc_token(t_command *cmd,
-                          t_token   **tokens,
-                          t_shell   *shell)
+void handle_heredoc_token(t_command *cmd, t_token **tokens, t_shell *shell)
 {
-    char *delimiter;
+    char *raw;
     int   is_quoted;
     char *clean;
+    char *effective_delim;
     char *tmp;
 
     *tokens = (*tokens)->next;
     if (check_heredoc_token_error(tokens, cmd))
         return;
-    delimiter = (*tokens)->value;
-    is_quoted = ((*tokens)->has_single_quote
-              || (*tokens)->has_double_quote);
-    clean = remove_surrounding_quotes_if_any(delimiter);
-    tmp = handle_heredoc(clean, is_quoted, shell);
-    free(clean);
+
+    raw        = (*tokens)->value;
+    is_quoted  = ((*tokens)->has_single_quote || (*tokens)->has_double_quote);
+    
+    clean = remove_surrounding_quotes_if_any(raw);
+
+    if (!is_quoted)
+    {
+        effective_delim = expand_heredoc_line(clean, shell);
+        free(clean);
+    }
+    else
+    {
+        effective_delim = clean;
+    }
+
+    tmp = handle_heredoc(effective_delim, is_quoted, shell);
+    free(effective_delim);
+
     if (!tmp)
     {
         cmd->redir_error_code = 1;
@@ -193,6 +205,7 @@ void handle_heredoc_token(t_command *cmd,
         *tokens = (*tokens)->next;
         return;
     }
+
     free(cmd->infile);
     cmd->infile = tmp;
     *tokens     = (*tokens)->next;

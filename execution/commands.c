@@ -6,35 +6,11 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 20:21:48 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/18 18:22:49 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 17:55:29 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
-
-// t_command *command_parser(t_token *tokens, t_shell *shell)
-// {
-//     t_command *head = NULL;
-//     t_command *last = NULL;
-//     t_command *cmd;
-
-//     while (tokens)
-//     {
-//         cmd = new_command(tokens);
-//         fill_command(cmd, &tokens, shell);    // on passe shell ici
-//         fix_empty_first_arg(cmd);
-//         if (!head)
-//             head = cmd;
-//         else
-//             last->next = cmd;
-//         last = cmd;
-
-//         if (tokens && tokens->type == TOKEN_PIPE)
-//             tokens = tokens->next;
-//     }
-
-//     return head;
-// }
 
 t_command *command_parser(t_token *tokens, t_shell *shell)
 {

@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 09:40:08 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 12:51:21 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 17:56:12 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,10 @@ int count_command_arguments(t_token *tokens)
         }
         else if (tokens->type == TOKEN_WORD)
         {
-            count++;
+            if (tokens->value[0] != '\0'
+             || tokens->has_single_quote
+             || tokens->has_double_quote)
+                count++;
             tokens = tokens->next;
         }
         else
@@ -61,24 +64,38 @@ t_command	*new_command(t_token *tokens)
 	return (cmd);
 }
 
-
 int handle_heredoc_line(t_heredoc_ctx *ctx, char *line)
 {
-    int cmp;
-    char *expanded_line;
+    char *to_compare;
+    char *expanded = NULL;
 
-    cmp = strcmp(line, ctx->delimiter);
-    if (cmp == 0)
-        return 1;
     if (!ctx->is_quoted)
     {
-        expanded_line = expand_heredoc_line(line, ctx->shell);
-        write(ctx->fd, expanded_line, ft_strlen(expanded_line));
-        free(expanded_line);
+        expanded    = expand_heredoc_line(line, ctx->shell);
+        to_compare  = expanded;
     }
     else
+    {
+        to_compare = line;
+    }
+
+    if (strcmp(to_compare, ctx->delimiter) == 0)
+    {
+        free(expanded);
+        return 1;
+    }
+
+    if (!ctx->is_quoted)
+    {
+        write(ctx->fd, expanded, ft_strlen(expanded));
+        free(expanded);
+    }
+    else
+    {
         write(ctx->fd, line, ft_strlen(line));
+    }
     write(ctx->fd, "\n", 1);
+
     return 0;
 }
 
@@ -180,9 +197,16 @@ char *handle_heredoc(const char *delimiter,
     }
     return (template);
 }
-
-void	handle_word(t_command *cmd, t_token **tokens, int *arg_count)
+void handle_word(t_command *cmd, t_token **tokens, int *arg_count)
 {
-	cmd->args[(*arg_count)++] = ft_strdup((*tokens)->value);
-	*tokens = (*tokens)->next;
+    if ((*tokens)->value[0] == '\0'
+     && !(*tokens)->has_single_quote
+     && !(*tokens)->has_double_quote)
+    {
+        *tokens = (*tokens)->next;
+        return;
+    }
+
+    cmd->args[(*arg_count)++] = ft_strdup((*tokens)->value);
+    *tokens = (*tokens)->next;
 }
