@@ -68,6 +68,8 @@ char **clone_envp(char **envp, t_shell *shell)
     char **copy;
 
     i = 0;
+    if (!envp || !*envp)
+        return (NULL);
     while (envp && envp[i])
         i++;
     copy = malloc(sizeof(char *) * (i + 1));
