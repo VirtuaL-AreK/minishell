@@ -6,32 +6,45 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 18:35:19 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/18 13:33:12 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 12:52:08 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-static char	*resolve_cd_path(t_command *cmd, t_shell *shell)
+static char *resolve_cd_path(t_command *cmd, t_shell *shell)
 {
-	char	*path;
+	char *arg1;
 
-	path = NULL;
+	if (cmd->nb_arg == 1)
+		return resolve_cd_path_tilde(cmd, shell);
+
+	arg1 = cmd->args[1];
+
+	if (strcmp(arg1, "--") == 0)
+	{
+		if (cmd->nb_arg == 2)
+			return resolve_cd_path_tilde(cmd, shell);
+		if (cmd->nb_arg == 3)
+			return cmd->args[2];
+		ft_putstr_fd("cd: too many arguments\n", 2);
+		shell->exit_status = 1;
+		return NULL;
+	}
+
+	if (strcmp(arg1, "-") == 0 && cmd->nb_arg == 2)
+		return resolve_cd_path_dash(cmd, shell);
+
+	if (ft_strncmp(arg1, "~/", 2) == 0)
+		return resolve_cd_path_home_slash(cmd, shell);
+
 	if (cmd->nb_arg > 2)
 	{
 		ft_putstr_fd("cd: too many arguments\n", 2);
 		shell->exit_status = 1;
-		return (NULL);
+		return NULL;
 	}
-	if (cmd->nb_arg < 2 || (cmd->args[1] && strcmp(cmd->args[1], "~") == 0))
-		path = resolve_cd_path_tilde(cmd, shell);
-	else if (cmd->args[1] && ft_strncmp(cmd->args[1], "-", 1) == 0 && !cmd->args[1])
-		path = resolve_cd_path_dash(cmd, shell);
-	else if (cmd->args[1] && ft_strncmp(cmd->args[1], "~/", 2) == 0)
-		path = resolve_cd_path_home_slash(cmd, shell);
-	else
-		path = cmd->args[1];
-	return (path);
+	return arg1; 
 }
 
 static int	update_cd_env(t_command *cmd, t_shell *shell, char *oldpwd)
@@ -55,64 +68,51 @@ static int	update_cd_env(t_command *cmd, t_shell *shell, char *oldpwd)
 
 static char *check_command(t_command *cmd, t_shell *shell)
 {
-    char *path = NULL;
-
-    if (cmd->args[1][0] == '-' && !cmd->args[2])
-    {
-        ft_putstr_fd("bash: cd: -: invalid option\n", 2);
-        ft_putstr_fd("cd: usage: cd [-L|[-P [-e]] [-@]] [dir]\n", 2);
-        shell->exit_status = 2;      /* ← on utilise shell-> et non g_shell */
-        return NULL;
-    }
-    else if (ft_strncmp(cmd->args[1], "--", 2) == 0 && cmd->args[2])
-    {
-        path = cmd->args[2];
-    }
-    return path;
+	if (cmd->nb_arg >= 2 &&
+		cmd->args[1][0] == '-' &&
+		strcmp(cmd->args[1], "-")  != 0 &&
+		strcmp(cmd->args[1], "--") != 0)
+	{
+		ft_putstr_fd("bash: cd: ", 2);
+		ft_putstr_fd(cmd->args[1], 2);
+		ft_putstr_fd(": invalid option\ncd: usage: cd [dir]\n", 2);
+		shell->exit_status = 2;
+		return NULL;
+	}
+	return resolve_cd_path(cmd, shell);
 }
 
-int ft_cd(t_command *cmd, t_shell *shell)
+
+int	ft_cd(t_command *cmd, t_shell *shell)
 {
-    char *path;
-    char *oldpwd;
-    int   ret;
+	char *path;
+	char *oldpwd;
+	int   ret;
 
-    if (cmd->nb_arg > 2)
-    {
-        ft_putstr_fd("cd: too many arguments\n", 2);
-        shell->exit_status = 1;
-        return (1);
-    }
+	path = check_command(cmd, shell);
+	if (!path)
+		return 1;
 
-    if (ft_strncmp(cmd->args[1], "-", 1) == 0)
-        path = check_command(cmd, shell);          /* ← nouvel appel */
-    else
-        path = resolve_cd_path(cmd, shell);
+	oldpwd = getcwd(NULL, 0);
+	if (chdir(path) != 0)
+	{
+		free(oldpwd);
+		shell->exit_status = 1;
+		return 1;
+	}
 
-    if (!path)
-        return (1);
+	if (cmd->nb_arg >= 2 && strcmp(cmd->args[1], "-") == 0)
+	{
+		char *newpwd = getcwd(NULL, 0);
+		if (newpwd)
+		{
+			ft_putendl_fd(newpwd, 1);
+			free(newpwd);
+		}
+	}
 
-    oldpwd = getcwd(NULL, 0);
-    if (chdir(path) != 0)
-    {
-        if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
-            free(path);
-        free(oldpwd);
-        shell->exit_status = 1;
-        return (1);
-    }
-
-    if (cmd->args[1] && strncmp(cmd->args[1], "~/", 2) == 0)
-        free(path);
-
-    ret = update_cd_env(cmd, shell, oldpwd);
-    shell->path = getcwd(NULL, 0);
-    if (!shell->path)
-    {
-        shell->exit_status = 1;
-        return (1);
-    }
-
-    shell->exit_status = 0;
-    return (ret);
+	ret = update_cd_env(cmd, shell, oldpwd);
+	shell->path = getcwd(NULL, 0);
+	shell->exit_status = 0;
+	return ret;
 }

@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 20:28:14 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/18 18:22:35 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 12:50:54 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,18 +156,6 @@ char *remove_surrounding_quotes_if_any(const char *str)
     return ft_strdup(str);
 }
 
-
-// static int	check_heredoc_token_error(t_token **tokens, t_command *cmd)
-// {
-// 	if (!(*tokens) || (*tokens)->type != TOKEN_WORD)
-// 	{
-// 		ft_putstr_fd("Syntax error: missing delimiter for heredoc\n", 2);
-// 		cmd->redir_error_code = 1;
-// 		return (1);
-// 	}
-// 	return (0);
-// }
-
 static int check_heredoc_token_error(t_token **tokens, t_command *cmd)
 {
     if (!(*tokens) || (*tokens)->type != TOKEN_WORD)
@@ -178,37 +166,6 @@ static int check_heredoc_token_error(t_token **tokens, t_command *cmd)
     }
     return (0);
 }
-
-// void	handle_heredoc_token(t_command *cmd, t_token **tokens, t_shell *shell)
-// {
-// 	char			*delimiter;
-// 	int				is_quoted;
-// 	char			*clean;
-// 	char			*tmp;
-
-// 	*tokens = (*tokens)->next;
-// 	if (check_heredoc_token_error(tokens, cmd))
-// 		return ;
-// 	delimiter = (*tokens)->value;
-// 	is_quoted = ((*tokens)->has_single_quote || (*tokens)->has_double_quote);
-// 	clean = remove_surrounding_quotes_if_any(delimiter);
-// 	tmp = handle_heredoc(clean, is_quoted, shell);
-// 	free(clean);
-// 	if (!tmp)
-// 	{
-// 		cmd->redir_error_code = 1;
-// 		if (g_last_signal == SIGINT)
-// 		{
-// 			*tokens = NULL;
-// 			return ;
-// 		}
-// 		*tokens = (*tokens)->next;
-// 		return ;
-// 	}
-// 	free(cmd->infile);
-// 	cmd->infile = tmp;
-// 	*tokens     = (*tokens)->next;
-// }
 
 void handle_heredoc_token(t_command *cmd,
                           t_token   **tokens,

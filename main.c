@@ -5,25 +5,6 @@
 
 volatile sig_atomic_t g_last_signal = 0;
 
-// void parse_command(char *input, t_shell *shell)
-// {
-//     t_token *tokens = bash_tokenize_to_tokens(input);
-// 	// print_tokens(tokens);
-//     if (!tokens)
-//         return;
-
-//     if (!is_syntax_error(tokens, shell))
-//     {
-//         expand_tokens(tokens, shell);
-//         // t_command *commands = command_parser(tokens);
-//         t_command *commands = command_parser(tokens, shell);
-// 		// print_command(commands);
-// 		execute_pipeline(commands, shell);
-//         free_commands(commands);
-//     }
-//     free_tokens(tokens);
-// }
-
 void parse_command(char *input, t_shell *shell)
 {
     t_token   *tokens;

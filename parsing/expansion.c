@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 10:56:27 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/10 19:29:18 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/19 12:49:48 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,21 +157,78 @@ char	*expand_string(const char *str, t_shell *shell)
 	return (st.buffer);
 }
 
-void	expand_tokens(t_token *tokens, t_shell *shell)
+char *expand_tilde(const char *value, t_shell *shell)
 {
-	t_token	*cur;
-	char	*expanded;
+	char *home;
+    if (!value || value[0] != '~')
+        return ft_strdup(value);
 
-	cur = tokens;
-	while (cur)
-	{
-		if (cur->type == TOKEN_WORD && cur->should_expand)
-		{
-			expanded = expand_string(cur->value, shell);
-			free(cur->value);
-			cur->value = expanded;
-		}
-		cur = cur->next;
-	}
+    if (value[1] == '\0' || value[1] == '/')
+    {
+        home = get_local_env_value("HOME", shell);
+        if (!home)
+            return ft_strdup(value);
+
+        char *result;
+        if (value[1] == '/')
+        {
+            result = ft_strjoin(home, value + 1);
+        }
+        else
+        {
+            result = home;
+        }
+        return result;
+    }
+    return ft_strdup(value);
 }
+
+char *remove_quotes(const char *s)
+{
+    t_expand_state st;
+    int in_sq = 0, in_dq = 0, i = 0;
+
+    if (init_expand_state(&st, 64) < 0)
+        return NULL;
+
+    while (s[i])
+    {
+        if (s[i] == '\'' && !in_dq) 
+            in_sq = !in_sq;
+        else if (s[i] == '"' && !in_sq) 
+            in_dq = !in_dq;
+        else           
+            expand_add_char(&st, s[i]);
+        i++;
+    }
+    expand_add_char(&st, '\0');
+    return st.buffer;
+}
+
+void expand_tokens(t_token *tokens, t_shell *shell)
+{
+    t_token *cur = tokens;
+
+    while (cur)
+    {
+        if (cur->type == TOKEN_WORD && cur->should_expand)
+        {
+            char *tmp;
+
+            tmp = expand_tilde(cur->value, shell);
+            free(cur->value);
+            cur->value = tmp;
+
+            tmp = expand_string(cur->value, shell);
+            free(cur->value);
+            cur->value = tmp;
+
+            tmp = remove_quotes(cur->value);
+            free(cur->value);
+            cur->value = tmp;
+        }
+        cur = cur->next;
+    }
+}
+
 

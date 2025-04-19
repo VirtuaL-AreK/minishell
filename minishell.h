@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/18 18:20:25 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/18 19:30:52 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,5 +297,8 @@ char			*resolve_cd_path_home_slash(t_command *cmd, t_shell *shell);
 void			sig_handler(int sig);
 void			exit_here(t_exit_status order);
 void sigint_handler_prompt(int sig);
+
+char *expand_tilde(const char *value, t_shell *shell);
+
 
 #endif
