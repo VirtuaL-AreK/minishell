@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 15:44:09 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/22 15:22:33 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,6 +137,8 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
+void print_error(const char *what);
+
 void			print_command(t_command *commands);
 int				count_command_arguments(t_token *tokens);
 t_command		*new_command(t_token *tokens);
@@ -253,7 +255,8 @@ void			setup_output_redirection(t_command *c,
 					int has_pipe, int pipe_fd[2]);
 void			setup_redirection(t_command *c, int prev_fd,
 					int pipe_fd[2], int has_pipe);
-void			check_directory_and_permissions(char *exec_path);
+// void			check_directory_and_permissions(char *exec_path);
+void check_directory_and_permissions(const char *path);
 void			wait_for_pipeline(pid_t *pids, int nb_cmds, t_shell *shell);
 void			execute_pipeline_child(t_command *c, int prev_fd,
 					int pipe_fd[2], int has_pipe, t_shell *shell);

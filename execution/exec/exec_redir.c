@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exec_redir.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:46:10 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/06 11:50:51 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/22 15:22:02 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,25 +70,24 @@ void	setup_redirection(t_command *c, int prev_fd,
 	setup_output_redirection(c, has_pipe, pipe_fd);
 }
 
-void	check_directory_and_permissions(char *exec_path)
+void check_directory_and_permissions(const char *path)
 {
-	struct stat	sb;
-	int			ret;
-
-	ret = stat(exec_path, &sb);
-	if (ret != 0)
-	{
-		ft_putstr_fd("No such file or directory\n", 2);
-		exit(127);
-	}
-	if (S_ISDIR(sb.st_mode))
-	{
-		fprintf(stderr, " Command not found\n");
-		exit(127);
-	}
-	if (access(exec_path, X_OK) != 0)
-	{
-		ft_putstr_fd(exec_path, 2);
-		exit(126);
-	}
+    struct stat sb;
+    if (stat(path, &sb) != 0)
+    {
+        print_error(path);
+        exit(127);
+    }
+    if (S_ISDIR(sb.st_mode))
+    {
+        ft_putstr_fd("minishell: ", 2);
+        ft_putstr_fd((char *)path, 2);
+        ft_putstr_fd(": is a directory\n", 2);
+        exit(126);
+    }
+    if (access(path, X_OK) != 0)
+    {
+        print_error(path);
+        exit(126);
+    }
 }

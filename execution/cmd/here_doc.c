@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 20:28:14 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 17:56:29 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/22 15:15:26 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,24 +118,23 @@ char *expand_heredoc_line(const char *line, t_shell *shell)
 
 
 
-void	handle_redir_in(t_command *cmd, t_token **tokens)
+void handle_redir_in(t_command *cmd, t_token **tokens)
 {
-	int	in_fd;
-
-	*tokens = (*tokens)->next;
-	in_fd = open((*tokens)->value, O_RDONLY);
-	if (in_fd < 0)
-	{
-		ft_putstr_fd((*tokens)->value, 2);
-		cmd->redir_error_code = 1;
-		while (*tokens && (*tokens)->type != TOKEN_PIPE)
-			*tokens = (*tokens)->next;
-		return ;
-	}
-	close(in_fd);
-	free(cmd->infile);
-	cmd->infile = ft_strdup((*tokens)->value);
-	*tokens = (*tokens)->next;
+    int in_fd;
+    *tokens = (*tokens)->next;
+    in_fd = open((*tokens)->value, O_RDONLY);
+    if (in_fd < 0)
+    {
+        print_error((*tokens)->value);
+        cmd->redir_error_code = 1;
+        while (*tokens && (*tokens)->type != TOKEN_PIPE)
+            *tokens = (*tokens)->next;
+        return;
+    }
+    close(in_fd);
+    free(cmd->infile);
+    cmd->infile = ft_strdup((*tokens)->value);
+    *tokens = (*tokens)->next;
 }
 
 char *remove_surrounding_quotes_if_any(const char *str)
@@ -211,33 +210,28 @@ void handle_heredoc_token(t_command *cmd, t_token **tokens, t_shell *shell)
     *tokens     = (*tokens)->next;
 }
 
-void	handle_redir_out_or_append(t_command *cmd, t_token **tokens)
+void handle_redir_out_or_append(t_command *cmd, t_token **tokens)
 {
-	int	is_append;
-	int	flags;
-	int	out_fd;
+    int flags;
+    int out_fd;
+    int is_append = ((*tokens)->type == TOKEN_APPEND);
 
-	is_append = ((*tokens)->type == TOKEN_APPEND);
-	*tokens = (*tokens)->next;
-	flags = O_WRONLY | O_CREAT;
-	if (is_append)
-		flags |= O_APPEND;
-	else
-		flags |= O_TRUNC;
-	out_fd = open((*tokens)->value, flags, 0644);
-	if (out_fd < 0)
-	{
-		ft_putstr_fd((*tokens)->value, 2);
-		cmd->redir_error_code = 1;
-		while (*tokens && (*tokens)->type != TOKEN_PIPE)
-			*tokens = (*tokens)->next;
-		return ;
-	}
-	close(out_fd);
-	free(cmd->outfile);
-	cmd->outfile = ft_strdup((*tokens)->value);
-	cmd->append = is_append;
-	*tokens = (*tokens)->next;
+    *tokens = (*tokens)->next;
+    flags = O_WRONLY | O_CREAT | (is_append ? O_APPEND : O_TRUNC);
+    out_fd = open((*tokens)->value, flags, 0644);
+    if (out_fd < 0)
+    {
+        print_error((*tokens)->value);
+        cmd->redir_error_code = 1;
+        while (*tokens && (*tokens)->type != TOKEN_PIPE)
+            *tokens = (*tokens)->next;
+        return;
+    }
+    close(out_fd);
+    free(cmd->outfile);
+    cmd->outfile = ft_strdup((*tokens)->value);
+    cmd->append = is_append;
+    *tokens = (*tokens)->next;
 }
 
 void fill_command(t_command *cmd, t_token **tokens, t_shell *shell)

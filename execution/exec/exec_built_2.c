@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exec_built_2.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:28:54 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/06 11:30:52 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/22 22:05:31 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ int	execute_builtin(t_command *cmd, t_shell *shell)
 		return (1);
 	if (strcmp(cmd->args[0], "cd") == 0)
 		return (execute_builtin_cd(cmd, shell));
-	if (strcmp(cmd->args[0], "env") == 0)
+	if (strcmp(cmd->args[0], "env") == 0 && cmd->args[1] == NULL)
 		return (ft_env(cmd, shell));
 	if (strcmp(cmd->args[0], "echo") == 0)
 		return (execute_builtin_echo(cmd, shell));

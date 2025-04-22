@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 10:56:27 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 17:54:56 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/22 22:04:15 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -225,22 +225,23 @@ char *expand_word(const char *s, t_shell *shell)
             in_dq = !in_dq;
             i++;
         }
-        else if (!in_sq && !in_dq && s[i] == '$' && s[i + 1] == '\'')
-        {
-            if (handle_dollar_quoted(s, &i, &st, shell) < 0)
-            {
-                free(st.buffer);
-                return NULL;
-            }
-        }
-        else if (!in_sq && s[i] == '$')
-        {
-            if (handle_variable(s, &i, &st, shell) < 0)
-            {
-                free(st.buffer);
-                return NULL;
-            }
-        }
+		else if (!in_sq && !in_dq && s[i] == '$'
+			&& (s[i + 1] == '\'' || s[i + 1] == '"'))
+	  {
+		  if (handle_dollar_quoted(s, &i, &st, shell) < 0)
+		  {
+			  free(st.buffer);
+			  return NULL;
+		  }
+	  }
+	  else if (!in_sq && s[i] == '$')
+	  {
+		  if (handle_variable(s, &i, &st, shell) < 0)
+		  {
+			  free(st.buffer);
+			  return NULL;
+		  }
+	  }	  
         else if (in_dq && s[i] == '\\'
                  && (s[i+1] == '"' || s[i+1] == '\\'
                      || s[i+1] == '$'  || s[i+1] == '`'))
