@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 09:40:08 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 17:56:12 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 14:58:13 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,39 +64,61 @@ t_command	*new_command(t_token *tokens)
 	return (cmd);
 }
 
+int open_heredoc_tmp(char **out_template, int *out_fd)
+{
+    *out_template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
+    if (!*out_template)
+        return (-1);
+    *out_fd = mkstemp(*out_template);
+    if (*out_fd < 0)
+    {
+        ft_putstr_fd("mkstemp error\n", 2);
+        free(*out_template);
+        return (-1);
+    }
+    return (0);
+}
+
+char *heredoc_on_interrupt(t_shell *shell, char *template, int fd)
+{
+    close(fd);
+    shell->exit_status         = 130;
+    shell->heredoc_interrupted = 1;
+    g_last_signal              = 0;
+    free(template);
+    return (NULL);
+}
+
+void write_heredoc_line(t_heredoc_ctx *ctx, const char *s)
+{
+    write(ctx->fd, s, ft_strlen(s));
+    write(ctx->fd, "\n", 1);
+}
+
 int handle_heredoc_line(t_heredoc_ctx *ctx, char *line)
 {
-    char *to_compare;
-    char *expanded = NULL;
+    char *cmp;
+    int   done;
 
-    if (!ctx->is_quoted)
+    if (ctx->is_quoted)
+        cmp = line;
+    else
+        cmp = expand_heredoc_line(line, ctx->shell);
+    done = (strcmp(cmp, ctx->delimiter) == 0);
+    if (done)
     {
-        expanded    = expand_heredoc_line(line, ctx->shell);
-        to_compare  = expanded;
+        if (!ctx->is_quoted)
+            free(cmp);
+        return (1);
     }
+    if (ctx->is_quoted)
+        write_heredoc_line(ctx, line);
     else
     {
-        to_compare = line;
+        write_heredoc_line(ctx, cmp);
+        free(cmp);
     }
-
-    if (strcmp(to_compare, ctx->delimiter) == 0)
-    {
-        free(expanded);
-        return 1;
-    }
-
-    if (!ctx->is_quoted)
-    {
-        write(ctx->fd, expanded, ft_strlen(expanded));
-        free(expanded);
-    }
-    else
-    {
-        write(ctx->fd, line, ft_strlen(line));
-    }
-    write(ctx->fd, "\n", 1);
-
-    return 0;
+    return (0);
 }
 
 static void sigint_handler_heredoc(int sig)
@@ -164,37 +186,23 @@ int read_heredoc_and_write(t_heredoc_ctx *ctx)
     return (g_last_signal == SIGINT);
 }
 
-char *handle_heredoc(const char *delimiter,
-                     int is_quoted,
-                     t_shell *shell)
+char *handle_heredoc(const char *delimiter, int          is_quoted, t_shell     *shell)
 {
-    t_heredoc_ctx    ctx;
-    char            *template;
-    int              fd;
-    int              interrupted;
+    t_heredoc_ctx ctx;
+    char         *template;
+    int           interrupted;
+    int           fd;
 
-    template = ft_strdup("/tmp/minishell_heredoc_XXXXXX");
-    fd = mkstemp(template);
-    if (fd < 0)
-    {
-        free(template);
+    if (open_heredoc_tmp(&template, &fd) < 0)
         return (NULL);
-    }
-    ctx.fd         = fd;
-    ctx.is_quoted  = is_quoted;
-    ctx.delimiter  = delimiter;
-    ctx.shell      = shell;
-
-    interrupted = read_heredoc_and_write(&ctx);
-    close(fd);
+    ctx.fd        = fd;
+    ctx.is_quoted = is_quoted;
+    ctx.delimiter = delimiter;
+    ctx.shell     = shell;
+    interrupted   = read_heredoc_and_write(&ctx);
     if (interrupted)
-    {
-        shell->exit_status         = 130;
-        shell->heredoc_interrupted = 1;
-        g_last_signal              = 0;
-        free(template);
-        return (NULL);
-    }
+        return heredoc_on_interrupt(shell, template, fd);
+    close(fd);
     return (template);
 }
 void handle_word(t_command *cmd, t_token **tokens, int *arg_count)

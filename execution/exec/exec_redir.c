@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:46:10 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/22 15:22:02 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/22 22:11:07 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,8 +63,7 @@ void	setup_output_redirection(t_command *c, int has_pipe, int pipe_fd[2])
 	}
 }
 
-void	setup_redirection(t_command *c, int prev_fd,
-		int pipe_fd[2], int has_pipe)
+void	setup_redirection(t_command *c, int prev_fd, int pipe_fd[2], int has_pipe)
 {
 	setup_input_redirection(c, prev_fd);
 	setup_output_redirection(c, has_pipe, pipe_fd);

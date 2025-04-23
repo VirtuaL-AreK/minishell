@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   export_h_01.c                                      :+:      :+:    :+:   */
+/*   env_h_01.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 13:49:07 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/05 13:56:13 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/22 22:09:47 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,7 @@ int	is_valid_varname(char *var)
 	return (1);
 }
 
-int	export_var_plus_get_parts(const char *arg, char *plus_eq,
-		t_export_parts *parts, t_shell *shell)
+int	export_var_plus_get_parts(const char *arg, char *plus_eq, t_export_parts *parts, t_shell *shell)
 {
 	size_t	name_len;
 
@@ -80,8 +79,7 @@ char	*export_var_plus_get_old_val(t_shell *shell, const char *name)
 	return (old_val);
 }
 
-void	export_var_plus_update(t_shell *shell, const char *name,
-		const char *to_append, char *old_val)
+void	export_var_plus_update(t_shell *shell, const char *name, const char *to_append, char *old_val)
 {
 	char	*new_val;
 

@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 09:05:16 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/22 21:27:53 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 14:04:24 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,39 +53,44 @@ static long	ft_atol(const char *s)
 	return (res * sign);
 }
 
-int	ft_exit(t_command *cmd, t_shell *shell)
+static void    exit_numeric_error(const char *arg)
 {
-	char	*arg;
-	long	val;
+    ft_putstr_fd("minishell: exit: ", 2);
+    ft_putstr_fd((char *)arg, 2);
+    ft_putstr_fd(": numeric argument required\n", 2);
+    exit(2);
+}
+
+static int    handle_too_many_args(t_command *cmd, t_shell *shell)
+{
+    if (cmd->args[2])
+    {
+        ft_putstr_fd("minishell: exit: too many arguments\n", 2);
+        shell->exit_status = 1;
+        return (1);
+    }
+    return (0);
+}
+
+int    ft_exit(t_command *cmd, t_shell *shell)
+{
+    char  *arg;
+    long   val;
 
 	// ft_putstr_fd("exit\n", 1);
+    arg = cmd->args[1];
+    if (!arg)
+        exit(shell->exit_status);
 
-	arg = cmd->args[1];
-	if (!arg)
-		exit(shell->exit_status);
+    if (!is_numeric_argument(arg))
+        exit_numeric_error(arg);
 
-	if (!is_numeric_argument(arg))
-	{
-		ft_putstr_fd("minishell: exit: ", 2);
-		ft_putstr_fd(arg, 2);
-		ft_putstr_fd(": numeric argument required\n", 2);
-		exit(2);
-	}
-	val = ft_atol(arg);
-	if (val > LONG_MAX || val < LONG_MIN)
-	{
-		ft_putstr_fd("minishell: exit: ", 2);
-		ft_putstr_fd(arg, 2);
-		ft_putstr_fd(": numeric argument required\n", 2);
-		exit(2);
-	}
+    val = ft_atol(arg);
+    if (val > LONG_MAX || val < LONG_MIN)
+        exit_numeric_error(arg);
 
-	if (cmd->args[2])
-	{
-		ft_putstr_fd("minishell: exit: too many arguments\n", 2);
-		shell->exit_status = 1;
-		return (1);
-	}
+    if (handle_too_many_args(cmd, shell))
+        return (1);
 
-	exit((unsigned char)val);
+    exit((unsigned char)val);
 }

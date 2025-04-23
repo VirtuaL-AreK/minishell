@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:41:33 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 16:59:18 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 13:35:57 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,17 +35,19 @@ void	wait_for_pipeline(pid_t *pids, int nb_cmds, t_shell *shell)
 		shell->exit_status = 0;
 }
 
-void	execute_pipeline_child(t_command *c, int prev_fd,
-		int pipe_fd[2], int has_pipe, t_shell *shell)
+void execute_pipeline_child(t_command *c, t_pipe_ctrl *ctrl)
 {
-	if (c->redir_error_code != 0)
-		exit(1);
-	setup_redirection(c, prev_fd, pipe_fd, has_pipe);
-	if (c->args[0] == NULL || c->args[0][0] == '\0')
-		exit(0);
-	if (!execute_builtin(c, shell))
-		exit(shell->exit_status);
-	execute_command_exec(c, shell);
+    if (c->redir_error_code)
+        exit(1);
+    setup_redirection(c,
+        ctrl->prev_fd,
+        ctrl->pipe_fd,
+        ctrl->has_pipe);
+    if (!c->args[0] || !*c->args[0])
+        exit(0);
+    if (!execute_builtin(c, ctrl->shell))
+        exit(ctrl->shell->exit_status);
+    execute_command_exec(c, ctrl->shell);
 }
 
 int	create_pipe_for_command(t_command *c, int pipe_fd[2])

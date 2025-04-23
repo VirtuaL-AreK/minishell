@@ -6,64 +6,93 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 18:35:19 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/19 17:56:58 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 13:57:06 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-static char *resolve_cd_path(t_command *cmd, t_shell *shell)
+static char *resolve_cd_double_dash(t_command *cmd, t_shell *shell)
 {
-	char *arg1;
-
-	if (cmd->nb_arg == 1)
-		return resolve_cd_path_tilde(cmd, shell);
-
-	arg1 = cmd->args[1];
-
-	if (strcmp(arg1, "--") == 0)
-	{
-		if (cmd->nb_arg == 2)
-			return resolve_cd_path_tilde(cmd, shell);
-		if (cmd->nb_arg == 3)
-			return cmd->args[2];
-		ft_putstr_fd("cd: too many arguments\n", 2);
-		shell->exit_status = 1;
-		return NULL;
-	}
-
-	if (strcmp(arg1, "-") == 0 && cmd->nb_arg == 2)
-		return resolve_cd_path_dash(cmd, shell);
-
-	if (ft_strncmp(arg1, "~/", 2) == 0)
-		return resolve_cd_path_home_slash(cmd, shell);
-
-	if (cmd->nb_arg > 2)
-	{
-		ft_putstr_fd("cd: too many arguments\n", 2);
-		shell->exit_status = 1;
-		return NULL;
-	}
-	return arg1; 
+    if (cmd->nb_arg == 2)
+        return resolve_cd_path_tilde(cmd, shell);
+    if (cmd->nb_arg == 3)
+        return cmd->args[2];
+    ft_putstr_fd("cd: too many arguments\n", 2);
+    shell->exit_status = 1;
+    return NULL;
 }
 
-static int	update_cd_env(t_command *cmd, t_shell *shell, char *oldpwd)
+static char *resolve_cd_path(t_command *cmd, t_shell *shell)
 {
-	char	cwd[1024];
+    char *arg1;
 
-	if (cmd->args[1] && strcmp(cmd->args[1], "-") == 0)
-	{
-		if (getcwd(cwd, sizeof(cwd)))
-			ft_putendl_fd(cwd, 1);
-	}
-	if (oldpwd)
-	{
-		add_or_replace_var(shell, "OLDPWD", oldpwd);
-		free(oldpwd);
-	}
-	if (getcwd(cwd, sizeof(cwd)))
-		add_or_replace_var(shell, "PWD", cwd);
-	return (0);
+    if (cmd->nb_arg == 1)
+        return resolve_cd_path_tilde(cmd, shell);
+    arg1 = cmd->args[1];
+    if (strcmp(arg1, "--") == 0)
+        return resolve_cd_double_dash(cmd, shell);
+    if (strcmp(arg1, "-") == 0 && cmd->nb_arg == 2)
+        return resolve_cd_path_dash(cmd, shell);
+    if (ft_strncmp(arg1, "~/", 2) == 0)
+        return resolve_cd_path_home_slash(cmd, shell);
+    if (cmd->nb_arg > 2)
+    {
+        ft_putstr_fd("cd: too many arguments\n", 2);
+        shell->exit_status = 1;
+        return NULL;
+    }
+    return arg1;
+}
+
+static char *get_oldpwd(void)
+{
+    char *oldpwd;
+
+    oldpwd = getcwd(NULL, 0);
+    if (!oldpwd)
+        oldpwd = ft_strdup("");
+    return oldpwd;
+}
+
+static const char *cd_error_msg(int err)
+{
+    if (err == ENOENT)
+        return "No such file or directory";
+    if (err == ENOTDIR)
+        return "Not a directory";
+    if (err == EACCES)
+        return "Permission denied";
+    return "Error";
+}
+
+static int perform_cd(const char *path, t_command *cmd,
+                     t_shell *shell, char **oldpwd)
+{
+    const char *msg;
+    char        cwd[1024];
+
+    if (chdir(path) != 0)
+    {
+        msg = cd_error_msg(errno);
+        ft_putstr_fd("minishell: cd: ", 2);
+        ft_putstr_fd((char *)path, 2);
+        ft_putstr_fd(": ", 2);
+        ft_putendl_fd((char *)msg, 2);
+        free(*oldpwd);
+        shell->exit_status = 1;
+        return 1;
+    }
+    if (cmd->args[1] && strcmp(cmd->args[1], "-") == 0)
+        if (getcwd(cwd, sizeof(cwd)))
+            ft_putendl_fd(cwd, 1);
+    add_or_replace_var(shell, "OLDPWD", *oldpwd);
+    free(*oldpwd);
+    if (getcwd(cwd, sizeof(cwd)))
+        add_or_replace_var(shell, "PWD", cwd);
+    shell->path = getcwd(NULL, 0);
+    shell->exit_status = 0;
+    return 0;
 }
 
 static char *check_command(t_command *cmd, t_shell *shell)
@@ -85,42 +114,18 @@ static char *check_command(t_command *cmd, t_shell *shell)
 
 int ft_cd(t_command *cmd, t_shell *shell)
 {
-    char  *path;
-    char  *oldpwd;
-    int    ret;
-    char *err_msg;
+    char *path;
+    char *oldpwd;
 
     path = check_command(cmd, shell);
     if (!path)
         return 1;
-
-    oldpwd = getcwd(NULL, 0);
-    if (!oldpwd)
-        oldpwd = ft_strdup("");
-
-    if (chdir(path) != 0)
+    oldpwd = get_oldpwd();
+    path   = resolve_cd_path(cmd, shell);
+    if (!path)
     {
-        if (errno == ENOENT)
-            err_msg = "No such file or directory";
-        else if (errno == ENOTDIR)
-            err_msg = "Not a directory";
-        else if (errno == EACCES)
-            err_msg = "Permission denied";
-        else
-            err_msg = "Error";
-
-        ft_putstr_fd("minishell: cd: ", 2);
-        ft_putstr_fd(path, 2);
-        ft_putstr_fd(": ", 2);
-        ft_putendl_fd(err_msg, 2);
-
         free(oldpwd);
-        shell->exit_status = 1;
         return 1;
     }
-
-    ret = update_cd_env(cmd, shell, oldpwd);
-    shell->path = getcwd(NULL, 0);
-    shell->exit_status = 0;
-    return ret;
+    return perform_cd(path, cmd, shell, &oldpwd);
 }

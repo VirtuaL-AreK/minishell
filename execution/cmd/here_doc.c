@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 20:28:14 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/22 15:15:26 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 14:54:21 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,7 @@ void append_char_result(char c, char **result)
 }
 
 
-int expand_variable_name(const char *line, int i,
-    char **result, t_shell *shell)
+int expand_variable_name(const char *line, int i, char **result, t_shell *shell)
 {
     int start_var;
     int var_len;
@@ -81,8 +80,7 @@ void expand_exit_status(char **result, t_shell *shell)
 }
 
 
-int process_dollar_in_heredoc(const char *line, int i,
-    char **result, t_shell *shell)
+int process_dollar_in_heredoc(const char *line, int i, char **result, t_shell *shell)
 {
     i++;
     if (line[i] == '?')
@@ -166,45 +164,59 @@ static int check_heredoc_token_error(t_token **tokens, t_command *cmd)
     return (0);
 }
 
-void handle_heredoc_token(t_command *cmd, t_token **tokens, t_shell *shell)
+static char	*get_effective_delim(const char *clean, int is_quoted, t_shell *shell)
+{
+	if (is_quoted)
+		return (ft_strdup(clean));
+	return (expand_heredoc_line(clean, shell));
+}
+
+static char *get_heredoc_clean(t_token **tokens, t_command *cmd, int *is_quoted)
 {
     char *raw;
-    int   is_quoted;
     char *clean;
-    char *effective_delim;
-    char *tmp;
 
     *tokens = (*tokens)->next;
     if (check_heredoc_token_error(tokens, cmd))
-        return;
-
+        return (NULL);
     raw        = (*tokens)->value;
-    is_quoted  = ((*tokens)->has_single_quote || (*tokens)->has_double_quote);
-    
-    clean = remove_surrounding_quotes_if_any(raw);
+    *is_quoted = ((*tokens)->has_single_quote
+                  || (*tokens)->has_double_quote);
+    clean      = remove_surrounding_quotes_if_any(raw);
+    return (clean);
+}
 
-    if (!is_quoted)
-    {
-        effective_delim = expand_heredoc_line(clean, shell);
-        free(clean);
-    }
-    else
-    {
-        effective_delim = clean;
-    }
-
-    tmp = handle_heredoc(effective_delim, is_quoted, shell);
-    free(effective_delim);
-
+static int handle_heredoc_failure(char  *tmp, t_command **pcmd, t_token  **ptokens, t_shell   *shell)
+{
     if (!tmp)
     {
-        cmd->redir_error_code = 1;
+        (*pcmd)->redir_error_code = 1;
         if (shell->heredoc_interrupted)
-            return;
-        *tokens = (*tokens)->next;
-        return;
+            return (1);
+        *ptokens = (*ptokens)->next;
+        return (1);
     }
+    return (0);
+}
 
+void handle_heredoc_token(t_command *cmd, t_token   **tokens, t_shell    *shell)
+{
+    int   is_quoted;
+    char *clean;
+    char *effective;
+    char *tmp;
+
+    clean = get_heredoc_clean(tokens, cmd, &is_quoted);
+    if (!clean)
+        return ;
+    effective = get_effective_delim(clean, is_quoted, shell);
+    free(clean);
+
+    tmp = handle_heredoc(effective, is_quoted, shell);
+    free(effective);
+
+    if (handle_heredoc_failure(tmp, &cmd, tokens, shell))
+        return ;
     free(cmd->infile);
     cmd->infile = tmp;
     *tokens     = (*tokens)->next;

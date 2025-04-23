@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/22 15:22:33 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 13:39:21 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,6 +137,16 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
+typedef struct s_pipe_ctrl
+{
+    t_shell *shell;
+    pid_t   *pids;
+    int     *idx;
+    int      prev_fd;
+    int      pipe_fd[2];
+    int      has_pipe;
+}   t_pipe_ctrl;
+
 void print_error(const char *what);
 
 void			print_command(t_command *commands);
@@ -231,7 +241,7 @@ void			parse_command(char *input, t_shell *shell);
 void			execute_pipeline(t_command *cmd, t_shell *shell);
 void			execute_command_line(t_command *cmd, char **env);
 void			ft_free_strarray(char **arr);
-
+void	execute_pipeline_child(t_command *c, t_pipe_ctrl *ctrl);
 void			ft_free_strarray(char **arr);
 char			*get_env_path(char **env);
 char			*search_in_paths(char *env_path, char *cmd);
@@ -258,9 +268,11 @@ void			setup_redirection(t_command *c, int prev_fd,
 // void			check_directory_and_permissions(char *exec_path);
 void check_directory_and_permissions(const char *path);
 void			wait_for_pipeline(pid_t *pids, int nb_cmds, t_shell *shell);
-void			execute_pipeline_child(t_command *c, int prev_fd,
-					int pipe_fd[2], int has_pipe, t_shell *shell);
+// void			execute_pipeline_child(t_command *c, int prev_fd, int pipe_fd[2], int has_pipe, t_shell *shell);
 int				create_pipe_for_command(t_command *c, int pipe_fd[2]);
+int fork_pipeline_command(t_command *c, t_pipe_ctrl *ctrl);
+int handle_pipeline_command(t_command *c, t_pipe_ctrl *ctrl);
+void process_pipeline(t_command *cmd, t_shell *shell);
 
 // Builtins
 int				ft_env(t_command *cmd, t_shell *shell);

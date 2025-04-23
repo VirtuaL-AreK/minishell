@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:04:56 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/10 19:28:37 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 15:11:32 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,68 +61,76 @@ int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st, t_shell 
 
 int	handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell)
 {
-char	*exit_str;
+	char	*exit_str;
 
-(*i)++;
-if (s[*i] == '?')
-{
 	(*i)++;
-	exit_str = ft_itoa(shell->exit_status);
-	if (!exit_str)
-		return (-1);
-	if (append_string(st, exit_str) < 0)
+	if (s[*i] == '?')
 	{
+		(*i)++;
+		exit_str = ft_itoa(shell->exit_status);
+		if (!exit_str)
+			return (-1);
+		if (append_string(st, exit_str) < 0)
+		{
+			free(exit_str);
+			return (-1);
+		}
 		free(exit_str);
-		return (-1);
 	}
-	free(exit_str);
-}
-else if ((s[*i] >= 'A' && s[*i] <= 'Z')
-	|| (s[*i] >= 'a' && s[*i] <= 'z')
-	|| s[*i] == '_')
-{
-	if (handle_alphanum_variable(s, i, st, shell) < 0)
-		return (-1);
-}
-else
-{
-	if (expand_add_char(st, '$') < 0)
-		return (-1);
-}
-return (0);
-}
-
-int	handle_dollar_quoted(const char *s, int *i, t_expand_state *st, t_shell *shell)
-{
-	char	quote;
-	int		seg_start;
-	int		seg_len;
-	char	*segment;
-	char	*processed;
-	int		ret;
-
-	(void)shell;
-	quote = s[*i + 1];
-	*i += 2;
-	seg_start = *i;
-	while (s[*i] && s[*i] != quote)
-		(*i)++;
-	seg_len = *i - seg_start;
-	segment = strndup(s + seg_start, seg_len);
-	if (!segment)
-		return (-1);
-	if (quote == '\'')
-		processed = process_ansi_c(segment);
+	else if ((s[*i] >= 'A' && s[*i] <= 'Z')
+		|| (s[*i] >= 'a' && s[*i] <= 'z')
+		|| s[*i] == '_')
+	{
+		if (handle_alphanum_variable(s, i, st, shell) < 0)
+			return (-1);
+	}
 	else
-		processed = process_dollar_dquote(segment);
-	free(segment);
-	if (!processed)
-		return (-1);
-	ret = append_string(st, processed);
-	free(processed);
-	if (ret < 0)
-		return (-1);
-	if (s[*i] == quote)
-		(*i)++;
+	{
+		if (expand_add_char(st, '$') < 0)
+			return (-1);
+	}
 	return (0);
+}
+
+static char *extract_quoted_segment(const char *s, int *i, char *quote_out)
+{
+    int  start;
+    int  len;
+    char *seg;
+
+    *quote_out = s[*i + 1];
+    *i        += 2;
+    start      = *i;
+    while (s[*i] && s[*i] != *quote_out)
+        (*i)++;
+    len = *i - start;
+    seg = strndup(s + start, len);
+    if (s[*i] == *quote_out)
+        (*i)++;
+    return (seg);
+}
+
+int handle_dollar_quoted(const char *s, int           *i, t_expand_state *st, t_shell        *shell)
+{
+    char  quote;
+    char  *segment;
+    char  *processed;
+    int   ret;
+
+    (void)shell;
+    segment = extract_quoted_segment(s, i, &quote);
+    if (!segment)
+        return (-1);
+    if (quote == '\'')
+        processed = process_ansi_c(segment);
+    else
+        processed = process_dollar_dquote(segment);
+    free(segment);
+    if (!processed)
+        return (-1);
+    ret = append_string(st, processed);
+    free(processed);
+    if (ret < 0)
+        return (-1);
+    return (0);
 }
