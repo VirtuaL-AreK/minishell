@@ -61,45 +61,60 @@ void parse_command(char *input, t_shell *shell)
 
 // NEW TEMPORARY PROMPT LOOP CODE FOR THE TESTER
 
-void	prompt_loop(t_shell *shell)
+static char *read_interactive_input(t_shell *shell)
 {
-	char	*input;
-	char	*line;
-
-	while (1)
-	{
-		if (isatty(fileno(stdin)))
-		{
-			input = readline("\033[1;32mminishell$\033[0m ");
-			if (!input)
-			{
-				write(STDOUT_FILENO, "exit\n", 5);
-				exit(shell->exit_status);
-			}
-			if (input[0] == '\0')
-			{
-				free(input);
-				continue ;
-			}
-		}
-		else
-		{
-			line = get_next_line(fileno(stdin));
-			if (!line)
-				exit(shell->exit_status);
-			input = ft_strtrim(line, "\n");
-			free(line);
-		}
-
-		if (*input)
-			add_history(input);
-
-		if (!check_unclosed_quotes(input, shell))
-			parse_command(input, shell);
-
-		free(input);
-	}
+    char *input = readline("\033[1;32mminishell$\033[0m ");
+    if (!input)
+    {
+        write(STDOUT_FILENO, "exit\n", 5);
+        exit(shell->exit_status);
+    }
+    if (input[0] == '\0')
+    {
+        free(input);
+        return NULL;
+    }
+    return input;
 }
+
+static char *read_non_interactive_input(t_shell *shell)
+{
+    char *line;
+    char *input;
+
+	line = get_next_line(fileno(stdin));
+    if (!line)
+        exit(shell->exit_status);
+    input = ft_strtrim(line, "\n");
+    free(line);
+    return input;
+}
+
+void prompt_loop(t_shell *shell)
+{
+    char *input;
+
+    while (1)
+    {
+        if (isatty(fileno(stdin)))
+        {
+            input = read_interactive_input(shell);
+            if (!input)
+                continue;
+        }
+        else
+        {
+            input = read_non_interactive_input(shell);
+        }
+
+        if (*input)
+            add_history(input);
+        if (!check_unclosed_quotes(input, shell))
+            parse_command(input, shell);
+        free(input);
+    }
+}
+
 
 
 int	main(int argc, char **argv, char **envp)

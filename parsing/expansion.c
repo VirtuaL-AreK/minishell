@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 10:56:27 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/23 15:29:40 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 17:28:35 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,42 +89,71 @@ int	process_backslash_branch(const char *str, int i, t_expand_state *state)
 	return (i);
 }
 
-int	process_char_in_expand(const char *str, int i,
-		t_expand_state *st, t_shell *shell)
+static int	handle_dollar_expand(const char *str,
+                                  int           *i,
+                                  t_expand_state *st,
+                                  t_shell        *shell)
 {
-	if (!st->in_sq && str[i] == '$')
-	{
-		if (handle_variable(str, &i, st, shell) < 0)
-			return (-1);
-		return (i);
-	}
-	else if (str[i] == '\'' && !st->in_dq)
-	{
-		st->in_sq = !st->in_sq;
-		return (i + 1);
-	}
-	else if (str[i] == '"' && !st->in_sq)
-	{
-		st->in_dq = !st->in_dq;
-		return (i + 1);
-	}
-	else if (str[i] == '\\')
-	{
-		i++;
-		if (str[i])
-		{
-			if (expand_add_char(st, str[i]) < 0)
-				return (-1);
-			i++;
-		}
-		return (i);
-	}
-	else
-	{
-		if (expand_add_char(st, str[i]) < 0)
-			return (-1);
-		return (i + 1);
-	}
+    if (handle_variable(str, i, st, shell) < 0)
+        return (-1);
+    return (*i);
+}
+
+static int	handle_quote_toggle(const char *str,
+                                int            i,
+                                t_expand_state *st)
+{
+    if (str[i] == '\'' && !st->in_dq)
+    {
+        st->in_sq = !st->in_sq;
+        return (i + 1);
+    }
+    if (str[i] == '"' && !st->in_sq)
+    {
+        st->in_dq = !st->in_dq;
+        return (i + 1);
+    }
+    return (-1);
+}
+
+static int	handle_backslash_expand(const char *str,
+                                    int            i,
+                                    t_expand_state *st)
+{
+    i++;
+    if (str[i])
+    {
+        if (expand_add_char(st, str[i]) < 0)
+            return (-1);
+        i++;
+    }
+    return (i);
+}
+
+static int	handle_regular_char(const char *str,
+                                int            i,
+                                t_expand_state *st)
+{
+    if (expand_add_char(st, str[i]) < 0)
+        return (-1);
+    return (i + 1);
+}
+
+int	process_char_in_expand(const char    *str,
+                          int             i,
+                          t_expand_state *st,
+                          t_shell        *shell)
+{
+    int ret;
+
+    if (!st->in_sq && str[i] == '$')
+        return handle_dollar_expand(str, &i, st, shell);
+    ret = handle_quote_toggle(str, i, st);
+    if (ret >= 0)
+        return ret;
+    if (str[i] == '\\')
+        return handle_backslash_expand(str, i, st);
+    return handle_regular_char(str, i, st);
 }
 
 char	*expand_string(const char *str, t_shell *shell)
@@ -151,8 +180,7 @@ char	*expand_string(const char *str, t_shell *shell)
 	}
 	if (expand_add_char(&st, '\0') < 0)
 	{
-		free(st.buffer);
-		return (NULL);
+		return (free(st.buffer), NULL);
 	}
 	return (st.buffer);
 }

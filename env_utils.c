@@ -6,69 +6,79 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 09:27:11 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/22 20:11:19 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/23 16:55:43 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-char **handle_shlvl(char **envir, t_shell *shell)
+static int find_shlvl_index(char **env)
 {
-    int     i;
-    char    *var;
-    int      n;
-    char    *sm;
-    char    *new_value;
-
-    i = 0;
-    while (envir[i])
+    int i = 0;
+    while (env && env[i])
     {
-        if (ft_strncmp(envir[i], "SHLVL=", 6) == 0)
-        {
-            var = ft_strdup(envir[i] + 6);
-            if (!var)
-                return (shell->env);
-            n = ft_atoi(var) + 1;
-            free(var);
-            sm = ft_itoa(n);
-            if (!sm)
-                return (shell->env);
-            new_value = ft_strjoin("SHLVL=", sm);
-            free(sm);
-            if (!new_value)
-                return (shell->env);
-            free(envir[i]);
-            envir[i] = new_value;
-            return (shell->env);
-        }
+        if (ft_strncmp(env[i], "SHLVL=", 6) == 0)
+            return (i);
         i++;
     }
-    var = ft_strjoin("SHLVL=", "1");
-    if (var)
+    return (-1);
+}
+
+static char *format_shlvl(int lvl)
+{
+    char *num = ft_itoa(lvl);
+    char *res;
+
+    if (!num)
+        return (NULL);
+    res = ft_strjoin("SHLVL=", num);
+    free(num);
+    return (res);
+}
+
+char **handle_shlvl(char **env, t_shell *shell)
+{
+    int   idx = find_shlvl_index(env);
+    char  *newvar;
+
+    if (idx >= 0)
     {
-        export_var(shell, var);
-        free(var);
+        int   oldlvl = ft_atoi(env[idx] + 6) + 1;
+        newvar = format_shlvl(oldlvl);
+        if (newvar)
+        {
+            free(env[idx]);
+            env[idx] = newvar;
+        }
+    }
+    else
+    {
+        newvar = format_shlvl(1);
+        if (newvar)
+        {
+            export_var(shell, newvar);
+            free(newvar);
+        }
     }
     return (shell->env);
 }
 
-char **clone_envp(char **envp, t_shell *shell)
+
+static char **create_default_env(void)
 {
+    char **copy = malloc(sizeof(char *) * 2);
+    if (!copy)
+        return (NULL);
+    copy[0] = ft_strdup("PATH=/usr/local/bin:/usr/bin:/bin");
+    copy[1] = NULL;
+    return (copy);
+}
+
+static char **duplicate_envp(char **envp)
+{
+    int    i = 0;
     char **copy;
-    int   i;
 
-    if (!envp || !*envp)
-    {
-        copy = malloc(sizeof(char *) * 2);
-        if (!copy)
-            return (NULL);
-        copy[0] = ft_strdup("PATH=/usr/local/bin:/usr/bin:/bin");
-        copy[1] = NULL;
-        shell->env = copy;
-        return (handle_shlvl(shell->env, shell));
-    }
-
-    i = 0;
     while (envp[i])
         i++;
     copy = malloc(sizeof(char *) * (i + 1));
@@ -81,11 +91,25 @@ char **clone_envp(char **envp, t_shell *shell)
         i++;
     }
     copy[i] = NULL;
-    shell->env = copy;
+    return (copy);
+}
 
+char **clone_envp(char **envp, t_shell *shell)
+{
+    char **copy;
+
+    if (!envp || !*envp)
+    {
+        copy = create_default_env();
+        shell->env = copy;
+        return (handle_shlvl(shell->env, shell));
+    }
+    copy = duplicate_envp(envp);
+    if (!copy)
+        return (NULL);
+    shell->env = copy;
     if (get_env_path(shell->env) == NULL)
         add_or_replace_var(shell, "PATH", "/usr/local/bin:/usr/bin:/bin");
-
     return (handle_shlvl(shell->env, shell));
 }
 
