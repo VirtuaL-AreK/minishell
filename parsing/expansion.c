@@ -318,5 +318,3 @@ void expand_tokens(t_token *tokens, t_shell *shell)
         cur = cur->next;
     }
 }
-
-

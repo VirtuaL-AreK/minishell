@@ -1,8 +1,5 @@
 #include "minishell.h"
 
-// extern char **environ;
-// t_shell g_shell = { NULL, 0 , '\0', 0};
-
 volatile sig_atomic_t g_last_signal = 0;
 
 void parse_command(char *input, t_shell *shell)

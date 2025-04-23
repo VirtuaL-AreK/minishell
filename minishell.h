@@ -22,8 +22,8 @@
 # include <sys/wait.h>
 # include <readline/readline.h>
 # include <readline/history.h>
-#include <termios.h>
-#include <sys/ioctl.h>
+# include <termios.h>
+# include <sys/ioctl.h>
 # include "libft/libft.h"
 
 # include <sys/stat.h>
@@ -43,7 +43,7 @@ typedef struct s_shell
 	char	**env;
 	char	*path;
 	int		exit_status;
-	int heredoc_interrupted;
+	int		heredoc_interrupted;
 }	t_shell;
 
 typedef struct s_heredoc_ctx
@@ -69,8 +69,6 @@ typedef struct s_token_flags
 	int	has_dq;
 	int	should_expand;
 }	t_token_flags;
-
-// extern t_shell	g_shell;
 
 extern volatile sig_atomic_t g_last_signal;
 
@@ -172,10 +170,10 @@ void			skip_spaces(const char *line, int *i);
 void			add_strlist(t_strlist **head,
 					const char *value, t_token_flags flags);
 					int	process_unquoted_char(const char *line, int *i, char **buf, int *len, int *cap);
-int	append_str(char **buf, int *len, int *cap, const char *s);
-int	append_char(char **buf, int *len, int *cap, char c);
-int	process_single_quote(const char *line, int *i, char **buf, int *len, int *cap);
-int	process_double_quote(const char *line, int *i, char **buf, int *len, int *cap);
+int				append_str(char **buf, int *len, int *cap, const char *s);
+int				append_char(char **buf, int *len, int *cap, char c);
+int				process_single_quote(const char *line, int *i, char **buf, int *len, int *cap);
+int				process_double_quote(const char *line, int *i, char **buf, int *len, int *cap);
 // void			process_unquoted_char(const char *line, int *i, char *buffer, int *len);
 char			*parse_one_token_merge_quotes(const char *line,
 					int *i, t_token_flags *flags);
@@ -183,7 +181,7 @@ void			process_special_char_token(const char *line,
 					int *i, t_strlist **result);
 
 // 1) Gestion de l'environnement local
-char **clone_envp(char **envp, t_shell *shell);
+char			**clone_envp(char **envp, t_shell *shell);
 void			free_envp(char **envp);
 
 // syntax
@@ -213,26 +211,26 @@ t_command      *command_parser(t_token *tokens, t_shell *shell);
 void			free_commands(t_command *cmd);
 
 // expansion
-int	init_expand_state(t_expand_state *st, int init_cap);
-int	expand_buffer_if_needed(t_expand_state *st, int needed);
-int	expand_add_char(t_expand_state *st, char c);
-int	expand_add_string(t_expand_state *st, const char *s);
-int	process_dollar_branch(const char *str, int i, t_expand_state *state, t_shell *shell);
-int	process_backslash_branch(const char *str, int i, t_expand_state *state);
+int				init_expand_state(t_expand_state *st, int init_cap);
+int				expand_buffer_if_needed(t_expand_state *st, int needed);
+int				expand_add_char(t_expand_state *st, char c);
+int				expand_add_string(t_expand_state *st, const char *s);
+int				process_dollar_branch(const char *str, int i, t_expand_state *state, t_shell *shell);
+int				process_backslash_branch(const char *str, int i, t_expand_state *state);
 char			*add_or_replace_var(t_shell *shell,
-					const char *name, const char *value);
+		const char *name, const char *value);
 void			expand_tokens(t_token *tokens, t_shell *shell);
 char			*expand_string(const char *str, t_shell *shell);
 char			*get_local_env_value(const char *var, t_shell *shell);
-int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st, t_shell *shell);
-int	handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell);
-int	handle_dollar_quoted(const char *s, int *i, t_expand_state *st, t_shell *shell);
+int				handle_alphanum_variable(const char *s, int *i, t_expand_state *st, t_shell *shell);
+int				handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell);
+int				handle_dollar_quoted(const char *s, int *i, t_expand_state *st, t_shell *shell);
 char			process_escape_char(const char *s, int *i, char quote);
 void			process_backslash(const char *s, int *i, int *j,
-					char *result, char quote);
+		char *result, char quote);
 char			*process_ansi_c(const char *s);
 char			*process_dollar_dquote(const char *s);
-int	append_string(t_expand_state *st, const char *s);
+int				append_string(t_expand_state *st, const char *s);
 // execution
 char			*find_exec(char *cmd, char **env);
 void			execute_command(char **args, char **env);
@@ -241,7 +239,7 @@ void			parse_command(char *input, t_shell *shell);
 void			execute_pipeline(t_command *cmd, t_shell *shell);
 void			execute_command_line(t_command *cmd, char **env);
 void			ft_free_strarray(char **arr);
-void	execute_pipeline_child(t_command *c, t_pipe_ctrl *ctrl);
+void			execute_pipeline_child(t_command *c, t_pipe_ctrl *ctrl);
 void			ft_free_strarray(char **arr);
 char			*get_env_path(char **env);
 char			*search_in_paths(char *env_path, char *cmd);
@@ -262,17 +260,17 @@ int				count_commands(t_command *cmd);
 void			execute_command_exec(t_command *c, t_shell *shell);
 void			setup_input_redirection(t_command *c, int prev_fd);
 void			setup_output_redirection(t_command *c,
-					int has_pipe, int pipe_fd[2]);
+		int has_pipe, int pipe_fd[2]);
 void			setup_redirection(t_command *c, int prev_fd,
-					int pipe_fd[2], int has_pipe);
-// void			check_directory_and_permissions(char *exec_path);
-void check_directory_and_permissions(const char *path);
+		int pipe_fd[2], int has_pipe);
+
+void			check_directory_and_permissions(const char *path);
 void			wait_for_pipeline(pid_t *pids, int nb_cmds, t_shell *shell);
-// void			execute_pipeline_child(t_command *c, int prev_fd, int pipe_fd[2], int has_pipe, t_shell *shell);
+
 int				create_pipe_for_command(t_command *c, int pipe_fd[2]);
-int fork_pipeline_command(t_command *c, t_pipe_ctrl *ctrl);
-int handle_pipeline_command(t_command *c, t_pipe_ctrl *ctrl);
-void process_pipeline(t_command *cmd, t_shell *shell);
+int				fork_pipeline_command(t_command *c, t_pipe_ctrl *ctrl);
+int				handle_pipeline_command(t_command *c, t_pipe_ctrl *ctrl);
+void			process_pipeline(t_command *cmd, t_shell *shell);
 
 // Builtins
 int				ft_env(t_command *cmd, t_shell *shell);
@@ -288,16 +286,16 @@ int				find_var_index(t_shell *shell, const char *name, int len);
 int				count_env(t_shell *shell);
 char			*append_var(t_shell *shell, char *new_var, int count);
 char			*add_or_replace_var(t_shell *shell, const char *name,
-					const char *value);
+		const char *value);
 int				is_valid_varname(char *var);
 int				export_var_plus_get_parts(const char *arg, char *plus_eq,
-					t_export_parts *parts, t_shell *shell);
+		t_export_parts *parts, t_shell *shell);
 char			*export_var_plus_get_old_val(t_shell *shell, const char *name);
 void			export_var_plus_update(t_shell *shell, const char *name,
-					const char *to_append, char *old_val);
+		const char *to_append, char *old_val);
 void			export_var_plus(t_shell *shell, const char *arg, char *plus_eq);
 int				extract_name_value(const char *arg, char *eq,
-					char **name, char **value);
+		char **name, char **value);
 void			export_var_eq(t_shell *shell, const char *arg, char *eq);
 void			export_var_no_eq(t_shell *shell, const char *arg);
 void			export_var(t_shell *shell, const char *arg);
@@ -311,9 +309,9 @@ char			*resolve_cd_path_home_slash(t_command *cmd, t_shell *shell);
 // Signals
 void			sig_handler(int sig);
 void			exit_here(t_exit_status order);
-void sigint_handler_prompt(int sig);
+void			sigint_handler_prompt(int sig);
 
-char *expand_tilde(const char *value, t_shell *shell);
+char			*expand_tilde(const char *value, t_shell *shell);
 
 
 #endif
