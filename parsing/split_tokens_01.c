@@ -6,29 +6,26 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 12:01:56 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/23 16:52:09 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/24 12:30:06 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-static int	accumulate_token(const char *line,
-				int *i,
-				char **buf,
-				int *len,
-				int *cap)
+static int	accumulate_token(t_prs_ctx *ctx)
 {
 	int	ret;
 
-	while (line[*i] && !isspace((unsigned char)line[*i])
-	    && !is_special_char(line[*i]))
+	while (ctx->line[*ctx->i]
+	    && !isspace((unsigned char)ctx->line[*ctx->i])
+	    && !is_special_char(ctx->line[*ctx->i]))
 	{
-		if (line[*i] == '\'')
-			ret = process_single_quote(line, i, buf, len, cap);
-		else if (line[*i] == '"')
-			ret = process_double_quote(line, i, buf, len, cap);
+		if (ctx->line[*ctx->i] == '\'')
+			ret = process_single_quote(ctx);
+		else if (ctx->line[*ctx->i] == '\"')
+			ret = process_double_quote(ctx);
 		else
-			ret = process_unquoted_char(line, i, buf, len, cap);
+			ret = process_unquoted_char(ctx);
 		if (ret < 0)
 			return (-1);
 	}
@@ -47,14 +44,21 @@ char	*parse_one_token_merge_quotes(const char *line,
 			int *i,
 			t_token_flags *flags)
 {
-	char	*buf;
-	int		capacity = 64;
-	int		len = 0;
+	t_prs_ctx	ctx;
+	char		*buf;
+	int			capacity = 64;
+	int			len = 0;
 
 	buf = malloc(capacity);
 	if (!buf)
 		return (NULL);
-	if (accumulate_token(line, i, &buf, &len, &capacity) < 0)
+	ctx.line = line;
+	ctx.i    = i;
+	ctx.buf  = &buf;
+	ctx.len  = &len;
+	ctx.cap  = &capacity;
+
+	if (accumulate_token(&ctx) < 0)
 		return (free(buf), NULL);
 	if (append_char(&buf, &len, &capacity, '\0') < 0)
 		return (free(buf), NULL);

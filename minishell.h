@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 10:21:52 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/24 09:38:25 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/24 12:29:35 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,6 +145,15 @@ typedef struct s_pipe_ctrl
 	int					has_pipe;
 }	t_pipe_ctrl;
 
+typedef struct s_prs_ctx
+{
+    const char    *line;
+    int           *i;
+    char         **buf;
+    int           *len;
+    int           *cap;
+}               t_prs_ctx;
+
 void			print_error(const char *what);
 
 void			print_command(t_command *commands);
@@ -193,12 +202,15 @@ int				is_special_char(int c);
 void			skip_spaces(const char *line, int *i);
 void			add_strlist(t_strlist **head,
 					const char *value, t_token_flags flags);
-int				process_unquoted_char(const char *line, int *i, char **buf, int *len, int *cap);
+// int				process_unquoted_char(const char *line, int *i, char **buf, int *len, int *cap);
 int				append_str(char **buf, int *len, int *cap, const char *s);
 int				append_char(char **buf, int *len, int *cap, char c);
-int				process_single_quote(const char *line, int *i, char **buf, int *len, int *cap);
-int				process_double_quote(const char *line, int *i, char **buf, int *len, int *cap);
+// int				process_single_quote(const char *line, int *i, char **buf, int *len, int *cap);
+// int				process_double_quote(const char *line, int *i, char **buf, int *len, int *cap);
 // void			process_unquoted_char(const char *line, int *i, char *buffer, int *len);
+int process_single_quote(t_prs_ctx *ctx);
+int process_double_quote(t_prs_ctx *ctx);
+int process_unquoted_char(t_prs_ctx *ctx);
 char			*parse_one_token_merge_quotes(const char *line,
 					int *i, t_token_flags *flags);
 void			process_special_char_token(const char *line,

@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 10:56:27 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/23 17:28:35 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/24 12:26:21 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -233,75 +233,122 @@ char *remove_quotes(const char *s)
     return st.buffer;
 }
 
+typedef struct s_exp_ctx
+{
+    const char       *s;
+    int               idx;
+    int               in_sq;
+    int               in_dq;
+    t_expand_state   *st;
+    t_shell          *shell;
+}   t_exp_ctx;
+
+static char *free_and_null(char *buf)
+{
+    free(buf);
+    return (NULL);
+}
+
+static int toggle_quote(t_exp_ctx *ctx)
+{
+    if (ctx->s[ctx->idx] == '\'' && !ctx->in_dq)
+    {
+        ctx->in_sq = !ctx->in_sq;
+        ctx->idx++;
+        return (1);
+    }
+    if (ctx->s[ctx->idx] == '"' && !ctx->in_sq)
+    {
+        ctx->in_dq = !ctx->in_dq;
+        ctx->idx++;
+        return (1);
+    }
+    return (0);
+}
+
+static int handle_dollar(t_exp_ctx *ctx)
+{
+    if (ctx->in_sq || ctx->s[ctx->idx] != '$')
+        return (0);
+    if (!ctx->in_dq && (ctx->s[ctx->idx + 1] == '\'' || ctx->s[ctx->idx + 1] == '"'))
+    {
+        if (handle_dollar_quoted(ctx->s, &ctx->idx, ctx->st, ctx->shell) < 0)
+            return (-1);
+        return (1);
+    }
+    if (handle_variable(ctx->s, &ctx->idx, ctx->st, ctx->shell) < 0)
+        return (-1);
+    return (1);
+}
+
+static int handle_escape(t_exp_ctx *ctx)
+{
+    if (ctx->in_dq && ctx->s[ctx->idx] == '\\'
+        && (ctx->s[ctx->idx + 1] == '"' || ctx->s[ctx->idx + 1] == '\\'
+         || ctx->s[ctx->idx + 1] == '$'  || ctx->s[ctx->idx + 1] == '`'))
+    {
+        ctx->idx++;
+        expand_add_char(ctx->st, ctx->s[ctx->idx]);
+        ctx->idx++;
+        return (1);
+    }
+    if (!ctx->in_sq && !ctx->in_dq && ctx->s[ctx->idx] == '\\')
+    {
+        ctx->idx++;
+        if (ctx->s[ctx->idx])
+            expand_add_char(ctx->st, ctx->s[ctx->idx]);
+        ctx->idx++;
+        return (1);
+    }
+    return (0);
+}
+
+static int handle_tilde(t_exp_ctx *ctx)
+{
+    char *home;
+
+    if (ctx->idx == 0 && ctx->s[ctx->idx] == '~'
+        && (ctx->s[ctx->idx + 1] == '\0' || ctx->s[ctx->idx + 1] == '/'))
+    {
+        home = get_local_env_value("HOME", ctx->shell);
+        expand_add_string(ctx->st, home);
+        free(home);
+        ctx->idx++;
+        return (1);
+    }
+    return (0);
+}
+
 char *expand_word(const char *s, t_shell *shell)
 {
-    t_expand_state st;
-    int in_sq = 0, in_dq = 0, i = 0;
+    t_expand_state  st;
+    t_exp_ctx       ctx;
+    int             ret;
 
     if (init_expand_state(&st, 64) < 0)
-        return NULL;
-
-    while (s[i])
+        return (NULL);
+    ctx.s     = s;
+    ctx.idx   = 0;
+    ctx.in_sq = 0;
+    ctx.in_dq = 0;
+    ctx.st    = &st;
+    ctx.shell = shell;
+    while (ctx.s[ctx.idx])
     {
-        if (s[i] == '\'' && !in_dq)
-        {
-            in_sq = !in_sq;
-            i++;
-        }
-        else if (s[i] == '"' && !in_sq)
-        {
-            in_dq = !in_dq;
-            i++;
-        }
-		else if (!in_sq && !in_dq && s[i] == '$'
-			&& (s[i + 1] == '\'' || s[i + 1] == '"'))
-	  {
-		  if (handle_dollar_quoted(s, &i, &st, shell) < 0)
-		  {
-			  free(st.buffer);
-			  return NULL;
-		  }
-	  }
-	  else if (!in_sq && s[i] == '$')
-	  {
-		  if (handle_variable(s, &i, &st, shell) < 0)
-		  {
-			  free(st.buffer);
-			  return NULL;
-		  }
-	  }	  
-        else if (in_dq && s[i] == '\\'
-                 && (s[i+1] == '"' || s[i+1] == '\\'
-                     || s[i+1] == '$'  || s[i+1] == '`'))
-        {
-            i++;
-            expand_add_char(&st, s[i]);
-            i++;
-        }
-        else if (!in_sq && !in_dq && s[i] == '\\')
-        {
-            i++;
-            if (s[i])
-                expand_add_char(&st, s[i]);
-            i++;
-        }
-        else if (!in_sq && !in_dq && i == 0 && s[i] == '~'
-                 && (s[i+1] == '\0' || s[i+1] == '/'))
-        {
-            char *home = get_local_env_value("HOME", shell);
-            expand_add_string(&st, home);
-            free(home);
-            i++;
-        }
-        else
-        {
-            expand_add_char(&st, s[i]);
-            i++;
-        }
+        if (toggle_quote(&ctx))
+            continue;
+        if ((ret = handle_dollar(&ctx)) < 0)
+            return (free_and_null(st.buffer));
+        if (ret)
+            continue;
+        if (handle_escape(&ctx))
+            continue;
+        if (!ctx.in_sq && !ctx.in_dq && handle_tilde(&ctx))
+            continue;
+        expand_add_char(&st, ctx.s[ctx.idx++]);
     }
-
     expand_add_char(&st, '\0');
-    return st.buffer;
+    return (st.buffer);
 }
 
 void expand_tokens(t_token *tokens, t_shell *shell)
