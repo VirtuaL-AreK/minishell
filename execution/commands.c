@@ -12,28 +12,30 @@
 
 #include "../minishell.h"
 
-t_command *command_parser(t_token *tokens, t_shell *shell)
+t_command	*command_parser(t_token *tokens, t_shell *shell)
 {
-    t_command *head = NULL;
-    t_command *last = NULL;
-    t_command *cmd;
+	t_command	*head;
+	t_command	*last;
+	t_command	*cmd;
 
-    while (tokens)
-    {
-        if (shell->heredoc_interrupted)
-            break;
-        cmd = new_command(tokens);
-        fill_command(cmd, &tokens, shell);
-        fix_empty_first_arg(cmd);
-        if (!head)
-            head = cmd;
-        else
-            last->next = cmd;
-        last = cmd;
-        if (tokens && tokens->type == TOKEN_PIPE)
-            tokens = tokens->next;
-    }
-    return (head);
+	head = NULL;
+	last = NULL;
+	while (tokens)
+	{
+		if (shell->heredoc_interrupted)
+			break ;
+		cmd = new_command(tokens);
+		fill_command(cmd, &tokens, shell);
+		fix_empty_first_arg(cmd);
+		if (!head)
+			head = cmd;
+		else
+			last->next = cmd;
+		last = cmd;
+		if (tokens && tokens->type == TOKEN_PIPE)
+			tokens = tokens->next;
+	}
+	return (head);
 }
 
 void	free_commands(t_command *cmd)

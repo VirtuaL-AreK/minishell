@@ -33,7 +33,8 @@ char	*get_local_env_value(const char *var, t_shell *shell)
 	return (ft_strdup(""));
 }
 
-int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st, t_shell *shell)
+int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st,
+		t_shell *shell)
 {
 	int		start;
 	int		var_len;
@@ -42,9 +43,9 @@ int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st, t_shell 
 	int		ret;
 
 	start = *i;
-	while (s[*i] && (((s[*i] >= 'A' && s[*i] <= 'Z')
-				|| (s[*i] >= 'a' && s[*i] <= 'z')
-				|| (s[*i] >= '0' && s[*i] <= '9')) || s[*i] == '_'))
+	while (s[*i] && (((s[*i] >= 'A' && s[*i] <= 'Z') || (s[*i] >= 'a'
+					&& s[*i] <= 'z') || (s[*i] >= '0' && s[*i] <= '9'))
+			|| s[*i] == '_'))
 		(*i)++;
 	var_len = *i - start;
 	var_name = strndup(s + start, var_len);
@@ -77,9 +78,8 @@ int	handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell)
 		}
 		free(exit_str);
 	}
-	else if ((s[*i] >= 'A' && s[*i] <= 'Z')
-		|| (s[*i] >= 'a' && s[*i] <= 'z')
-		|| s[*i] == '_')
+	else if ((s[*i] >= 'A' && s[*i] <= 'Z') || (s[*i] >= 'a' && s[*i] <= 'z')
+			|| s[*i] == '_')
 	{
 		if (handle_alphanum_variable(s, i, st, shell) < 0)
 			return (-1);
@@ -92,45 +92,46 @@ int	handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell)
 	return (0);
 }
 
-static char *extract_quoted_segment(const char *s, int *i, char *quote_out)
+static char	*extract_quoted_segment(const char *s, int *i, char *quote_out)
 {
-    int  start;
-    int  len;
-    char *seg;
+	int		start;
+	int		len;
+	char	*seg;
 
-    *quote_out = s[*i + 1];
-    *i        += 2;
-    start      = *i;
-    while (s[*i] && s[*i] != *quote_out)
-        (*i)++;
-    len = *i - start;
-    seg = strndup(s + start, len);
-    if (s[*i] == *quote_out)
-        (*i)++;
-    return (seg);
+	*quote_out = s[*i + 1];
+	*i += 2;
+	start = *i;
+	while (s[*i] && s[*i] != *quote_out)
+		(*i)++;
+	len = *i - start;
+	seg = strndup(s + start, len);
+	if (s[*i] == *quote_out)
+		(*i)++;
+	return (seg);
 }
 
-int handle_dollar_quoted(const char *s, int           *i, t_expand_state *st, t_shell        *shell)
+int	handle_dollar_quoted(const char *s, int *i, t_expand_state *st,
+		t_shell *shell)
 {
-    char  quote;
-    char  *segment;
-    char  *processed;
-    int   ret;
+	char	quote;
+	char	*segment;
+	char	*processed;
+	int		ret;
 
-    (void)shell;
-    segment = extract_quoted_segment(s, i, &quote);
-    if (!segment)
-        return (-1);
-    if (quote == '\'')
-        processed = process_ansi_c(segment);
-    else
-        processed = process_dollar_dquote(segment);
-    free(segment);
-    if (!processed)
-        return (-1);
-    ret = append_string(st, processed);
-    free(processed);
-    if (ret < 0)
-        return (-1);
-    return (0);
+	(void)shell;
+	segment = extract_quoted_segment(s, i, &quote);
+	if (!segment)
+		return (-1);
+	if (quote == '\'')
+		processed = process_ansi_c(segment);
+	else
+		processed = process_dollar_dquote(segment);
+	free(segment);
+	if (!processed)
+		return (-1);
+	ret = append_string(st, processed);
+	free(processed);
+	if (ret < 0)
+		return (-1);
+	return (0);
 }

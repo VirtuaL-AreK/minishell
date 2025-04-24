@@ -73,10 +73,8 @@ int	check_token_error(t_token *token, t_shell *shell)
 			return (1);
 		}
 	}
-	else if (token->type == TOKEN_REDIR_IN
-		|| token->type == TOKEN_REDIR_OUT
-		|| token->type == TOKEN_APPEND
-		|| token->type == TOKEN_HEREDOC)
+	else if (token->type == TOKEN_REDIR_IN || token->type == TOKEN_REDIR_OUT
+			|| token->type == TOKEN_APPEND || token->type == TOKEN_HEREDOC)
 	{
 		if (!token->next || token->next->type != TOKEN_WORD)
 		{

@@ -63,30 +63,32 @@ void	setup_output_redirection(t_command *c, int has_pipe, int pipe_fd[2])
 	}
 }
 
-void	setup_redirection(t_command *c, int prev_fd, int pipe_fd[2], int has_pipe)
+void	setup_redirection(t_command *c, int prev_fd, int pipe_fd[2],
+		int has_pipe)
 {
 	setup_input_redirection(c, prev_fd);
 	setup_output_redirection(c, has_pipe, pipe_fd);
 }
 
-void check_directory_and_permissions(const char *path)
+void	check_directory_and_permissions(const char *path)
 {
-    struct stat sb;
-    if (stat(path, &sb) != 0)
-    {
-        print_error(path);
-        exit(127);
-    }
-    if (S_ISDIR(sb.st_mode))
-    {
-        ft_putstr_fd("minishell: ", 2);
-        ft_putstr_fd((char *)path, 2);
-        ft_putstr_fd(": is a directory\n", 2);
-        exit(126);
-    }
-    if (access(path, X_OK) != 0)
-    {
-        print_error(path);
-        exit(126);
-    }
+	struct stat	sb;
+
+	if (stat(path, &sb) != 0)
+	{
+		print_error(path);
+		exit(127);
+	}
+	if (S_ISDIR(sb.st_mode))
+	{
+		ft_putstr_fd("minishell: ", 2);
+		ft_putstr_fd((char *)path, 2);
+		ft_putstr_fd(": is a directory\n", 2);
+		exit(126);
+	}
+	if (access(path, X_OK) != 0)
+	{
+		print_error(path);
+		exit(126);
+	}
 }

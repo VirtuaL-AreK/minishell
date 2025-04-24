@@ -35,19 +35,19 @@ void	wait_for_pipeline(pid_t *pids, int nb_cmds, t_shell *shell)
 		shell->exit_status = 0;
 }
 
-void execute_pipeline_child(t_command *c, t_pipe_ctrl *ctrl)
+void	execute_pipeline_child(t_command *c, t_pipe_ctrl *ctrl)
 {
-    if (c->redir_error_code)
-        exit(1);
-    setup_redirection(c,
-        ctrl->prev_fd,
-        ctrl->pipe_fd,
-        ctrl->has_pipe);
-    if (!c->args[0] || !*c->args[0])
-        exit(0);
-    if (!execute_builtin(c, ctrl->shell))
-        exit(ctrl->shell->exit_status);
-    execute_command_exec(c, ctrl->shell);
+	if (c->redir_error_code)
+		exit(1);
+	setup_redirection(c,
+		ctrl->prev_fd,
+		ctrl->pipe_fd,
+		ctrl->has_pipe);
+	if (!c->args[0] || !*c->args[0])
+		exit(0);
+	if (!execute_builtin(c, ctrl->shell))
+		exit(ctrl->shell->exit_status);
+	execute_command_exec(c, ctrl->shell);
 }
 
 int	create_pipe_for_command(t_command *c, int pipe_fd[2])

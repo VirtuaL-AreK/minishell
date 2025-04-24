@@ -30,8 +30,8 @@ char	process_escape_char(const char *s, int *i, char quote)
 	return (res);
 }
 
-void	process_backslash(const char *s, int *i, int *j,
-		char *result, char quote)
+void	process_backslash(const char *s, int *i, int *j, char *result,
+		char quote)
 {
 	(*i) = (*i) + 1;
 	if (s[*i])

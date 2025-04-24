@@ -40,8 +40,8 @@ char	*remove_surrounding_quotes_if_any(const char *str)
 	len = ft_strlen(str);
 	if (len >= 2)
 	{
-		if ((str[0] == '\'' && str[len - 1] == '\'')
-			|| (str[0] == '"' && str[len - 1] == '"'))
+		if ((str[0] == '\'' && str[len - 1] == '\'') || (str[0] == '"'
+				&& str[len - 1] == '"'))
 		{
 			sub = ft_substr(str, 1, len - 2);
 			return (sub);
@@ -77,8 +77,7 @@ char	*get_heredoc_clean(t_token **tokens, t_command *cmd, int *is_quoted)
 	if (check_heredoc_token_error(tokens, cmd))
 		return (NULL);
 	raw = (*tokens)->value;
-	*is_quoted = ((*tokens)->has_single_quote
-			|| (*tokens)->has_double_quote);
+	*is_quoted = ((*tokens)->has_single_quote || (*tokens)->has_double_quote);
 	clean = remove_surrounding_quotes_if_any(raw);
 	return (clean);
 }

@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../minishell.h" 
+#include "../../minishell.h"
 
 int	count_command_arguments(t_token *tokens)
 {
@@ -19,10 +19,8 @@ int	count_command_arguments(t_token *tokens)
 	count = 0;
 	while (tokens && tokens->type != TOKEN_PIPE)
 	{
-		if (tokens->type == TOKEN_REDIR_IN
-			|| tokens->type == TOKEN_REDIR_OUT
-			|| tokens->type == TOKEN_APPEND
-			|| tokens->type == TOKEN_HEREDOC)
+		if (tokens->type == TOKEN_REDIR_IN || tokens->type == TOKEN_REDIR_OUT
+			|| tokens->type == TOKEN_APPEND || tokens->type == TOKEN_HEREDOC)
 		{
 			tokens = tokens->next;
 			if (tokens)
@@ -67,8 +65,7 @@ t_command	*new_command(t_token *tokens)
 
 void	handle_word(t_command *cmd, t_token **tokens, int *arg_count)
 {
-	if ((*tokens)->value[0] == '\0'
-		&& !(*tokens)->has_single_quote
+	if ((*tokens)->value[0] == '\0' && !(*tokens)->has_single_quote
 		&& !(*tokens)->has_double_quote)
 	{
 		*tokens = (*tokens)->next;

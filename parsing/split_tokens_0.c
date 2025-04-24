@@ -12,121 +12,121 @@
 
 #include "../minishell.h"
 
-int is_special_char(int c)
+int	is_special_char(int c)
 {
-    return (c == '|' || c == '<' || c == '>');
+	return (c == '|' || c == '<' || c == '>');
 }
 
-void skip_spaces(const char *line, int *i)
+void	skip_spaces(const char *line, int *i)
 {
-    while (line[*i] && isspace((unsigned char)line[*i]))
-        (*i)++;
+	while (line[*i] && isspace((unsigned char)line[*i]))
+		(*i)++;
 }
 
-void add_strlist(t_strlist **head, const char *value, t_token_flags flags)
+void	add_strlist(t_strlist **head, const char *value, t_token_flags flags)
 {
-    t_strlist *node;
-    t_strlist *tmp;
+	t_strlist	*node;
+	t_strlist	*tmp;
 
-    node = malloc(sizeof(*node));
-    node->str = strdup(value);
-    node->has_single_quote = flags.has_sq;
-    node->has_double_quote = flags.has_dq;
-    node->should_expand = flags.should_expand;
-    node->next = NULL;
-    if (!*head)
-        *head = node;
-    else
-    {
-        tmp = *head;
-        while (tmp->next)
-            tmp = tmp->next;
-        tmp->next = node;
-    }
+	node = malloc(sizeof(*node));
+	node->str = strdup(value);
+	node->has_single_quote = flags.has_sq;
+	node->has_double_quote = flags.has_dq;
+	node->should_expand = flags.should_expand;
+	node->next = NULL;
+	if (!*head)
+		*head = node;
+	else
+	{
+		tmp = *head;
+		while (tmp->next)
+			tmp = tmp->next;
+		tmp->next = node;
+	}
 }
 
-int append_char(char **buf, int *len, int *cap, char c)
+int	append_char(char **buf, int *len, int *cap, char c)
 {
-    char *new_buf;
-    int   new_cap;
+	char	*new_buf;
+	int		new_cap;
 
-    if (*len + 1 < *cap)
-    {
-        (*buf)[*len] = c;
-        (*len)++;
-        return (0);
-    }
-    new_cap = (*cap) * 2;
-    new_buf = malloc(new_cap);
-    if (!new_buf)
-        return (-1);
-    memcpy(new_buf, *buf, *len);
-    free(*buf);
-    *buf = new_buf;
-    *cap = new_cap;
-    (*buf)[*len] = c;
-    (*len)++;
-    return (0);
+	if (*len + 1 < *cap)
+	{
+		(*buf)[*len] = c;
+		(*len)++;
+		return (0);
+	}
+	new_cap = (*cap) * 2;
+	new_buf = malloc(new_cap);
+	if (!new_buf)
+		return (-1);
+	memcpy(new_buf, *buf, *len);
+	free(*buf);
+	*buf = new_buf;
+	*cap = new_cap;
+	(*buf)[*len] = c;
+	(*len)++;
+	return (0);
 }
 
-int append_str(char **buf, int *len, int *cap, const char *s)
+int	append_str(char **buf, int *len, int *cap, const char *s)
 {
-    int j;
+	int	j;
 
-    j = 0;
-    while (s[j])
-    {
-        if (append_char(buf, len, cap, s[j]) < 0)
-            return (-1);
-        j++;
-    }
-    return (0);
+	j = 0;
+	while (s[j])
+	{
+		if (append_char(buf, len, cap, s[j]) < 0)
+			return (-1);
+		j++;
+	}
+	return (0);
 }
 
-int process_single_quote(t_prs_ctx *ctx)
+int	process_single_quote(t_prs_ctx *ctx)
 {
-    if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
-        return (-1);
-    (*ctx->i)++;
-    while (ctx->line[*ctx->i] && ctx->line[*ctx->i] != '\'')
-    {
-        if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
-            return (-1);
-        (*ctx->i)++;
-    }
-    if (ctx->line[*ctx->i] == '\'')
-    {
-        if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
-            return (-1);
-        (*ctx->i)++;
-    }
-    return (0);
+	if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+		return (-1);
+	(*ctx->i)++;
+	while (ctx->line[*ctx->i] && ctx->line[*ctx->i] != '\'')
+	{
+		if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+			return (-1);
+		(*ctx->i)++;
+	}
+	if (ctx->line[*ctx->i] == '\'')
+	{
+		if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+			return (-1);
+		(*ctx->i)++;
+	}
+	return (0);
 }
 
-int process_double_quote(t_prs_ctx *ctx)
+int	process_double_quote(t_prs_ctx *ctx)
 {
-    if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
-        return (-1);
-    (*ctx->i)++;
-    while (ctx->line[*ctx->i] && ctx->line[*ctx->i] != '"')
-    {
-        if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
-            return (-1);
-        (*ctx->i)++;
-    }
-    if (ctx->line[*ctx->i] == '"')
-    {
-        if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
-            return (-1);
-        (*ctx->i)++;
-    }
-    return (0);
+	if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+		return (-1);
+	(*ctx->i)++;
+	while (ctx->line[*ctx->i] && ctx->line[*ctx->i] != '"')
+	{
+		if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+			return (-1);
+		(*ctx->i)++;
+	}
+	if (ctx->line[*ctx->i] == '"')
+	{
+		if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+			return (-1);
+		(*ctx->i)++;
+	}
+	return (0);
 }
 
-int process_unquoted_char(t_prs_ctx *ctx)
+int	process_unquoted_char(t_prs_ctx *ctx)
 {
-    if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
-        return (-1);
-    (*ctx->i)++;
-    return (0);
+	if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+		return (-1);
+	(*ctx->i)++;
+	return (0);
 }

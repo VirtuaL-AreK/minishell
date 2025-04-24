@@ -12,8 +12,8 @@
 
 #include "../../minishell.h"
 
-int	handle_heredoc_failure(char *tmp, t_command **pcmd,
-	t_token **ptokens, t_shell *shell)
+int	handle_heredoc_failure(char *tmp, t_command **pcmd, t_token **ptokens,
+		t_shell *shell)
 {
 	if (!tmp)
 	{

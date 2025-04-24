@@ -154,6 +154,16 @@ typedef struct s_prs_ctx
     int           *cap;
 }               t_prs_ctx;
 
+typedef struct s_exp_ctx
+{
+    const char       *s;
+    int               idx;
+    int               in_sq;
+    int               in_dq;
+    t_expand_state   *st;
+    t_shell          *shell;
+}   t_exp_ctx;
+
 void			print_error(const char *what);
 
 void			print_command(t_command *commands);
@@ -267,6 +277,28 @@ void			process_backslash(const char *s, int *i, int *j,
 char			*process_ansi_c(const char *s);
 char			*process_dollar_dquote(const char *s);
 int				append_string(t_expand_state *st, const char *s);
+int				init_expand_state(t_expand_state *st, int init_cap);
+int				expand_buffer_if_needed(t_expand_state *st, int needed);
+int				expand_add_char(t_expand_state *st, char c);
+int				expand_add_string(t_expand_state *st, const char *s);
+int				process_dollar_branch(const char *str, int i, t_expand_state *state, t_shell *shell);
+int				process_backslash_branch(const char *str, int i, t_expand_state *state);
+int				handle_dollar_expand(const char *str,
+					int *i, t_expand_state *st, t_shell *shell);
+int				handle_quote_toggle(const char *str, int i, t_expand_state *st);
+int				handle_backslash_expand(const char *str, int i, t_expand_state *st);
+int				handle_regular_char(const char *str, int i, t_expand_state *st);
+int				process_char_in_expand(const char    *str,
+    				int i, t_expand_state *st, t_shell *shell);
+char			*expand_string(const char *str, t_shell *shell);
+char			*expand_tilde(const char *value, t_shell *shell);
+char			*remove_quotes(const char *s);
+char			*free_and_null(char *buf);
+int				toggle_quote(t_exp_ctx *ctx);
+int				handle_dollar(t_exp_ctx *ctx);
+int				handle_escape(t_exp_ctx *ctx);
+int				handle_tilde(t_exp_ctx *ctx);
+
 // execution
 char			*find_exec(char *cmd, char **env);
 void			execute_command(char **args, char **env);

@@ -16,9 +16,8 @@ static int	accumulate_token(t_prs_ctx *ctx)
 {
 	int	ret;
 
-	while (ctx->line[*ctx->i]
-	    && !isspace((unsigned char)ctx->line[*ctx->i])
-	    && !is_special_char(ctx->line[*ctx->i]))
+	while (ctx->line[*ctx->i] && !isspace((unsigned char)ctx->line[*ctx->i])
+		&& !is_special_char(ctx->line[*ctx->i]))
 	{
 		if (ctx->line[*ctx->i] == '\'')
 			ret = process_single_quote(ctx);
@@ -41,23 +40,24 @@ static void	set_quote_flags(t_token_flags *flags, const char *buf)
 }
 
 char	*parse_one_token_merge_quotes(const char *line,
-			int *i,
-			t_token_flags *flags)
+									int *i,
+									t_token_flags *flags)
 {
 	t_prs_ctx	ctx;
 	char		*buf;
-	int			capacity = 64;
-	int			len = 0;
+	int			capacity;
+	int			len;
 
+	capacity = 64;
+	len = 0;
 	buf = malloc(capacity);
 	if (!buf)
 		return (NULL);
 	ctx.line = line;
-	ctx.i    = i;
-	ctx.buf  = &buf;
-	ctx.len  = &len;
-	ctx.cap  = &capacity;
-
+	ctx.i = i;
+	ctx.buf = &buf;
+	ctx.len = &len;
+	ctx.cap = &capacity;
 	if (accumulate_token(&ctx) < 0)
 		return (free(buf), NULL);
 	if (append_char(&buf, &len, &capacity, '\0') < 0)
@@ -66,7 +66,6 @@ char	*parse_one_token_merge_quotes(const char *line,
 	flags->should_expand = 1;
 	return (buf);
 }
-
 
 void	process_special_char_token(const char *line, int *i, t_strlist **result)
 {

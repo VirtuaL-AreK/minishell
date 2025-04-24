@@ -26,7 +26,7 @@ int	execute_builtin_unset(t_command *cmd, t_shell *shell)
 
 int	execute_builtin_xargs(t_command *cmd, t_shell *shell)
 {
-	(void) cmd;
+	(void)cmd;
 	shell->exit_status = 127;
 	return (0);
 }
@@ -41,10 +41,8 @@ int	execute_builtin(t_command *cmd, t_shell *shell)
 		return (ft_env(cmd, shell));
 	if (strcmp(cmd->args[0], "echo") == 0)
 		return (execute_builtin_echo(cmd, shell));
-	if (strcmp(cmd->args[0], "xargs") == 0
-		&& cmd->args[1] != NULL
-		&& strcmp(cmd->args[1], "echo") == 0
-		&& cmd->args[3] == NULL)
+	if (strcmp(cmd->args[0], "xargs") == 0 && cmd->args[1] != NULL
+		&& strcmp(cmd->args[1], "echo") == 0 && cmd->args[3] == NULL)
 		return (execute_builtin_xargs(cmd, shell));
 	if (strcmp(cmd->args[0], "exit") == 0)
 		return (execute_builtin_exit(cmd, shell));
