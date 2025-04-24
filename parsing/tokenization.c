@@ -12,6 +12,26 @@
 
 #include "../minishell.h"
 
+int	process_single_quote(t_prs_ctx *ctx)
+{
+	if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+		return (-1);
+	(*ctx->i)++;
+	while (ctx->line[*ctx->i] && ctx->line[*ctx->i] != '\'')
+	{
+		if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+			return (-1);
+		(*ctx->i)++;
+	}
+	if (ctx->line[*ctx->i] == '\'')
+	{
+		if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+			return (-1);
+		(*ctx->i)++;
+	}
+	return (0);
+}
+
 t_token_type	get_token_type(char *str)
 {
 	if (strcmp(str, "|") == 0)

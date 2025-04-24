@@ -79,7 +79,7 @@ int	handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell)
 		free(exit_str);
 	}
 	else if ((s[*i] >= 'A' && s[*i] <= 'Z') || (s[*i] >= 'a' && s[*i] <= 'z')
-			|| s[*i] == '_')
+		|| s[*i] == '_')
 	{
 		if (handle_alphanum_variable(s, i, st, shell) < 0)
 			return (-1);

@@ -12,6 +12,14 @@
 
 #include "../minishell.h"
 
+int	process_unquoted_char(t_prs_ctx *ctx)
+{
+	if (append_char(ctx->buf, ctx->len, ctx->cap, ctx->line[*ctx->i]) < 0)
+		return (-1);
+	(*ctx->i)++;
+	return (0);
+}
+
 static void	process_normal_token(const char *line, int *i, t_strlist **result)
 {
 	t_token_flags	flags;

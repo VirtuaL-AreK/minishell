@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   expand_state.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/24 14:59:37 by aanmazir          #+#    #+#             */
+/*   Updated: 2025/04/24 15:00:29 by aanmazir         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../minishell.h"
 
 int	init_expand_state(t_expand_state *st, int init_cap)
@@ -32,7 +44,6 @@ int	expand_buffer_if_needed(t_expand_state *st, int needed)
 	return (0);
 }
 
-
 int	expand_add_char(t_expand_state *st, char c)
 {
 	if (expand_buffer_if_needed(st, 1 + 1) < 0)
@@ -56,7 +67,8 @@ int	expand_add_string(t_expand_state *st, const char *s)
 	return (0);
 }
 
-int	process_dollar_branch(const char *str, int i, t_expand_state *state, t_shell *shell)
+int	process_dollar_branch(const char *str, int i,
+		t_expand_state *state, t_shell *shell)
 {
 	if (str[i + 1] == '\'' || str[i + 1] == '"')
 		handle_dollar_quoted(str, &i, state, shell);
