@@ -6,25 +6,26 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 20:28:14 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/23 14:54:21 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/24 13:38:00 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../minishell.h"
 
-char *ft_strjoin_and_free(char *s1, const char *s2)
+char	*ft_strjoin_and_free(char *s1, const char *s2)
 {
+	char	*new_str;
+	size_t	len1;
+	size_t	len2;
+
     if (!s1 && !s2)
-        return NULL;
+        return (NULL);
     if (!s1)
-        return ft_strdup(s2);
+        return (ft_strdup(s2));
     if (!s2)
-        return s1;
-
-    char *new_str;
-    size_t len1 = ft_strlen(s1);
-    size_t len2 = ft_strlen(s2);
-
+        return (s1);
+    len1 = ft_strlen(s1);
+    len2 = ft_strlen(s2);
     new_str = malloc(len1 + len2 + 1);
     if (!new_str)
         return (free(s1), NULL);
@@ -32,7 +33,7 @@ char *ft_strjoin_and_free(char *s1, const char *s2)
     ft_memcpy(new_str + len1, s2, len2);
     new_str[len1 + len2] = '\0';
     free(s1);
-    return new_str;
+    return (new_str);
 }
 
 void append_char_result(char c, char **result)
@@ -66,7 +67,7 @@ int expand_variable_name(const char *line, int i, char **result, t_shell *shell)
     }
     else
         *result = ft_strjoin_and_free(*result, "$");
-    return i;
+    return (i);
 }
 
 
@@ -90,5 +91,5 @@ int process_dollar_in_heredoc(const char *line, int i, char **result, t_shell *s
     }
     else
         i = expand_variable_name(line, i, result, shell);
-    return i;
+    return (i);
 }
