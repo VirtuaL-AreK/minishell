@@ -147,22 +147,22 @@ typedef struct s_pipe_ctrl
 
 typedef struct s_prs_ctx
 {
-    const char    *line;
-    int           *i;
-    char         **buf;
-    int           *len;
-    int           *cap;
-}               t_prs_ctx;
+	const char		*line;
+	int				*i;
+	char			**buf;
+	int				*len;
+	int				*cap;
+}	t_prs_ctx;
 
 typedef struct s_exp_ctx
 {
-    const char       *s;
-    int               idx;
-    int               in_sq;
-    int               in_dq;
-    t_expand_state   *st;
-    t_shell          *shell;
-}   t_exp_ctx;
+	const char			*s;
+	int					idx;
+	int					in_sq;
+	int					in_dq;
+	t_expand_state		*st;
+	t_shell				*shell;
+}	t_exp_ctx;
 
 void			print_error(const char *what);
 
@@ -171,13 +171,17 @@ int				count_command_arguments(t_token *tokens);
 t_command		*new_command(t_token *tokens);
 
 // char			*handle_heredoc(const char *delimiter);
-char			*handle_heredoc(const char *delimiter, int is_quoted, t_shell *shell);
-void			handle_word(t_command *cmd, t_token **tokens, int *arg_count);
+char			*handle_heredoc(const char *delimiter,
+					int is_quoted, t_shell *shell);
+void			handle_word(t_command *cmd,
+					t_token **tokens, int *arg_count);
 
 //here doc
 void			handle_redir_in(t_command *cmd, t_token **tokens);
-void			handle_heredoc_token(t_command *cmd, t_token **tokens, t_shell *shell);
-void			handle_redir_out_or_append(t_command *cmd, t_token **tokens);
+void			handle_heredoc_token(t_command *cmd, t_token **tokens,
+					t_shell *shell);
+void			handle_redir_out_or_append(t_command *cmd,
+					t_token **tokens);
 void			fill_command(t_command *cmd, t_token **tokens, t_shell *shell);
 void			fix_empty_first_arg(t_command *cmd);
 char			*expand_heredoc_line(const char *line, t_shell *shell);
@@ -190,20 +194,26 @@ void			init_heredoc_signals(struct sigaction *old_sa);
 void			restore_heredoc_signals(struct sigaction *old_sa);
 int				create_heredoc_file(char *template);
 int				read_heredoc_and_write(t_heredoc_ctx *ctx);
-char			*handle_heredoc(const char *delimiter, int is_quoted, t_shell *shell);
-int				handle_heredoc_failure(char  *tmp, t_command **pcmd, t_token  **ptokens, t_shell   *shell);
-void			handle_heredoc_token(t_command *cmd, t_token   **tokens, t_shell    *shell);
+char			*handle_heredoc(const char *delimiter, int is_quoted,
+					t_shell *shell);
+int				handle_heredoc_failure(char *tmp, t_command **pcmd,
+					t_token **ptokens, t_shell *shell);
+void			handle_heredoc_token(t_command *cmd,
+					t_token **tokens, t_shell *shell);
 void			handle_redir_out_or_append(t_command *cmd, t_token **tokens);
 void			fill_command(t_command *cmd, t_token **tokens, t_shell *shell);
 void			fix_empty_first_arg(t_command *cmd);
 void			handle_redir_in(t_command *cmd, t_token **tokens);
 char			*remove_surrounding_quotes_if_any(const char *str);
 int				check_heredoc_token_error(t_token **tokens, t_command *cmd);
-char			*get_effective_delim(const char *clean, int is_quoted, t_shell *shell);
-char			*get_heredoc_clean(t_token **tokens, t_command *cmd, int *is_quoted);
+char			*get_effective_delim(const char *clean, int is_quoted,
+					t_shell *shell);
+char			*get_heredoc_clean(t_token **tokens, t_command *cmd,
+					int *is_quoted);
 char			*expand_heredoc_line(const char *line, t_shell *shell);
 void			append_char_result(char c, char **result);
-int				process_dollar_in_heredoc(const char *line, int i, char **result, t_shell *shell);
+int				process_dollar_in_heredoc(const char *line, int i,
+					char **result, t_shell *shell);
 
 // utils
 char			**ft_split(char const *s, char c);
@@ -212,15 +222,13 @@ int				is_special_char(int c);
 void			skip_spaces(const char *line, int *i);
 void			add_strlist(t_strlist **head,
 					const char *value, t_token_flags flags);
-// int				process_unquoted_char(const char *line, int *i, char **buf, int *len, int *cap);
+
 int				append_str(char **buf, int *len, int *cap, const char *s);
 int				append_char(char **buf, int *len, int *cap, char c);
-// int				process_single_quote(const char *line, int *i, char **buf, int *len, int *cap);
-// int				process_double_quote(const char *line, int *i, char **buf, int *len, int *cap);
-// void			process_unquoted_char(const char *line, int *i, char *buffer, int *len);
-int process_single_quote(t_prs_ctx *ctx);
-int process_double_quote(t_prs_ctx *ctx);
-int process_unquoted_char(t_prs_ctx *ctx);
+
+int				process_single_quote(t_prs_ctx *ctx);
+int				process_double_quote(t_prs_ctx *ctx);
+int				process_unquoted_char(t_prs_ctx *ctx);
 char			*parse_one_token_merge_quotes(const char *line,
 					int *i, t_token_flags *flags);
 void			process_special_char_token(const char *line,
@@ -261,16 +269,21 @@ int				init_expand_state(t_expand_state *st, int init_cap);
 int				expand_buffer_if_needed(t_expand_state *st, int needed);
 int				expand_add_char(t_expand_state *st, char c);
 int				expand_add_string(t_expand_state *st, const char *s);
-int				process_dollar_branch(const char *str, int i, t_expand_state *state, t_shell *shell);
-int				process_backslash_branch(const char *str, int i, t_expand_state *state);
+int				process_dollar_branch(const char *str, int i,
+					t_expand_state *state, t_shell *shell);
+int				process_backslash_branch(const char *str, int i,
+					t_expand_state *state);
 char			*add_or_replace_var(t_shell *shell,
 					const char *name, const char *value);
 void			expand_tokens(t_token *tokens, t_shell *shell);
 char			*expand_string(const char *str, t_shell *shell);
 char			*get_local_env_value(const char *var, t_shell *shell);
-int				handle_alphanum_variable(const char *s, int *i, t_expand_state *st, t_shell *shell);
-int				handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell);
-int				handle_dollar_quoted(const char *s, int *i, t_expand_state *st, t_shell *shell);
+int				handle_alphanum_variable(const char *s, int *i,
+					t_expand_state *st, t_shell *shell);
+int				handle_variable(const char *s, int *i, t_expand_state *st,
+					t_shell *shell);
+int				handle_dollar_quoted(const char *s, int *i,
+					t_expand_state *st, t_shell *shell);
 char			process_escape_char(const char *s, int *i, char quote);
 void			process_backslash(const char *s, int *i, int *j,
 					char *result, char quote);
@@ -281,15 +294,18 @@ int				init_expand_state(t_expand_state *st, int init_cap);
 int				expand_buffer_if_needed(t_expand_state *st, int needed);
 int				expand_add_char(t_expand_state *st, char c);
 int				expand_add_string(t_expand_state *st, const char *s);
-int				process_dollar_branch(const char *str, int i, t_expand_state *state, t_shell *shell);
-int				process_backslash_branch(const char *str, int i, t_expand_state *state);
+int				process_dollar_branch(const char *str, int i,
+					t_expand_state *state, t_shell *shell);
+int				process_backslash_branch(const char *str, int i,
+					t_expand_state *state);
 int				handle_dollar_expand(const char *str,
 					int *i, t_expand_state *st, t_shell *shell);
 int				handle_quote_toggle(const char *str, int i, t_expand_state *st);
-int				handle_backslash_expand(const char *str, int i, t_expand_state *st);
+int				handle_backslash_expand(const char *str, int i,
+					t_expand_state *st);
 int				handle_regular_char(const char *str, int i, t_expand_state *st);
-int				process_char_in_expand(const char    *str,
-    				int i, t_expand_state *st, t_shell *shell);
+int				process_char_in_expand(const char *str,
+					int i, t_expand_state *st, t_shell *shell);
 char			*expand_string(const char *str, t_shell *shell);
 char			*expand_tilde(const char *value, t_shell *shell);
 char			*remove_quotes(const char *s);
