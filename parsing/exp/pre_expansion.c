@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:15:47 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/10 19:28:24 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/24 17:52:46 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,71 +30,68 @@ char	process_escape_char(const char *s, int *i, char quote)
 	return (res);
 }
 
-void	process_backslash(const char *s, int *i, int *j, char *result,
-		char quote)
+void	process_backslash(t_process_ctx *ctx, const char *s)
 {
-	(*i) = (*i) + 1;
-	if (s[*i])
+	ctx->i = ctx->i + 1;
+	if (s[ctx->i])
 	{
-		result[*j] = process_escape_char(s, i, quote);
-		(*j) = (*j) + 1;
+		ctx->result[ctx->j] = process_escape_char(s, &ctx->i, ctx->quote);
+		ctx->j = ctx->j + 1;
 	}
 }
 
 char	*process_ansi_c(const char *s)
 {
-	int		i;
-	int		j;
-	int		len;
-	char	*result;
+	t_process_ctx	ctx;
+	int				len;
 
-	i = 0;
-	j = 0;
 	len = ft_strlen(s);
-	result = malloc(len + 1);
-	if (result == NULL)
+	ctx.result = malloc(len + 1);
+	if (ctx.result == NULL)
 		return (NULL);
-	while (s[i])
+	ctx.i = 0;
+	ctx.j = 0;
+	ctx.quote = '\'';
+	while (s[ctx.i])
 	{
-		if (s[i] == '\\')
-			process_backslash(s, &i, &j, result, '\'');
+		if (s[ctx.i] == '\\')
+			process_backslash(&ctx, s);
 		else
 		{
-			result[j] = s[i];
-			i = i + 1;
-			j = j + 1;
+			ctx.result[ctx.j] = s[ctx.i];
+			ctx.i = ctx.i + 1;
+			ctx.j = ctx.j + 1;
 		}
 	}
-	result[j] = '\0';
-	return (result);
+	ctx.result[ctx.j] = '\0';
+	return (ctx.result);
 }
 
 char	*process_dollar_dquote(const char *s)
 {
-	int		i;
-	int		j;
-	int		len;
-	char	*result;
+	t_process_ctx	ctx;
+	int				len;
 
-	i = 0;
-	j = 0;
 	len = ft_strlen(s);
-	result = malloc(len + 1);
-	if (result == NULL)
+	ctx.result = malloc(len + 1);
+	if (ctx.result == NULL)
 		return (NULL);
-	while (s[i])
+	ctx.i = 0;
+	ctx.j = 0;
+	ctx.quote = '"';
+	while (s[ctx.i])
 	{
-		if (s[i] == '\\')
-			process_backslash(s, &i, &j, result, '"');
+		if (s[ctx.i] == '\\')
+			process_backslash(&ctx, s);
 		else
 		{
-			result[j] = s[i];
-			i = i + 1;
-			j = j + 1;
+			ctx.result[ctx.j] = s[ctx.i];
+			ctx.i = ctx.i + 1;
+			ctx.j = ctx.j + 1;
 		}
 	}
-	result[j] = '\0';
-	return (result);
+	ctx.result[ctx.j] = '\0';
+	return (ctx.result);
 }
 
 int	append_string(t_expand_state *st, const char *s)

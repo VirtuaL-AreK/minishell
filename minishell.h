@@ -164,6 +164,14 @@ typedef struct s_exp_ctx
 	t_shell				*shell;
 }	t_exp_ctx;
 
+typedef struct s_process_ctx
+{
+	int		i;
+	int		j;
+	char	*result;
+	char	quote;
+}	t_process_ctx;
+
 void			print_error(const char *what);
 
 void			print_command(t_command *commands);
@@ -285,8 +293,7 @@ int				handle_variable(const char *s, int *i, t_expand_state *st,
 int				handle_dollar_quoted(const char *s, int *i,
 					t_expand_state *st, t_shell *shell);
 char			process_escape_char(const char *s, int *i, char quote);
-void			process_backslash(const char *s, int *i, int *j,
-					char *result, char quote);
+void			process_backslash(t_process_ctx *ctx, const char *s);
 char			*process_ansi_c(const char *s);
 char			*process_dollar_dquote(const char *s);
 int				append_string(t_expand_state *st, const char *s);
@@ -314,6 +321,10 @@ int				toggle_quote(t_exp_ctx *ctx);
 int				handle_dollar(t_exp_ctx *ctx);
 int				handle_escape(t_exp_ctx *ctx);
 int				handle_tilde(t_exp_ctx *ctx);
+int				handle_exit_status(t_shell *shell, t_expand_state *st);
+int				handle_alphanumeric_variable(const char *s, int *i,
+					t_expand_state *st, t_shell *shell);
+int				handle_default_variable(t_expand_state *st);
 
 // execution
 char			*find_exec(char *cmd, char **env);

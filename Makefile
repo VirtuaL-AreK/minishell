@@ -8,7 +8,7 @@ SRC = main.c ./parsing/syntax.c ./parsing/split_tokens.c ./parsing/split_tokens_
 		./execution/exec/exec.c ./execution/exec/exec_built.c ./execution/exec/exec_built_2.c ./execution/exec/exec_cmd.c ./execution/exec/exec_redir.c \
 		./execution/exec/exec_pipe.c ./parsing/exp/exp_env.c ./parsing/exp/pre_expansion.c ./builtins/export_h/env_cd_syn.c ./execution/cmd/here_doc_1.c \
 		./execution/cmd/here_doc_2.c ./execution/cmd/here_doc_3.c ./execution/cmd/here_doc_4.c ./execution/cmd/here_doc_line.c ./parsing/exp/expand_state.c \
-		./parsing/exp/exp_backslash.c ./parsing/exp/expand_string.c ./parsing/exp/expand_list_funcs.c
+		./parsing/exp/exp_backslash.c ./parsing/exp/expand_string.c ./parsing/exp/expand_list_funcs.c ./parsing/exp/exp_env_1.c
 OBJ = $(SRC:.c=.o)
 LIBFT = ./libft/libft.a
 

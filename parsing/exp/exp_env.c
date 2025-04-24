@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 11:04:56 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/23 15:11:32 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/24 17:33:13 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,31 +62,22 @@ int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st,
 
 int	handle_variable(const char *s, int *i, t_expand_state *st, t_shell *shell)
 {
-	char	*exit_str;
-
 	(*i)++;
 	if (s[*i] == '?')
 	{
 		(*i)++;
-		exit_str = ft_itoa(shell->exit_status);
-		if (!exit_str)
+		if (handle_exit_status(shell, st) < 0)
 			return (-1);
-		if (append_string(st, exit_str) < 0)
-		{
-			free(exit_str);
-			return (-1);
-		}
-		free(exit_str);
 	}
 	else if ((s[*i] >= 'A' && s[*i] <= 'Z') || (s[*i] >= 'a' && s[*i] <= 'z')
 		|| s[*i] == '_')
 	{
-		if (handle_alphanum_variable(s, i, st, shell) < 0)
+		if (handle_alphanumeric_variable(s, i, st, shell) < 0)
 			return (-1);
 	}
 	else
 	{
-		if (expand_add_char(st, '$') < 0)
+		if (handle_default_variable(st) < 0)
 			return (-1);
 	}
 	return (0);
