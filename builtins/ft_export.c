@@ -118,5 +118,7 @@ int	ft_export(t_command *cmd, t_shell *shell)
 		export_var(shell, cmd->args[i]);
 		i = i + 1;
 	}
-	return (shell->exit_status == 1 ? 1 : 0);
+	if (shell->exit_status == 1)
+		return (1);
+	return (0);
 }
