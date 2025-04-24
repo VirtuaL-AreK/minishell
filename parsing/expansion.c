@@ -30,7 +30,8 @@ char	*expand_word(const char *s, t_shell *shell)
 	{
 		if (toggle_quote(&ctx))
 			continue ;
-		if ((ret = handle_dollar(&ctx)) < 0)
+		ret = handle_dollar(&ctx);
+		if (ret < 0)
 			return (free_and_null(st.buffer));
 		if (ret)
 			continue ;
@@ -40,8 +41,7 @@ char	*expand_word(const char *s, t_shell *shell)
 			continue ;
 		expand_add_char(&st, ctx.s[ctx.idx++]);
 	}
-	expand_add_char(&st, '\0');
-	return (st.buffer);
+	return (expand_add_char(&st, '\0'), st.buffer);
 }
 
 void	expand_tokens(t_token *tokens, t_shell *shell)
