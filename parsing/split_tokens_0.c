@@ -60,7 +60,7 @@ int	append_char(char **buf, int *len, int *cap, char c)
 	new_buf = malloc(new_cap);
 	if (!new_buf)
 		return (-1);
-	memcpy(new_buf, *buf, *len);
+	ft_memcpy(new_buf, *buf, *len);
 	free(*buf);
 	*buf = new_buf;
 	*cap = new_cap;

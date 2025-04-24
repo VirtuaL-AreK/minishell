@@ -50,7 +50,7 @@ static int	perform_cd(const char *path, t_command *cmd,
 		shell->exit_status = 1;
 		return (1);
 	}
-	if (cmd->args[1] && strcmp(cmd->args[1], "-") == 0)
+	if (cmd->args[1] && ft_strncmp(cmd->args[1], "-", 1) == 0)
 		if (getcwd(cwd, sizeof(cwd)))
 			ft_putendl_fd(cwd, 1);
 	add_or_replace_var(shell, "OLDPWD", *oldpwd);
@@ -66,8 +66,8 @@ static char	*check_command(t_command *cmd, t_shell *shell)
 {
 	if (cmd->nb_arg >= 2
 		&& cmd->args[1][0] == '-'
-		&& strcmp(cmd->args[1], "-") != 0
-		&& strcmp(cmd->args[1], "--") != 0)
+		&& ft_strncmp(cmd->args[1], "-", 1) != 0
+		&& ft_strncmp(cmd->args[1], "--", 2) != 0)
 	{
 		ft_putstr_fd("bash: cd: ", 2);
 		ft_putstr_fd(cmd->args[1], 2);

@@ -30,9 +30,9 @@ char	*resolve_cd_path(t_command *cmd, t_shell *shell)
 	if (cmd->nb_arg == 1)
 		return (resolve_cd_path_tilde(cmd, shell));
 	arg1 = cmd->args[1];
-	if (strcmp(arg1, "--") == 0)
+	if (ft_strncmp(arg1, "--", 2) == 0)
 		return (resolve_cd_double_dash(cmd, shell));
-	if (strcmp(arg1, "-") == 0 && cmd->nb_arg == 2)
+	if (ft_strncmp(arg1, "-", 1) == 0 && cmd->nb_arg == 2)
 		return (resolve_cd_path_dash(cmd, shell));
 	if (ft_strncmp(arg1, "~/", 2) == 0)
 		return (resolve_cd_path_home_slash(cmd, shell));

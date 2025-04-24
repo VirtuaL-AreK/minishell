@@ -60,7 +60,7 @@ static void	print_echo_output(t_command *cmd, int start_index)
 	{
 		printf("%s", cmd->args[i]);
 		if (i < cmd->nb_arg - 1)
-			putchar(' ');
+			printf(" ");
 		i++;
 	}
 }
@@ -73,7 +73,7 @@ int	ft_echo(t_command *cmd, t_shell *shell)
 	no_newline = parse_echo_flags(cmd, &start_index);
 	print_echo_output(cmd, start_index);
 	if (!no_newline)
-		putchar('\n');
+		printf("\n");
 	shell->exit_status = 0;
 	return (0);
 }

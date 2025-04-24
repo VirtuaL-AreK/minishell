@@ -72,7 +72,7 @@ void	export_var(t_shell *shell, const char *arg)
 	char	*plus_eq;
 	char	*eq;
 
-	plus_eq = strstr(arg, "+=");
+	plus_eq = ft_strnstr(arg, "+=", 2);
 	if (plus_eq)
 	{
 		export_var_plus(shell, arg, plus_eq);

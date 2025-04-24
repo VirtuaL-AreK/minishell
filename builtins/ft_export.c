@@ -70,7 +70,7 @@ static void	print_env_array(char **env_array, int count)
 		if (eq)
 		{
 			printf("declare -x ");
-			fwrite(env_array[j], 1, (size_t)(eq - env_array[j] + 1), stdout);
+			printf("%.*s", (int)(eq - env_array[j] + 1), env_array[j]);
 			printf("\"%s\"\n", eq + 1);
 		}
 		else

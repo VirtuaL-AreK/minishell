@@ -37,7 +37,7 @@ int	expand_buffer_if_needed(t_expand_state *st, int needed)
 	new_buf = (char *)malloc(new_cap);
 	if (!new_buf)
 		return (-1);
-	memcpy(new_buf, st->buffer, st->idx);
+	ft_memcpy(new_buf, st->buffer, st->idx);
 	free(st->buffer);
 	st->buffer = new_buf;
 	st->capacity = new_cap;
