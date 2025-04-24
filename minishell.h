@@ -306,6 +306,8 @@ char			*get_oldpwd_from_env(t_shell *shell);
 char			*resolve_cd_path_tilde(t_command *cmd, t_shell *shell);
 char			*resolve_cd_path_dash(t_command *cmd, t_shell *shell);
 char			*resolve_cd_path_home_slash(t_command *cmd, t_shell *shell);
+char			*resolve_cd_double_dash(t_command *cmd, t_shell *shell);
+char			*resolve_cd_path(t_command *cmd, t_shell *shell);
 
 // Signals
 void			sig_handler(int sig);

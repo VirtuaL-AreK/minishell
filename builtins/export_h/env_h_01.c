@@ -28,7 +28,8 @@ int	is_valid_varname(char *var)
 	return (1);
 }
 
-int	export_var_plus_get_parts(const char *arg, char *plus_eq, t_export_parts *parts, t_shell *shell)
+int	export_var_plus_get_parts(const char *arg, char *plus_eq,
+	t_export_parts *parts, t_shell *shell)
 {
 	size_t	name_len;
 
@@ -79,7 +80,8 @@ char	*export_var_plus_get_old_val(t_shell *shell, const char *name)
 	return (old_val);
 }
 
-void	export_var_plus_update(t_shell *shell, const char *name, const char *to_append, char *old_val)
+void	export_var_plus_update(t_shell *shell, const char *name,
+	const char *to_append, char *old_val)
 {
 	char	*new_val;
 
