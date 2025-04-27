@@ -6,7 +6,7 @@
 /*   By: aanmazir <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/27 15:45:36 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/27 15:50:12 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/27 15:57:18 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,32 +39,6 @@ void	parse_command(char *input, t_shell *shell)
 	free_tokens(tokens);
 }
 
-void	prompt_loop(t_shell *shell)
-{
-	char	*input;
-
-	while (1)
-	{
-		input = readline("\033[1;32mminishell$\033[0m ");
-		if (!input)
-		{
-			write(STDOUT_FILENO, "exit\n", 5);
-			exit(shell->exit_status);
-		}
-		if (g_last_signal == SIGINT)
-		{
-			g_last_signal = 0;
-			free(input);
-			continue ;
-		}
-		if (*input)
-			add_history(input);
-		if (!check_unclosed_quotes(input, shell))
-			parse_command(input, shell);
-		free(input);
-	}
-}
-
 static char	*read_interactive_input(t_shell *shell)
 {
 	char	*input;
@@ -94,6 +68,30 @@ static char	*read_non_interactive_input(t_shell *shell)
 	input = ft_strtrim(line, "\n");
 	free(line);
 	return (input);
+}
+
+void	prompt_loop(t_shell *shell)
+{
+	char	*input;
+
+	while (1)
+	{
+		if (isatty(fileno(stdin)))
+		{
+			input = read_interactive_input(shell);
+			if (!input)
+				continue ;
+		}
+		else
+		{
+			input = read_non_interactive_input(shell);
+		}
+		if (*input)
+			add_history(input);
+		if (!check_unclosed_quotes(input, shell))
+			parse_command(input, shell);
+		free(input);
+	}
 }
 
 int	main(int argc, char **argv, char **envp)
