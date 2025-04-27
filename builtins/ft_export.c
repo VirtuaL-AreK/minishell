@@ -46,7 +46,7 @@ static void	sort_env_array(char **env_array, int count)
 		j = 0;
 		while (j < count - 1)
 		{
-			if (strcmp(env_array[j], env_array[j + 1]) > 0)
+			if (ft_strcmp(env_array[j], env_array[j + 1]) > 0)
 			{
 				temp = env_array[j];
 				env_array[j] = env_array[j + 1];

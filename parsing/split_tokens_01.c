@@ -36,7 +36,7 @@ static int	accumulate_token(t_prs_ctx *ctx)
 {
 	int	ret;
 
-	while (ctx->line[*ctx->i] && !isspace((unsigned char)ctx->line[*ctx->i])
+	while (ctx->line[*ctx->i] && !ft_isspace((unsigned char)ctx->line[*ctx->i])
 		&& !is_special_char(ctx->line[*ctx->i]))
 	{
 		if (ctx->line[*ctx->i] == '\'')
@@ -53,9 +53,9 @@ static int	accumulate_token(t_prs_ctx *ctx)
 
 static void	set_quote_flags(t_token_flags *flags, const char *buf)
 {
-	if (strchr(buf, '\''))
+	if (ft_strchr(buf, '\''))
 		flags->has_sq = 1;
-	if (strchr(buf, '"'))
+	if (ft_strchr(buf, '"'))
 		flags->has_dq = 1;
 }
 

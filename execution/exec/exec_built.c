@@ -16,13 +16,13 @@ int	is_critical_builtin(const char *cmd)
 {
 	if (cmd == NULL)
 		return (0);
-	if (strcmp(cmd, "cd") == 0)
+	if (ft_strcmp(cmd, "cd") == 0)
 		return (1);
-	if (strcmp(cmd, "exit") == 0)
+	if (ft_strcmp(cmd, "exit") == 0)
 		return (1);
-	if (strcmp(cmd, "export") == 0)
+	if (ft_strcmp(cmd, "export") == 0)
 		return (1);
-	if (strcmp(cmd, "unset") == 0)
+	if (ft_strcmp(cmd, "unset") == 0)
 		return (1);
 	return (0);
 }
@@ -41,7 +41,7 @@ int	execute_builtin_echo(t_command *cmd, t_shell *shell)
 	}
 	else
 	{
-		putchar('\n');
+		printf("\n");
 		shell->exit_status = 0;
 	}
 	return (0);

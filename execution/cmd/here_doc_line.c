@@ -72,3 +72,44 @@ char	*expand_heredoc_line(const char *line, t_shell *shell)
 	}
 	return (result);
 }
+
+int	handle_heredoc_line(t_heredoc_ctx *ctx, char *line)
+{
+	char	*cmp;
+	int		done;
+
+	if (ctx->is_quoted)
+		cmp = line;
+	else
+		cmp = expand_heredoc_line(line, ctx->shell);
+	done = (ft_strcmp(cmp, ctx->delimiter) == 0);
+	if (done)
+	{
+		if (!ctx->is_quoted)
+			free(cmp);
+		return (1);
+	}
+	if (ctx->is_quoted)
+		write_heredoc_line(ctx, line);
+	else
+	{
+		write_heredoc_line(ctx, cmp);
+		free(cmp);
+	}
+	return (0);
+}
+
+void	sigint_handler_heredoc(int sig)
+{
+	char	nl;
+
+	(void)sig;
+	g_last_signal = SIGINT;
+	rl_on_new_line();
+	rl_replace_line("", 0);
+	rl_done = 1;
+	{
+		nl = '\n';
+		ioctl(STDIN_FILENO, TIOCSTI, &nl);
+	}
+}

@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/27 13:28:15 by iel-kher          #+#    #+#             */
-/*   Updated: 2024/10/27 13:28:16 by iel-kher         ###   ########.fr       */
+/*   Updated: 2025/04/27 14:54:16 by aanmazir         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,31 @@ char	*ft_strdup(const char *s)
 	dup[i] = '\0';
 	return (dup);
 }
+
+char	*ft_strndup(const char *s, size_t n)
+{
+	char	*dup;
+	size_t	i;
+	size_t	j;
+
+	i = 0;
+	while (s[i] && i < n)
+		i++;
+	dup = (char *)malloc(sizeof(char) * (i + 1));
+	if (!dup)
+	{
+		return (NULL);
+	}
+	j = 0;
+	while (j < i)
+	{
+		dup[j] = s[j];
+		j++;
+	}
+	dup[i] = '\0';
+	return (dup);
+}
+
 /*
 #include <stdio.h>
 

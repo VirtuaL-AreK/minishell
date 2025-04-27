@@ -34,17 +34,17 @@ int	process_single_quote(t_prs_ctx *ctx)
 
 t_token_type	get_token_type(char *str)
 {
-	if (strcmp(str, "|") == 0)
+	if (ft_strcmp(str, "|") == 0)
 		return (TOKEN_PIPE);
-	if (strcmp(str, "<") == 0)
+	if (ft_strcmp(str, "<") == 0)
 		return (TOKEN_REDIR_IN);
-	if (strcmp(str, ">") == 0)
+	if (ft_strcmp(str, ">") == 0)
 		return (TOKEN_REDIR_OUT);
-	if (strcmp(str, ">>") == 0)
+	if (ft_strcmp(str, ">>") == 0)
 		return (TOKEN_APPEND);
-	if (strcmp(str, "<<") == 0)
+	if (ft_strcmp(str, "<<") == 0)
 		return (TOKEN_HEREDOC);
-	if (strcmp(str, " ") == 0)
+	if (ft_strcmp(str, " ") == 0)
 		return (TOKEN_SPACE);
 	return (TOKEN_WORD);
 }

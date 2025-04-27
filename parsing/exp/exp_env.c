@@ -48,7 +48,7 @@ int	handle_alphanum_variable(const char *s, int *i, t_expand_state *st,
 			|| s[*i] == '_'))
 		(*i)++;
 	var_len = *i - start;
-	var_name = strndup(s + start, var_len);
+	var_name = ft_strndup(s + start, var_len);
 	if (!var_name)
 		return (-1);
 	val = get_local_env_value(var_name, shell);
@@ -95,7 +95,7 @@ static char	*extract_quoted_segment(const char *s, int *i, char *quote_out)
 	while (s[*i] && s[*i] != *quote_out)
 		(*i)++;
 	len = *i - start;
-	seg = strndup(s + start, len);
+	seg = ft_strndup(s + start, len);
 	if (s[*i] == *quote_out)
 		(*i)++;
 	return (seg);

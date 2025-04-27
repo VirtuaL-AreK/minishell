@@ -84,7 +84,7 @@ char	*search_in_cwd(char *cmd)
 	if (cwd == NULL)
 		return (NULL);
 	len = ft_strlen(cwd);
-	if (len >= 4 && strcmp(cwd + len - 4, "/bin") == 0)
+	if (len >= 4 && ft_strcmp((cwd + len - 4), "/bin") == 0)
 	{
 		tmp = ft_strjoin(cwd, "/");
 		full_path = ft_strjoin(tmp, cmd);
@@ -104,7 +104,7 @@ char	*find_exec(char *cmd, char **env)
 	char	*full_path;
 	char	*env_path;
 
-	if (strchr(cmd, '/') != NULL)
+	if (ft_strchr(cmd, '/') != NULL)
 	{
 		if (access(cmd, F_OK) == 0)
 		{

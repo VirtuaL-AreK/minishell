@@ -19,7 +19,7 @@ int	is_special_char(int c)
 
 void	skip_spaces(const char *line, int *i)
 {
-	while (line[*i] && isspace((unsigned char)line[*i]))
+	while (line[*i] && ft_isspace((unsigned char)line[*i]))
 		(*i)++;
 }
 
@@ -29,7 +29,7 @@ void	add_strlist(t_strlist **head, const char *value, t_token_flags flags)
 	t_strlist	*tmp;
 
 	node = malloc(sizeof(*node));
-	node->str = strdup(value);
+	node->str = ft_strdup(value);
 	node->has_single_quote = flags.has_sq;
 	node->has_double_quote = flags.has_dq;
 	node->should_expand = flags.should_expand;

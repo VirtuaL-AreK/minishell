@@ -65,7 +65,7 @@ static t_token	*build_tokens_from_list(t_strlist *lst)
 	while (lst)
 	{
 		node = malloc(sizeof(*node));
-		node->value = strdup(lst->str);
+		node->value = ft_strdup(lst->str);
 		node->type = get_token_type(node->value);
 		node->has_single_quote = lst->has_single_quote;
 		node->has_double_quote = lst->has_double_quote;

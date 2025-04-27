@@ -19,7 +19,7 @@ void parse_command(char *input, t_shell *shell)
             free_commands(commands);
             shell->heredoc_interrupted = 0;
             free_tokens(tokens);
-            return;
+            return ;
         }
         execute_pipeline(commands, shell);
         free_commands(commands);
@@ -69,9 +69,9 @@ static char *read_interactive_input(t_shell *shell)
     if (input[0] == '\0')
     {
         free(input);
-        return NULL;
+        return (NULL);
     }
-    return input;
+    return (input);
 }
 
 static char *read_non_interactive_input(t_shell *shell)
@@ -84,7 +84,7 @@ static char *read_non_interactive_input(t_shell *shell)
         exit(shell->exit_status);
     input = ft_strtrim(line, "\n");
     free(line);
-    return input;
+    return (input);
 }
 
 void prompt_loop(t_shell *shell)
