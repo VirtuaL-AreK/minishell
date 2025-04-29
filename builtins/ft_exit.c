@@ -6,7 +6,7 @@
 /*   By: iel-kher <iel-kher@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/05 09:05:16 by aanmazir          #+#    #+#             */
-/*   Updated: 2025/04/24 10:34:27 by aanmazir         ###   ########.fr       */
+/*   Updated: 2025/04/29 17:10:04 by iel-kher         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ static int	is_numeric_argument(const char *str)
 static void	exit_numeric_error(const char *arg)
 {
 	ft_putstr_fd("exit\n", 2);
-	ft_putstr_fd("bash: exit: ", 2);
+	ft_putstr_fd("minishell: exit: ", 2);
 	ft_putstr_fd((char *)arg, 2);
 	ft_putstr_fd(": numeric argument required\n", 2);
 	exit(2);
