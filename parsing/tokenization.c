@@ -49,18 +49,6 @@ t_token_type	get_token_type(char *str)
 	return (TOKEN_WORD);
 }
 
-void	print_tokens(t_token *head)
-{
-	t_token	*temp;
-
-	temp = head;
-	while (temp)
-	{
-		printf("Token: %-10s Type: %d\n", temp->value, temp->type);
-		temp = temp->next;
-	}
-}
-
 void	free_tokens(t_token *head)
 {
 	t_token	*temp;

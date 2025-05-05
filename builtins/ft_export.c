@@ -108,7 +108,7 @@ int	ft_export(t_command *cmd, t_shell *shell)
 	}
 	while (cmd->args[i])
 	{
-		if (ft_strlen(cmd->args[i]) == 0 || strcmp(cmd->args[i], "=") == 0)
+		if (ft_strlen(cmd->args[i]) == 0 || ft_strcmp(cmd->args[i], "=") == 0)
 		{
 			shell->exit_status = 1;
 			ft_putstr_fd("export: not a valid identifier\n", 2);
