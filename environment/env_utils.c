@@ -16,11 +16,12 @@ static char	**create_default_env(void)
 {
 	char	**copy;
 
-	copy = malloc(sizeof(char *) * 2);
+	copy = malloc(sizeof(char *) * 3);
 	if (!copy)
 		return (NULL);
-	copy[0] = ft_strdup("PATH=/usr/local/bin:/usr/bin:/bin");
-	copy[1] = NULL;
+	copy[0] = ft_strdup("PWD=/home/aanmazir/Desktop");
+	copy[1] = ft_strdup("_=/usr/bin/env");
+	copy[2] = NULL;
 	return (copy);
 }
 
@@ -59,8 +60,6 @@ char	**clone_envp(char **envp, t_shell *shell)
 	if (!copy)
 		return (NULL);
 	shell->env = copy;
-	if (get_env_path(shell->env) == NULL)
-		add_or_replace_var(shell, "PATH", "/usr/local/bin:/usr/bin:/bin");
 	return (handle_shlvl(shell->env, shell));
 }
 
